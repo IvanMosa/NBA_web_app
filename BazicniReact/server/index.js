@@ -972,7 +972,7 @@ app.post('/getStatistikaIgraci', async (req, res) => {
 
         let sql_FROM = ` FROM (select utk.utakmica_id as Utakmica_id, m1.kratica AS Domaci, m1.naziv as DOMACI_IME, m2.kratica AS Gosti , m2.NAZIV AS GOSTI_IME, i.igrac_id AS Igrac_id, i.naziv AS Igrac, sp.naziv || '_' ||s.naziv AS Podatak, s.naziv AS Status, UTK.DATUM_VRIJEME, l.sezona as Sezona FROM statistika stat,igraci i,utakmice utk,stat_podatak sp,momcad m1,momcad m2,statusi s, lige l where STAT.IGRAC_ID = i.igrac_id and stat.sp_id = sp.sp_id and STAT.STATUS_ID = s.status_id and stat.utakmica_id = utk.utakmica_id and UTK.DOMACI_ID = m1.momcad_id and utk.gosti_id = m2.momcad_id and s.tablica = 'STATISTIKA' and utk.liga_id = l.liga_id ORDER BY DATUM_VRIJEME)`;
 
-        let sql_pivot = ` PIVOT ( COUNT(Status) FOR Podatak IN('Slobodna bacanja_Pogođen' AS "Slobodna Bacanja Pogodena",'Slobodna bacanja_Promašen' AS "Slobodna Bacanja Promasena",'Šut za 3_Pogođen' AS "Šut za 3 Pogoden", 'Šut za 3_Promašen' AS "Šut za 3 Promasen",'Šut za 2_Pogođen' AS "Šut za 2 Pogoden", 'Šut za 2_Promašen' AS "Šut za 2 Promasen",'Ulaz/Izlaz_Završen' AS "Ulaz/Izlaz",'Obrambeni skok_Završen' AS "Obrambeni Skok",'Napadački skok_Završen' AS "Napadacki Skok",'Asistencije_Završen' AS "Asistencije",'Izgubljene lopte_Završen' AS "Izgubljene Lopte",'Ukradene lopte_Završen' AS "Ukradene Lopte",'Blokade_Završen' AS "Blokovi")) ORDER BY DATUM_UTAKMICE DESC`;
+        let sql_pivot = ` PIVOT ( COUNT(Status) FOR Podatak IN('Slobodno bacanje_Pogođen' AS "Slobodna Bacanja Pogodena",'Slobodno bacanje_Promašen' AS "Slobodna Bacanja Promasena",'Šut za 3_Pogođen' AS "Šut za 3 Pogoden", 'Šut za 3_Promašen' AS "Šut za 3 Promasen",'Šut za 2_Pogođen' AS "Šut za 2 Pogoden", 'Šut za 2_Promašen' AS "Šut za 2 Promasen",'Ulaz/Izlaz_Završen' AS "Ulaz/Izlaz",'Obrambeni skok_Završen' AS "Obrambeni Skok",'Napadački skok_Završen' AS "Napadacki Skok",'Asistencija_Završen' AS "Asistencije",'Izgubljena lopta_Završen' AS "Izgubljene Lopte",'Ukradena lopta_Završen' AS "Ukradene Lopte",'Blokada_Završen' AS "Blokovi")) ORDER BY DATUM_UTAKMICE DESC`;
 
         const result = await connection.execute(
             sql_SELECT + sql_FROM + sql_pivot,
@@ -1044,18 +1044,34 @@ app.post('/getStatistikaIgraci', async (req, res) => {
 
 app.post('/getStatistikaMomcadi', async (req, res) => {
     let connection;
+
     let imeMomcad = req.body.imeMomcad;
     let hasImeMomcad = imeMomcad ? imeMomcad.trim().length > 0 : false;
 
+    let imeMomcad1 = req.body.imeMomcad1;
+    let hasImeMomcad1 = imeMomcad1 ? imeMomcad1.trim().length > 0 : false;
+
+    let datum = req.body.datum;
+    let hasDatum = datum ? datum.trim().length > 0 : false;
+
     let sql_SELECT =
-        "SELECT m1.kratica AS DOMACI, UTK.POENI_DOMACI as POENI_DOMACI, M2.kratica AS GOSTI, SUD.NAZIV, L.SEZONA, TO_CHAR(DATUM_VRIJEME , 'MM/DD/YYYY') AS DATUM_UTAKMICE, null as W_L, m1.naziv AS DOMACI_NAZIV, m2.naziv AS GOSTI_NAZIV,  UTK.POENI_GOSTI AS POENI_GOSTI, STATUS_ID";
+        "SELECT m1.kratica AS DOMACI, UTK.POENI_DOMACI as POENI_DOMACI, M2.kratica AS GOSTI, SUD.NAZIV AS SUDAC, L.SEZONA, TO_CHAR(DATUM_VRIJEME , 'MM/DD/YYYY') AS DATUM_UTAKMICE, null as W_L, m1.naziv AS DOMACI_NAZIV, m2.naziv AS GOSTI_NAZIV,  UTK.POENI_GOSTI AS POENI_GOSTI, STATUS_ID, UTK.UTAKMICA_ID AS UTAKMICA_ID";
     let sql_FROM =
         ' FROM MOMCAD m1, MOMCAD m2, UTAKMICE utk, SUDCI sud, LIGE l';
     let sql_WHERE =
         ' where m1.momcad_id = UTK.DOMACI_ID and m2.momcad_id = UTK.GOSTI_ID and utk.sudac_id = sud.sudac_id and utk.liga_id = l.liga_id and (m1.naziv = :imeMomcad OR m2.naziv = :imeMomcad)';
     try {
         connection = await oracledb.getConnection();
-        if (hasImeMomcad) {
+        if (hasImeMomcad && hasImeMomcad1 && hasDatum) {
+            sql_WHERE =
+                " where m1.momcad_id = UTK.DOMACI_ID and m2.momcad_id = UTK.GOSTI_ID and utk.sudac_id = sud.sudac_id and utk.liga_id = l.liga_id and m1.naziv = :imeMomcad AND m2.naziv = :imeMomcad1 AND DATUM_VRIJEME = TO_DATE(:datum, 'YYYY-MM-DD HH24:MI:SS')";
+            const result = await connection.execute(
+                sql_SELECT + sql_FROM + sql_WHERE,
+                { imeMomcad: imeMomcad, imeMomcad1: imeMomcad1, datum: datum },
+                { outFormat: oracledb.OBJECT }
+            );
+            res.send({ utakmica: result.rows[0] });
+        } else if (hasImeMomcad) {
             const result = await connection.execute(
                 sql_SELECT + sql_FROM + sql_WHERE,
                 { imeMomcad: imeMomcad, imeMomcad: imeMomcad },
@@ -1100,8 +1116,16 @@ app.post('/getStatistikaMomcadi', async (req, res) => {
             const result1 = await connection.execute(
                 `SELECT L.SEZONA FROM LIGE L`
             );
-
             res.send({ utakmice: result.rows, sezone: result1.rows });
+        } else {
+            sql_WHERE =
+                ' where m1.momcad_id = UTK.DOMACI_ID and m2.momcad_id = UTK.GOSTI_ID and utk.sudac_id = sud.sudac_id and utk.liga_id = l.liga_id ORDER BY DATUM_UTAKMICE DESC';
+            const result = await connection.execute(
+                sql_SELECT + sql_FROM + sql_WHERE,
+                [],
+                { outFormat: oracledb.OBJECT }
+            );
+            res.send({ utakmice: result.rows });
         }
     } catch (err) {
         console.log(err);
@@ -1182,14 +1206,17 @@ app.post('/kreirajUtakmicu', async (req, res) => {
             let sudac_id = res4.rows[0].SUDAC_ID;
 
             const check = await connection.execute(
-                "SELECT U.UTAKMICA_ID FROM UTAKMICE U WHERE U.DOMACI_ID = :domaci_id AND U.GOSTI_ID = :gosti_id AND DATUM_VRIJEME = TO_DATE(:datum, 'YYYY-MM-DD HH24:MI:SS')",
+                "SELECT U.UTAKMICA_ID AS UTAKMICA_ID FROM UTAKMICE U WHERE U.DOMACI_ID = :domaci_id AND U.GOSTI_ID = :gosti_id AND DATUM_VRIJEME = TO_DATE(:datum, 'YYYY-MM-DD HH24:MI:SS')",
                 {
                     domaci_id: domaci_id,
                     gosti_id: gosti_id,
                     datum: datum,
+                },
+                {
+                    outFormat: oracledb.OBJECT,
                 }
             );
-            if (check.rows[0])
+            if (check.rows[0] !== undefined)
                 return res.send({
                     message:
                         'Utakmica već postoji! Unesite novu utakmicu ili izađite na početak da bi ste označili ovu!',
@@ -1238,11 +1265,11 @@ app.post('/kreirajUtakmicu', async (req, res) => {
     }
 });
 
-app.post('/prikaziStatistiku', async (req, res) => {
+app.post('/prikaziStatistikuUtakmice', async (req, res) => {
     let connection;
 
     let sql_SELECT =
-        'SELECT I.NAZIV, SP.NAZIV, STAT.VRIJEME_POCETAK, S.NAZIV, STAT.UTAKMICA_ID ';
+        'SELECT I.NAZIV, SP.NAZIV, STAT.VRIJEME_POCETAK, S.NAZIV, STAT.UTAKMICA_ID AS UTAKMICA_ID ';
     let sql_FROM =
         'FROM STATISTIKA STAT, STAT_PODATAK SP, IGRACI I,  STATUSI S ';
     let sql_WHERE_ORDER =
@@ -1256,7 +1283,7 @@ app.post('/prikaziStatistiku', async (req, res) => {
             { utakmica_id: utakmica_id }
         );
 
-        res.send(result.rows);
+        res.send({ statistika: result.rows });
     } catch (err) {
         console.log(err);
     } finally {
@@ -1269,6 +1296,7 @@ app.post('/prikaziStatistiku', async (req, res) => {
         }
     }
 });
+
 app.post('/unesiStatistiku', async (req, res) => {
     let connection;
 

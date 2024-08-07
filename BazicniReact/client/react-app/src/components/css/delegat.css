@@ -12,7 +12,7 @@
     background-color: #f9f9f9;
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
     text-align: center;
-    margin: 0 30px 0 30px;
+    margin: -60px 30px 0 30px;
     height: 80vh;
 }
 
@@ -20,9 +20,12 @@
     display: flex;
     flex-direction: column;
     flex-grow: 1;
+    margin-top: -60px;
     height: 80vh;
     gap: 20px;
+    position: relative;
 }
+
 .middle {
     border: 1px solid #ccc;
     border-radius: 8px;
@@ -31,6 +34,8 @@
     text-align: center;
     height: 50vh;
     margin-top: 50px;
+    position: relative;
+    z-index: 1;
 }
 
 .above-container {
@@ -46,7 +51,41 @@
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
     border-radius: 28px;
     width: 50%;
+    z-index: 10;
     text-align: center;
+}
+
+.above-middle.stil1 {
+    width: 100%;
+    height: 13vh;
+    padding: 20px;
+    background-color: #f9f9f9;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.match-details {
+    display: flex;
+    flex-wrap: wrap; /* Allows wrapping to the next line if necessary */
+    justify-content: center;
+    margin-top: 15px;
+    gap: 20px; /* Space between each item */
+}
+
+.match-detail {
+    display: flex;
+    flex-direction: column;
+    font-size: 14px;
+}
+
+.match-detail strong {
+    margin-bottom: 5px;
+    color: #333;
+}
+
+.match-detail span {
+    color: #666;
 }
 
 .above-middle:hover {
@@ -81,7 +120,7 @@
     border-radius: 8px;
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
     z-index: 1001;
-    max-width: 600px;
+    max-width: 900px;
     width: 90%;
     margin-top: 20vh; /* Razmak od vrha u visini viewporta, prilagodite prema potrebi */
 }
@@ -91,6 +130,19 @@
     display: flex;
     flex-direction: column;
     gap: 15px; /* Razmak između elemenata unutar modala */
+}
+
+.overlay.stil1 {
+    z-index: 8;
+    background-color: rgba(0, 0, 0, 0.2);
+}
+
+.modal.stil1 {
+    box-shadow: 0 16px 16px rgba(0, 0, 0, 0.1);
+    background: none;
+    margin-top: 40vh;
+    width: 100%;
+    z-index: 14;
 }
 
 /* Stil za formu */
@@ -159,7 +211,7 @@
 
 .statistics {
     width: 90%;
-    margin: 20px auto;
+    margin: 10px auto;
     padding: 20px;
     border: 1px solid #ccc;
     border-radius: 8px;
@@ -168,4 +220,40 @@
     text-align: center;
     font-weight: bold;
     font-size: 18px;
+    max-height: 300px;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+}
+
+.statistics table,
+.modal table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 10px;
+}
+
+.statistics th,
+.statistics td,
+.modal th,
+.modal td {
+    border: 1px solid #ccc;
+    padding: 10px;
+    text-align: left;
+}
+
+.statistics thead th,
+.modal thead th {
+    position: sticky;
+    top: 0;
+    background-color: #f2f2f2;
+}
+
+.table-container {
+    max-height: 200px; /* Maksimalna visina tablice, dovoljno za 3 retka */
+    overflow-y: auto; /* Vertikalno skrolanje */
+}
+
+.modal .table-container {
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
 }

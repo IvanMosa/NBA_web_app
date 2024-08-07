@@ -4,7 +4,7 @@ import '../components/css/statistika.css';
 import axios from 'axios';
 import { Link } from 'react-router-dom';
 
-function Statistika() {
+const Statistika = () => {
     const [igraci, setIgraci] = useState([]);
     const [imeSezone, setimeSezone] = useState('23/24');
     const [sezone, setSezone] = useState([]);
@@ -121,6 +121,6 @@ function Statistika() {
             </div>
         </div>
     );
-}
+};
 
 export default Statistika;

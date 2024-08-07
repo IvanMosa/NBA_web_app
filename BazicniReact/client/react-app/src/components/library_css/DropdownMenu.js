@@ -10,10 +10,7 @@ const DropdownMenu = ({ items, odabir, onSelect }) => {
 
     return (
         <div className="dropdown">
-            <button
-                onClick={handleButtonClick}
-                onMouseEnter={handleButtonClick}
-            >
+            <button onClick={handleButtonClick}>
                 {clicked ? clicked : odabir}
             </button>
             {isOpen && (
