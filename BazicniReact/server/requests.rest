@@ -1,0 +1,10 @@
+POST http://localhost:4000/kreirajUtakmicu
+Content-Type: application/json
+
+{
+    "domaci" : "Atlanta Hawks",
+    "gosti" : "Charlotte Hornets",
+    "datum" : "2024-06-08 19:00:00",
+    "sezona" : "23/24",
+    "sudac" : "Matt Boland"
+}

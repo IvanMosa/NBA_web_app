@@ -1,0 +1,105 @@
+.query_container {
+    display: grid;
+    max-width: 900px;
+    margin: 0 auto;
+    margin-top: 30px;
+    margin-bottom: 30px;
+    padding: 20px;
+    border: 1px solid #ccc;
+    border-radius: 8px;
+    background-color: #f9f9f9;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.query_title {
+    text-align: center;
+    font-size: 24px;
+    margin-bottom: 20px;
+}
+
+.izbor {
+    margin-bottom: 5px;
+}
+.dropdown_menu {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    margin-bottom: 10px;
+}
+
+.dropdown_menu form {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.dropdown_menu select {
+    padding: 10px;
+    font-size: 16px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    background-color: #fff;
+    cursor: pointer;
+}
+
+.dropdown_menu select:focus {
+    outline: none;
+    border-color: #007bff;
+}
+
+.button_query {
+    padding: 10px 15px;
+    font-size: 16px;
+    color: #fff;
+    background-color: #007bff;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+}
+
+.button_query:hover {
+    background-color: #0056b3;
+}
+
+.error_message {
+    color: red;
+    font-weight: bold;
+    text-align: center;
+}
+
+.data-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.data-table th,
+.data-table td {
+    border: none;
+    padding: 8px;
+}
+
+.data-table th {
+    background-color: #f2f2f2;
+    text-align: center;
+}
+
+.data-table td {
+    text-align: center;
+}
+.data-table tr:nth-child(even) {
+    background-color: #f9f9f9;
+}
+
+.data-table tr:hover {
+    background-color: #ddd;
+}
+
+.table_link a {
+    text-decoration: none;
+    color: inherit;
+    font-weight: 500;
+    text-align: left;
+}
+.table_link a:hover {
+    font-weight: bold;
+}

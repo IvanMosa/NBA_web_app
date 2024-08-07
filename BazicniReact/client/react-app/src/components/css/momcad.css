@@ -1,0 +1,411 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+html,
+body {
+    overflow-x: hidden;
+}
+
+.momcad_page {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    height: 100%;
+}
+
+.momcad_container {
+    display: flex;
+    position: relative;
+    flex-direction: column;
+    padding: 30px;
+    margin: 0 auto;
+    margin-top: 30px;
+    margin-bottom: 30px;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid #ccc;
+    border-radius: 8px;
+    background-color: #f9f9f9;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.header_and_button {
+    display: flex; /* Flexbox za horizontalno poravnavanje */
+    align-items: flex-start; /* Poravnavanje na vrhu */
+    position: relative; /* Za pozicioniranje unutar kontejnera */
+}
+
+.stil1 {
+    width: 1200px;
+}
+.stil2 {
+    width: 400px;
+}
+.momcad_title {
+    text-align: center;
+    font-size: 24px;
+    margin: 0 0 15px 0;
+}
+
+.line_momcad {
+    border: none;
+    height: 1px;
+    background-color: #000;
+    width: 50%;
+    margin-bottom: 20px;
+}
+
+.table_div {
+    /* width: 75%;
+    display: flex;
+    flex-direction: column;
+    gap: 20px; */
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    position: relative;
+}
+
+.table_div form {
+    width: 95%;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.table_div select {
+    padding: 10px;
+    font-size: 16px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    background-color: #fff;
+    cursor: pointer;
+}
+
+.table_div select:focus {
+    outline: none;
+    border-color: #007bff;
+}
+
+.data_table {
+    width: 95%;
+    border-collapse: collapse;
+    margin-top: 20px;
+    position: relative; /* Održavanje relativne pozicije za pozicioniranje child elemenata */
+}
+.data_table th,
+.data_table td {
+    border: none; /* Ako želite da `td` ima border */
+    padding: 6px; /* Ako želite padding unutar `td` */
+    background-color: transparent;
+}
+
+.data_table th {
+    height: 20px;
+    background-color: #f2f2f2;
+    text-align: center;
+}
+
+.data_table td {
+    text-align: center;
+    position: relative;
+    max-width: 150px; /* Postavite maksimalnu širinu ćelija */
+    text-overflow: ellipsis; /* Prikaz elipsa za dug tekst */
+    white-space: nowrap; /* Sprečava prelazak teksta u novi red */
+}
+
+.data_table tr:nth-child(even) {
+    background-color: #f9f9f9;
+}
+
+.data_table tr:hover {
+    background-color: #ddd;
+}
+
+.data_table input[type='text'],
+.data_table input[type='date'],
+.data_table select {
+    width: 100%; /* Postavljanje širine na 100% */
+    box-sizing: border-box; /* Uključuje padding i border u ukupnu širinu i visinu */
+    border-radius: 6px; /* Za zaobljene rubove */
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); /* Blagi sjaj */
+    padding: 4px; /* Padding za unutarnji razmak */
+    border: 1px solid #ccc; /* Granični stil */
+    font-size: 16px; /* Veličina fonta */
+    background-color: #fff; /* Pozadina inputa */
+    appearance: none; /* Uklanja zadani izgled za select */
+}
+
+.data_table input[type='text']:focus,
+.data_table input[type='date']:focus,
+.data_table select:focus {
+    outline: none; /* Uklanja okvir fokusa */
+    border-color: #007bff; /* Promjena boje obruba pri fokusu */
+}
+
+.data_table select {
+    /* Specifični stilovi za select ako su potrebni */
+    background-color: #fff; /* Pozadina za select */
+}
+
+.data_table input[type='date'] {
+    /* Specifični stilovi za input date ako su potrebni */
+    background-color: #fff; /* Pozadina za date input */
+}
+
+.button_cell {
+    position: relative; /* Ensure button is positioned relative to this cell */
+    padding: 10px; /* Optional padding for better appearance */
+    text-align: center; /* Center content horizontally */
+    white-space: nowrap; /* Prevent buttons from wrapping */
+}
+
+.button_divs {
+    display: inline-flex; /* Ensure buttons are displayed in a single line */
+    gap: 6px; /* Space between buttons */
+    justify-content: center; /* Center buttons horizontally */
+    align-items: center; /* Center buttons vertically */
+}
+.button_divs_add {
+    position: absolute; /* Pozicioniraj apsolutno unutar .header_and_button */
+    right: 0; /* Poravnanje desno */
+    top: 0; /* Poravnanje na vrh */
+    display: flex; /* Koristi flexbox za poravnavanje unutar .button_divs_add */
+    align-items: center; /* Poravnavanje po vertikali */
+
+    margin-top: 20px;
+    height: 20px; /* Postavite visinu na istu kao visina zaglavlja tablice */
+    gap: 10px; /* Razmak između dugmadi */
+}
+.button_div {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background-color: none;
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+.button_div:hover {
+    background-color: #e0e0e0;
+}
+.button_div button {
+    padding: 10px 10px;
+    font-size: 24px;
+    cursor: pointer;
+    border: none; /* Ako želite da button bude bez obruba */
+    background-color: transparent; /* Ako želite da button bude bez pozadine */
+}
+
+.button_divs_add .button_div button {
+    height: 100%; /* Postavite visinu dugmadi da bude 100% visine kontejnera */
+    display: flex; /* Koristi flexbox za poravnavanje sadržaja unutar dugmeta */
+    align-items: center; /* Poravnavanje sadržaja po vertikali */
+    justify-content: center; /* Poravnavanje sadržaja po horizontali */
+    padding: 10px; /* Padding unutar dugmeta */
+    font-size: 24px; /* Veličina fonta unutar dugmeta */
+    cursor: pointer;
+    border: none; /* Ako želite da button bude bez obruba */
+    background-color: transparent; /* Ako želite da button bude bez pozadine */
+}
+
+.button_div .fa-edit,
+.button_div .fa-save,
+.button_div .fa-plus {
+    font-size: 24px; /* Adjust size as needed */
+    color: black; /* Adjust color as needed */
+}
+
+.back_div {
+    margin-top: 20px;
+    background-color: #f0f0f0; /* Pozadina button_div-a */
+    border-radius: 4px; /* Za zaobljene rubove */
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); /* Blagi sjaj */
+    cursor: pointer; /* Da izgleda kao dugme */
+    transition: background-color 0.3s; /* Efekt prijelaza pri promjeni boje */
+}
+
+.back_div:hover {
+    background-color: #e0e0e0; /* Promjena boje pri prelasku miša */
+}
+.back_div button {
+    padding: 10px 50px;
+    font-size: 16px;
+    cursor: pointer;
+    border: none; /* Ako želite da button bude bez obruba */
+    background-color: transparent; /* Ako želite da button bude bez pozadine */
+}
+
+.back_div .fa-circle-arrow-left {
+    font-size: 24px; /* Adjust size as needed */
+    color: black; /* Adjust color as needed */
+}
+
+/* Stil za overlay koji se pojavljuje pri otvaranju modala */
+.overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+    backdrop-filter: blur(5px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+    overflow: hidden;
+}
+
+/* Stil za modalni div */
+.modal {
+    background: #fff;
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    z-index: 1001;
+    max-width: 500px;
+    width: 90%;
+    margin: 0 auto;
+}
+
+/* Stil za input polja */
+.inputField {
+    width: 100%;
+    box-sizing: border-box;
+    border-radius: 6px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    padding: 10px;
+    border: 1px solid #ccc;
+    font-size: 16px;
+    background-color: #fff;
+    margin-bottom: 10px; /* Razmak između input polja */
+}
+
+.naslovUnos {
+    padding-bottom: 10px;
+    text-align: center;
+}
+.inputField:focus {
+    outline: none;
+    border-color: #007bff;
+}
+
+/* Stil za select polja */
+.selectField {
+    width: 100%;
+    box-sizing: border-box;
+    border-radius: 6px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    padding: 0px;
+    border: 1px solid #ccc;
+    font-size: 16px;
+    background-color: #fff;
+    margin-bottom: 10px; /* Razmak između select polja */
+}
+
+.selectField:focus {
+    outline: none;
+    border-color: #007bff;
+}
+
+.buttonContainer {
+    display: flex;
+    align-items: center;
+    width: 100%; /* Ograničena širina */
+    justify-content: space-between; /* Razmak između poruke pogreške i dugmeta */
+}
+/* Stil za dugme za spremanje */
+.saveButton {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: #f0f0f0;
+    border-radius: 4px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    cursor: pointer;
+    padding: 10px;
+    border: none;
+    font-size: 16px;
+    margin-left: auto;
+    transition: background-color 0.3s;
+    flex-shrink: 0; /* Sprječava smanjivanje dugmeta */
+}
+
+.saveButton:hover {
+    background-color: #e0e0e0;
+}
+
+.saveButton .fas {
+    font-size: 24px;
+    color: black;
+}
+
+.errorMessage {
+    color: red; /* Boja teksta poruke pogreške */
+    margin: 0; /* Uklanja margine oko poruke pogreške */
+    flex: 1; /* Poruka pogreške zauzima preostali prostor */
+    text-align: left; /* Poravnanje poruke pogreške lijevo */
+}
+
+/* Stil za blur efekat na ostatak stranice */
+.blurred {
+    filter: blur(4px); /* Blur efekat za ostatak stranice */
+    pointer-events: none; /* Onemogućava interakciju sa blurovanim delom */
+}
+
+/* Stil za overlay koji se pojavljuje pri otvaranju modala */
+.errorOverlay {
+    position: fixed; /* Pruža da overlay pokriva celu stranicu */
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5); /* Poluprovidna crna pozadina */
+    backdrop-filter: blur(5px); /* Blur efekat */
+    display: flex; /* Centriranje sadržaja */
+    align-items: center;
+    justify-content: center;
+    z-index: 1000; /* Visoki z-index da bi bio iznad svega */
+    overflow: hidden; /* Sprečava da overlay proširi veličinu stranice */
+}
+
+/* Stil za modalni div */
+.errorModal {
+    background: #fff;
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    z-index: 1001; /* Da bi modal bio iznad overlay-a */
+    max-width: 300px; /* Maksimalna širina modala */
+    width: 90%; /* Širina modala */
+    margin: 0 auto; /* Centriranje modala */
+    text-align: center; /* Centriranje teksta unutar modala */
+}
+
+/* Stil za poruku pogreške */
+.errorMessage {
+    color: red; /* Boja teksta poruke pogreške */
+    margin: 0 0 20px 0; /* Razmak ispod poruke pogreške */
+    font-weight: bold;
+    text-align: center;
+}
+
+/* Stil za OK dugme */
+.okButton {
+    padding: 10px 20px;
+    margin: 0 0 0 10px;
+    font-size: 16px;
+    background-color: black; /* Boja pozadine dugmeta */
+    color: #fff; /* Boja teksta dugmeta */
+    border: none; /* Uklanja border */
+    border-radius: 4px; /* Za zaobljene rubove */
+    cursor: pointer; /* Promjena kursora pri prelasku miša */
+    transition: background-color 0.3s; /* Efekt prijelaza pri promjeni boje */
+}
+
+.okButton:hover {
+    background-color: #414a4c; /* Tamnija nijansa boje pri prelasku miša */
+}

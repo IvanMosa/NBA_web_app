@@ -1,0 +1,77 @@
+.statistika_container {
+    display: grid;
+    width: 1800px;
+    margin: 0 auto;
+    margin-top: 30px;
+    margin-bottom: 30px;
+    padding: 20px;
+    border: 1px solid #ccc;
+    border-radius: 8px;
+    background-color: #f9f9f9;
+    box-shadow: 0 1px 1px rgba(0, 0, 0, 0.1);
+}
+
+.statistika_naslov {
+    text-align: center;
+    font-size: 24px;
+    margin-bottom: 20px;
+}
+
+.statistika_menu {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+.statistika_menu form {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.sezona_text {
+    margin-left: 22px;
+}
+.statistika_menu select {
+    margin-left: 20px;
+    width: 12%;
+    padding: 10px;
+    font-size: 16px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    background-color: #fff;
+    cursor: pointer;
+}
+
+.statistika_menu select:focus {
+    outline: none;
+    border-color: #007bff;
+}
+
+.data-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.data-table th,
+.data-table td {
+    border: none;
+    padding: 8px;
+    font-size: 14px; /* Reduced font size */
+}
+
+.data-table th {
+    background-color: #f2f2f2;
+    text-align: center;
+}
+
+.data-table td {
+    text-align: center;
+}
+.data-table tr:nth-child(even) {
+    background-color: #f9f9f9;
+}
+
+.data-table tr:hover {
+    background-color: #ddd;
+}

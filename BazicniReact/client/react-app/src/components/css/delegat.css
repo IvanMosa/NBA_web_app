@@ -1,0 +1,171 @@
+.container {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    height: 100vh; /* Da bi središnji element bio centriran po visini */
+}
+
+.side {
+    width: 400px; /* Možeš prilagoditi širinu prema potrebi */
+    border: 1px solid #ccc;
+    border-radius: 8px;
+    background-color: #f9f9f9;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    text-align: center;
+    margin: 0 30px 0 30px;
+    height: 80vh;
+}
+
+.middle-container {
+    display: flex;
+    flex-direction: column;
+    flex-grow: 1;
+    height: 80vh;
+    gap: 20px;
+}
+.middle {
+    border: 1px solid #ccc;
+    border-radius: 8px;
+    background-color: #f9f9f9;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    text-align: center;
+    height: 50vh;
+    margin-top: 50px;
+}
+
+.above-container {
+    display: flex;
+    justify-content: space-between; /* Razmak između above-middle divova */
+    gap: 20px; /* Razmak između above-middle divova */
+}
+
+.above-middle {
+    height: 8vh;
+    top: 0;
+    background-color: #f2f2f2; /* Za demonstraciju, možeš promijeniti boju */
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    border-radius: 28px;
+    width: 50%;
+    text-align: center;
+}
+
+.above-middle:hover {
+    background-color: #ddd;
+}
+.dropdown_container {
+    display: flex;
+    justify-content: center; /* Centriranje dropdown menija u roditeljskom kontejneru */
+    gap: 300px; /* Razmak između dropdown menija */
+}
+
+/* Kontejner za cijeli overlay */
+.overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+    backdrop-filter: blur(5px);
+    display: flex;
+    align-items: flex-start; /* Poravnanje na vrhu */
+    justify-content: center; /* Centriranje horizontalno */
+    z-index: 1000;
+    overflow: hidden;
+}
+
+/* Stil za modalni div */
+.modal {
+    background: #fff;
+    padding: 30px;
+    border-radius: 8px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    z-index: 1001;
+    max-width: 600px;
+    width: 90%;
+    margin-top: 20vh; /* Razmak od vrha u visini viewporta, prilagodite prema potrebi */
+}
+
+/* Stil za modalne elemente */
+.modal-content {
+    display: flex;
+    flex-direction: column;
+    gap: 15px; /* Razmak između elemenata unutar modala */
+}
+
+/* Stil za formu */
+.form-group {
+    display: flex;
+    flex-direction: column;
+}
+
+/* Stil za labele */
+.label {
+    margin-bottom: 5px;
+    font-weight: bold;
+}
+
+/* Stil za dropdown menije unutar modala */
+.dropdown_container {
+    display: flex;
+    flex-wrap: wrap; /* Omogućava više redova */
+    justify-content: space-between; /* Razmak između dropdown menija */
+    gap: 20px; /* Razmak između elemenata */
+    margin-bottom: 20px; /* Razmak ispod dropdown menija */
+}
+
+/* Stil za inpute */
+.input-field,
+.datepicker {
+    padding: 8px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    width: 100%;
+}
+.back_div {
+    display: flex;
+    justify-content: center; /* Centriranje horizontalno */
+    align-items: center; /* Centriranje vertikalno */
+    width: 100px;
+    height: 50px; /* Dodano kako bi se kontrolirala visina */
+    margin: 0 auto;
+    margin-top: 20px;
+    background-color: #f0f0f0; /* Pozadina button_div-a */
+    border-radius: 4px; /* Za zaobljene rubove */
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); /* Blagi sjaj */
+    cursor: pointer; /* Da izgleda kao dugme */
+    transition: background-color 0.3s; /* Efekt prijelaza pri promjeni boje */
+}
+
+.back_div:hover {
+    background-color: #e0e0e0; /* Promjena boje pri prelasku miša */
+}
+
+.back_div button {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 10px 50px;
+    font-size: 16px;
+    cursor: pointer;
+    border: none; /* Ako želite da button bude bez obruba */
+    background-color: transparent; /* Ako želite da button bude bez pozadine */
+}
+
+.back_div .fa-circle-arrow-left {
+    font-size: 24px; /* Adjust size as needed */
+    color: black; /* Adjust color as needed */
+}
+
+.statistics {
+    width: 90%;
+    margin: 20px auto;
+    padding: 20px;
+    border: 1px solid #ccc;
+    border-radius: 8px;
+    background-color: #f9f9f9;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    text-align: center;
+    font-weight: bold;
+    font-size: 18px;
+}

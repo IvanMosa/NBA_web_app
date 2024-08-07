@@ -1,0 +1,91 @@
+.trade_container {
+    display: flex;
+    flex-direction: column;
+    margin: 0 auto;
+    margin-top: 20px;
+    align-items: center;
+    height: 300px;
+    width: 1400px;
+    border-radius: 8px;
+    justify-content: center;
+    background-color: #ccc;
+    position: relative;
+    padding-bottom: 60px;
+}
+
+.trade_div {
+    display: flex;
+    justify-content: space-between;
+    width: 100%;
+    margin-bottom: 200px;
+    padding: 0 20px;
+}
+
+.form_div {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 45%;
+}
+.form_div form {
+    display: flex;
+    flex-direction: row;
+    gap: 10px;
+    width: 100%;
+    padding: 40px;
+    justify-content: center;
+}
+
+.form_div select {
+    width: 250px;
+    padding: 10px;
+    font-size: 16px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    background-color: #fff;
+    cursor: pointer;
+}
+
+.form_div select:focus {
+    outline: none;
+    border-color: #007bff;
+}
+
+.form_div input {
+    align-self: center; /* Center the input within form_div */
+    margin-top: 45px;
+    height: 30px;
+    border-radius: 8px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+.trade_confirm {
+    position: absolute;
+    bottom: 10px;
+    left: 50%;
+    transform: translateX(-50%);
+}
+
+.trade_button {
+    position: relative;
+    height: 50px; /* Dimenzije button_div-a */
+    display: flex; /* Koristi flexbox za centriranje ikone */
+    align-items: center; /* Vertikalno centriranje */
+    justify-content: center; /* Horizontalno centriranje */
+    background-color: #f0f0f0; /* Pozadina button_div-a */
+    border-radius: 4px; /* Za zaobljene rubove */
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); /* Blagi sjaj */
+    cursor: pointer; /* Da izgleda kao dugme */
+    transition: background-color 0.3s; /* Efekt prijelaza pri promjeni boje */
+}
+
+.trade_button:hover {
+    background-color: #e0e0e0; /* Promjena boje pri prelasku miša */
+}
+
+.trade_button button {
+    padding: 10px 50px;
+    font-size: 16px;
+    cursor: pointer;
+    border: none; /* Ako želite da button bude bez obruba */
+    background-color: transparent; /* Ako želite da button bude bez pozadine */
+}

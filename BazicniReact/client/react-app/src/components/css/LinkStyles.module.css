@@ -1,0 +1,11 @@
+/* LinkStyles.module.css */
+.tableLink a {
+    text-decoration: none;
+    color: inherit;
+    font-weight: 500;
+    text-align: left;
+}
+
+.tableLink a:hover {
+    font-weight: bold;
+}
