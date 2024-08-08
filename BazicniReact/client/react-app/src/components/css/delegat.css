@@ -1,44 +1,67 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+html,
+body {
+    overflow-x: hidden;
+}
 .container {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    height: 100vh; /* Da bi središnji element bio centriran po visini */
+    height: 80vh; /* Da bi središnji element bio centriran po visini */
 }
 
 .side {
-    width: 400px; /* Možeš prilagoditi širinu prema potrebi */
+    width: 500px; /* Možeš prilagoditi širinu prema potrebi */
     border: 1px solid #ccc;
     border-radius: 8px;
     background-color: #f9f9f9;
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
     text-align: center;
-    margin: -60px 30px 0 30px;
-    height: 80vh;
+    margin: 20px 30px 0 30px;
+    min-height: 70vh;
+    max-height: 90vh;
 }
 
+.p_logo {
+    display: flex;
+    justify-content: space-between; /* Raspoređuje elemente na lijevo i desno */
+    align-items: center; /* Poravnava elemente vertikalno na sredini */
+    margin: 0px 20px 10px 20px; /* Opcionalno, dodajte margine po potrebi */
+}
+
+.p_logo p {
+    margin-right: 50px; /* Uklanja marginu iz p elementa */
+    font-weight: bold;
+}
 .middle-container {
+    width: 800px;
     display: flex;
     flex-direction: column;
-    flex-grow: 1;
-    margin-top: -60px;
-    height: 80vh;
+    height: 70vh;
     gap: 20px;
+    align-items: center;
+    margin: 20px 30px 0 30px;
     position: relative;
 }
 
 .middle {
+    width: 800px;
     border: 1px solid #ccc;
     border-radius: 8px;
     background-color: #f9f9f9;
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
     text-align: center;
-    height: 50vh;
-    margin-top: 50px;
-    position: relative;
-    z-index: 1;
+    height: 56vh; /* Visina po vašem izboru */
+    margin: 0 10px; /* Razmak oko middle div-a */
+    flex: 1; /* Omogućuje middle div-u da se širi u preostalom prostoru */
 }
-
 .above-container {
+    width: 800px;
     display: flex;
     justify-content: space-between; /* Razmak između above-middle divova */
     gap: 20px; /* Razmak između above-middle divova */
@@ -50,18 +73,30 @@
     background-color: #f2f2f2; /* Za demonstraciju, možeš promijeniti boju */
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
     border-radius: 28px;
-    width: 50%;
+    width: 450px;
     z-index: 10;
-    text-align: center;
+    color: darkgray; /* Bela boja teksta */
+    font-size: 18px; /* Veličina fonta */
+    font-weight: bold; /* Podebljani tekst */
+    text-align: center; /* Centriranje teksta */
+    justify-items: center;
+    cursor: pointer;
 }
 
+.above-middle p {
+    margin-top: 10px;
+}
+.above-middle:hover {
+    background-color: #0056b3; /* Tamnija nijansa plave pri prelasku miša */
+    transform: scale(1.02); /* Blago povećanje pri prelasku miša */
+}
 .above-middle.stil1 {
-    width: 100%;
+    width: 800px;
     height: 13vh;
     padding: 20px;
     background-color: #f9f9f9;
     border: 1px solid #ddd;
-    border-radius: 8px;
+    border-radius: 28px;
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
 }
 
@@ -132,19 +167,6 @@
     gap: 15px; /* Razmak između elemenata unutar modala */
 }
 
-.overlay.stil1 {
-    z-index: 8;
-    background-color: rgba(0, 0, 0, 0.2);
-}
-
-.modal.stil1 {
-    box-shadow: 0 16px 16px rgba(0, 0, 0, 0.1);
-    background: none;
-    margin-top: 40vh;
-    width: 100%;
-    z-index: 14;
-}
-
 /* Stil za formu */
 .form-group {
     display: flex;
@@ -211,7 +233,7 @@
 
 .statistics {
     width: 90%;
-    margin: 10px auto;
+    margin: 50px auto;
     padding: 20px;
     border: 1px solid #ccc;
     border-radius: 8px;
@@ -224,6 +246,11 @@
     overflow: hidden;
     display: flex;
     flex-direction: column;
+}
+
+.statistics p {
+    font-size: 16px; /* Tekst u statistikama, ako ima, u manjoj veličini */
+    color: #333; /* Tamno siva za bolju čitljivost */
 }
 
 .statistics table,
@@ -249,6 +276,9 @@
     background-color: #f2f2f2;
 }
 
+.modal td:hover {
+    cursor: pointer;
+}
 .table-container {
     max-height: 200px; /* Maksimalna visina tablice, dovoljno za 3 retka */
     overflow-y: auto; /* Vertikalno skrolanje */

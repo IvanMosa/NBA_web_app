@@ -8,6 +8,7 @@ import { add, format, parse } from 'date-fns';
 import { useNavigate, useLocation } from 'react-router-dom';
 import MySelect from './library_css/MySelect.js';
 import '@fortawesome/fontawesome-free/css/all.min.css';
+import Logo from './library_css/Logo.js';
 
 const Momcad = () => {
     const { imeMomcad } = useParams();
@@ -278,12 +279,14 @@ const Momcad = () => {
 
     return (
         <div className="momcad_page">
+            <div className="logo_back">
+                <Logo imeMomcad={imeMomcad} visina={true} />
+            </div>
             <div
                 className={`momcad_container stil1 ${addNew ? 'blurred' : ''}`}
             >
                 <h1 className="momcad_title">{imeMomcad}</h1>
                 <hr className="line_momcad" />
-
                 <div className="table_div">
                     <form>
                         <select
@@ -334,129 +337,137 @@ const Momcad = () => {
                                                     handleMouseClick(rowIndex)
                                                 }
                                             >
-                                                {rowItem.map((row, rowInd) => (
-                                                    <React.Fragment
-                                                        key={rowInd}
-                                                    >
-                                                        <td key={rowInd}>
-                                                            {isEditing &&
-                                                            isEqual(
-                                                                rowIndex
-                                                            ) ? (
-                                                                rowInd === 0 ||
-                                                                rowInd === 1 ? (
-                                                                    <input
-                                                                        type="text"
-                                                                        value={
-                                                                            promjene[
-                                                                                rowItem[0]
-                                                                            ]?.[
-                                                                                rowInd
-                                                                            ] ||
-                                                                            row
-                                                                        }
-                                                                        onChange={(
-                                                                            e
-                                                                        ) =>
-                                                                            handleInputChange(
+                                                {rowItem
+                                                    .slice(0, -1)
+                                                    .map((row, rowInd) => (
+                                                        <React.Fragment
+                                                            key={rowInd}
+                                                        >
+                                                            <td key={rowInd}>
+                                                                {isEditing &&
+                                                                isEqual(
+                                                                    rowIndex
+                                                                ) ? (
+                                                                    rowInd ===
+                                                                        0 ||
+                                                                    rowInd ===
+                                                                        1 ? (
+                                                                        <input
+                                                                            type="text"
+                                                                            value={
+                                                                                promjene[
+                                                                                    rowItem[0]
+                                                                                ]?.[
+                                                                                    rowInd
+                                                                                ] ||
+                                                                                row
+                                                                            }
+                                                                            onChange={(
                                                                                 e
-                                                                                    .target
-                                                                                    .value,
-                                                                                rowIndex,
-                                                                                rowInd,
-                                                                                rowItem[0],
-                                                                                row
-                                                                            )
-                                                                        }
-                                                                    />
-                                                                ) : rowInd ===
-                                                                      2 ||
-                                                                  rowInd ===
-                                                                      3 ? (
-                                                                    <MySelect
-                                                                        options={
-                                                                            options[
-                                                                                rowInd
-                                                                            ] ||
-                                                                            []
-                                                                        }
-                                                                        value={{
-                                                                            value:
-                                                                                promjene[
-                                                                                    rowItem[0]
-                                                                                ]?.[
-                                                                                    rowInd
-                                                                                ] ||
-                                                                                row,
-                                                                            label:
-                                                                                promjene[
-                                                                                    rowItem[0]
-                                                                                ]?.[
-                                                                                    rowInd
-                                                                                ] ||
-                                                                                row,
-                                                                        }}
-                                                                        onChange={(
-                                                                            selectedOption
-                                                                        ) =>
-                                                                            handleInputChange(
-                                                                                selectedOption,
-                                                                                rowIndex,
-                                                                                rowInd,
-                                                                                rowItem[0],
-                                                                                row
-                                                                            )
-                                                                        }
-                                                                        isSearchable
-                                                                    />
-                                                                ) : (
-                                                                    <input
-                                                                        type="date"
-                                                                        value={
-                                                                            promjene[
-                                                                                rowItem[0]
-                                                                            ]?.[
-                                                                                rowInd
-                                                                            ] ||
-                                                                            format(
-                                                                                new Date(
+                                                                            ) =>
+                                                                                handleInputChange(
+                                                                                    e
+                                                                                        .target
+                                                                                        .value,
+                                                                                    rowIndex,
+                                                                                    rowInd,
+                                                                                    rowItem[0],
                                                                                     row
-                                                                                ),
-                                                                                'yyyy-MM-dd'
-                                                                            )
-                                                                        }
-                                                                        onChange={(
-                                                                            e
-                                                                        ) =>
-                                                                            handleInputChange(
+                                                                                )
+                                                                            }
+                                                                        />
+                                                                    ) : rowInd ===
+                                                                          2 ||
+                                                                      rowInd ===
+                                                                          3 ? (
+                                                                        <MySelect
+                                                                            options={
+                                                                                options[
+                                                                                    rowInd
+                                                                                ] ||
+                                                                                []
+                                                                            }
+                                                                            value={{
+                                                                                value:
+                                                                                    promjene[
+                                                                                        rowItem[0]
+                                                                                    ]?.[
+                                                                                        rowInd
+                                                                                    ] ||
+                                                                                    row,
+                                                                                label:
+                                                                                    promjene[
+                                                                                        rowItem[0]
+                                                                                    ]?.[
+                                                                                        rowInd
+                                                                                    ] ||
+                                                                                    row,
+                                                                            }}
+                                                                            onChange={(
+                                                                                selectedOption
+                                                                            ) =>
+                                                                                handleInputChange(
+                                                                                    selectedOption,
+                                                                                    rowIndex,
+                                                                                    rowInd,
+                                                                                    rowItem[0],
+                                                                                    row
+                                                                                )
+                                                                            }
+                                                                            isSearchable
+                                                                        />
+                                                                    ) : (
+                                                                        <input
+                                                                            type="date"
+                                                                            value={
+                                                                                promjene[
+                                                                                    rowItem[0]
+                                                                                ]?.[
+                                                                                    rowInd
+                                                                                ] ||
+                                                                                format(
+                                                                                    new Date(
+                                                                                        row
+                                                                                    ),
+                                                                                    'yyyy-MM-dd'
+                                                                                )
+                                                                            }
+                                                                            onChange={(
                                                                                 e
-                                                                                    .target
-                                                                                    .value,
-                                                                                rowIndex,
-                                                                                rowInd,
-                                                                                rowItem[0],
+                                                                            ) =>
+                                                                                handleInputChange(
+                                                                                    e
+                                                                                        .target
+                                                                                        .value,
+                                                                                    rowIndex,
+                                                                                    rowInd,
+                                                                                    rowItem[0],
+                                                                                    row
+                                                                                )
+                                                                            }
+                                                                        />
+                                                                    )
+                                                                ) : rowInd ===
+                                                                  0 ? (
+                                                                    <td className="table_link">
+                                                                        <Link
+                                                                            to={`/Igrac/${row}`}
+                                                                        >
+                                                                            {
                                                                                 row
-                                                                            )
-                                                                        }
-                                                                    />
-                                                                )
-                                                            ) : rowInd === 0 ? (
-                                                                <td className="table_link">
-                                                                    <Link
-                                                                        to={`/Igrac/${row}`}
-                                                                    >
-                                                                        {row}
-                                                                    </Link>
-                                                                </td>
-                                                            ) : (
-                                                                promjene[
-                                                                    rowItem[0]
-                                                                ]?.[rowInd] ||
-                                                                row
-                                                            )}
-                                                        </td>
-                                                    </React.Fragment>
-                                                ))}
+                                                                            }
+                                                                        </Link>
+                                                                    </td>
+                                                                ) : (
+                                                                    promjene[
+                                                                        rowItem[0]
+                                                                    ]?.[
+                                                                        rowInd
+                                                                    ] || row
+                                                                )}
+                                                            </td>
+                                                        </React.Fragment>
+                                                    ))}
                                                 <td className="button_cell">
                                                     <div className="button_divs">
                                                         {isEqual(rowIndex) &&

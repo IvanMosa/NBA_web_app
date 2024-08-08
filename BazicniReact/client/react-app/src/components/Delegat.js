@@ -5,6 +5,8 @@ import { format, parse } from 'date-fns';
 import axios from 'axios';
 import DropdownMenu from './library_css/DropdownMenu';
 import Logo from './library_css/Logo';
+import OdabirPodatka from './library_css/OdabirPodatka';
+import Delegat_Igraci from './library_css/Delegat_Igraci';
 const Delegat = () => {
     const [momcadi, setMomcadi] = useState([]);
     const [sudci, setSudci] = useState([]);
@@ -23,26 +25,57 @@ const Delegat = () => {
     const [oznacena, setOznacena] = useState(false);
     const [nova, setNova] = useState(false);
     const [statistika, setStatistika] = useState([]);
-    const [utakmica_id, setUtakmica_id] = useState(0);
+    const [utakmica_id, setUtakmica_ID] = useState(0);
     const [sveUtakmice, setSveUtakmice] = useState([]);
     const [oznacenaUtakmica, setOznacenaUtakmica] = useState([]);
     const [hover, setHover] = useState(false);
+    const [statusi, setStatusi] = useState([]);
+    const [statistickiPodatci, setStatistickiPodatci] = useState([]);
+    const [igraci_domaci, setIgraciDomaci] = useState([]);
+    const [igraci_gosti, setIgraciGosti] = useState([]);
 
     const fetchData = async () => {
         try {
-            const result = await axios.get('http://localhost:4000/getMomcadi');
-            setMomcadi(
-                Array.isArray(result.data.momcad) ? result.data.momcad : []
+            const pocetniPodatci = await axios.get(
+                'http://localhost:4000/getMomcadi'
             );
-            setSudci(Array.isArray(result.data.sudci) ? result.data.sudci : []);
+            setMomcadi(
+                Array.isArray(pocetniPodatci.data.momcad)
+                    ? pocetniPodatci.data.momcad
+                    : []
+            );
+            setSudci(
+                Array.isArray(pocetniPodatci.data.sudci)
+                    ? pocetniPodatci.data.sudci
+                    : []
+            );
             setLige(
-                Array.isArray(result.data.sezona) ? result.data.sezona : []
+                Array.isArray(pocetniPodatci.data.sezona)
+                    ? pocetniPodatci.data.sezona
+                    : []
             );
 
-            const result1 = await axios.post(
+            const statistikaMomcadi = await axios.post(
                 'http://localhost:4000/getStatistikaMomcadi'
             );
-            setSveUtakmice(result1.data.utakmice);
+            setSveUtakmice(statistikaMomcadi.data.utakmice);
+
+            const statPodatci_statusi = await axios.post(
+                'http://localhost:4000/getStatistickiPodatci'
+            );
+
+            console.log(statPodatci_statusi.data.statistickiPodatci);
+            console.log(statPodatci_statusi.data.statusi);
+            setStatistickiPodatci(
+                Array.isArray(statPodatci_statusi.data.statistickiPodatci)
+                    ? statPodatci_statusi.data.statistickiPodatci
+                    : []
+            );
+            setStatusi(
+                Array.isArray(statPodatci_statusi.data.statusi)
+                    ? statPodatci_statusi.data.statusi
+                    : []
+            );
         } catch (err) {
             console.log(err);
         }
@@ -120,7 +153,7 @@ const Delegat = () => {
                     setOznacena(true);
                     setErrorMessage('');
                     setBluranoPocetna(false);
-                    setUtakmica_id(result.data.utakmica_id);
+                    setUtakmica_ID(result.data.UTAKMICA_ID);
                     const result1 = await axios.post(
                         'http://localhost:4000/getStatistikaMomcadi',
                         {
@@ -137,13 +170,9 @@ const Delegat = () => {
         } else setErrorMessage('Sva polja moraju biti označena!');
     };
 
-    const handleOdabir = (rowItem) => {
+    const handleOdabir = async (rowItem) => {
         setOznacenaUtakmica(rowItem);
-        setUtakmica_id(rowItem.UTAKMICA_ID);
-        setOznacena(true);
-        setUtakmica(false);
-        setBlurano(false);
-        setBluranoPocetna(false);
+        setUtakmica_ID(rowItem.UTAKMICA_ID);
     };
 
     const fetchStatistika = async () => {
@@ -160,15 +189,57 @@ const Delegat = () => {
             }
         }
     };
+
+    const fetchIgraci = async () => {
+        if (oznacenaUtakmica !== null) {
+            try {
+                const igraci_domaci = await axios.post(
+                    'http://localhost:4000/showRoster',
+                    {
+                        imeMomcad: oznacenaUtakmica.DOMACI_NAZIV,
+                        status: 0,
+                    }
+                );
+                const igraci_gosti = await axios.post(
+                    'http://localhost:4000/showRoster',
+                    {
+                        imeMomcad: oznacenaUtakmica.GOSTI_NAZIV,
+                        status: 0,
+                    }
+                );
+                setIgraciDomaci(igraci_domaci.data.igraci);
+                setIgraciGosti(igraci_gosti.data.igraci);
+            } catch (err) {
+                console.log(err);
+            }
+        }
+    };
     useEffect(() => {
-        fetchStatistika();
+        if (utakmica_id !== 0) {
+            fetchStatistika();
+            fetchIgraci();
+            setOznacena(true);
+            setUtakmica(false);
+            setBlurano(false);
+            setBluranoPocetna(false);
+        }
     }, [utakmica_id]);
 
     return (
         <div>
             <div className={`container ${blurano ? 'blurred' : ''}`}>
                 <div className={`side ${blurano_pocetna ? 'blurred' : ''}`}>
-                    <Logo imeMomcad={oznacenaUtakmica.DOMACI_NAZIV} />
+                    {!blurano_pocetna && (
+                        <>
+                            <div className="p_logo">
+                                <Logo
+                                    imeMomcad={oznacenaUtakmica.DOMACI_NAZIV}
+                                />
+                                <p>{oznacenaUtakmica.DOMACI_NAZIV}</p>
+                            </div>
+                            <Delegat_Igraci igraci={igraci_domaci} />
+                        </>
+                    )}
                 </div>
                 <div className="middle-container">
                     {oznacenaUtakmica.length === 0 ? (
@@ -177,13 +248,13 @@ const Delegat = () => {
                                 className="above-middle"
                                 onClick={clickUtakmica}
                             >
-                                Unesi novu utakmicu
+                                <p>Unesi novu utakmicu</p>
                             </div>
                             <div
                                 className="above-middle"
                                 onClick={clickOdaberi}
                             >
-                                Odaberi završenu utakmicu
+                                <p>Odaberi završenu utakmicu</p>
                             </div>
                         </div>
                     ) : (
@@ -197,6 +268,7 @@ const Delegat = () => {
                                     className="above-middle stil1"
                                     onClick={() => {
                                         setOznacenaUtakmica([]);
+                                        setUtakmica_ID(0);
                                         setOznacena(false);
                                         setBluranoPocetna(true);
                                     }}
@@ -241,11 +313,26 @@ const Delegat = () => {
                     <div
                         className={`middle ${blurano_pocetna ? 'blurred' : ''}`}
                     >
-                        Middle
+                        {!blurano_pocetna && (
+                            <OdabirPodatka
+                                statistickiPodatci={statistickiPodatci}
+                                statusi={statusi}
+                            />
+                        )}
                     </div>
                 </div>
                 <div className={`side ${blurano_pocetna ? 'blurred' : ''}`}>
-                    <Logo imeMomcad={oznacenaUtakmica.GOSTI_NAZIV} />
+                    {!blurano_pocetna && (
+                        <>
+                            <div className="p_logo">
+                                <Logo
+                                    imeMomcad={oznacenaUtakmica.GOSTI_NAZIV}
+                                />
+                                <p>{oznacenaUtakmica.GOSTI_NAZIV}</p>
+                            </div>
+                            <Delegat_Igraci igraci={igraci_gosti} />
+                        </>
+                    )}
                 </div>
             </div>
             {utakmica ? (
@@ -377,7 +464,7 @@ const Delegat = () => {
                     </div>
                 )
             ) : null}
-            {oznacena && (
+            {oznacena && statistika.length !== 0 ? (
                 <div className="statistics">
                     <div className="table-container">
                         <table>
@@ -407,7 +494,13 @@ const Delegat = () => {
                         </table>
                     </div>
                 </div>
-            )}
+            ) : oznacena ? (
+                <div className="statistics">
+                    <p>
+                        Unesite statističke podatke kako biste ih ovdje vidjeli!
+                    </p>
+                </div>
+            ) : null}
         </div>
     );
 };

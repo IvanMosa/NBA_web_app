@@ -305,26 +305,43 @@ app.get('/getMomcadi', async (req, res) => {
 //Naziv, visina, državljanstvo, pozicija, datum potpisa igrača odabrane momčadi API
 app.post('/showRoster', async (req, res) => {
     let connection;
-    let imeMomcad = req.body.imeMomcad;
+
+    const status = req.body.status;
+    const imeMomcad = req.body.imeMomcad;
     let hasImeMomcad = imeMomcad.trim().length > 0;
     let sql2 = 'SELECT D.NAZIV FROM DRZAVE D ORDER BY D.NAZIV';
     let sql1 = 'SELECT P.NAZIV FROM POZICIJE P ORDER BY P.NAZIV';
     let sql =
-        "SELECT I.NAZIV, NVL(I.VISINA, ' '), NVL(D.NAZIV,' '), NVL(P.NAZIV,' '), SUBSTR(VMI.DATUM_OD,1, 10) FROM VEZE_MOMCAD_IGRACI VMI, MOMCAD M, IGRACI I, POZICIJE P, DRZAVE D WHERE VMI.MOMCAD_ID = M.MOMCAD_ID AND VMI.IGRAC_ID = I.IGRAC_ID AND I.POZICIJA_ID = P.POZICIJA_ID(+) AND I.DRZAVA_ID = D.DRZAVA_ID(+) AND VMI.STATUS_ID = 1";
+        "SELECT I.NAZIV, NVL(I.VISINA, ' '), NVL(D.NAZIV,' '), NVL(P.NAZIV,' '), SUBSTR(VMI.DATUM_OD,1, 10), I.BROJ_DRESA FROM VEZE_MOMCAD_IGRACI VMI, MOMCAD M, IGRACI I, POZICIJE P, DRZAVE D WHERE VMI.MOMCAD_ID = M.MOMCAD_ID AND VMI.IGRAC_ID = I.IGRAC_ID AND I.POZICIJA_ID = P.POZICIJA_ID(+) AND I.DRZAVA_ID = D.DRZAVA_ID(+) AND VMI.STATUS_ID = 1";
     if (hasImeMomcad) {
         sql += ' AND M.NAZIV = :imeMomcad';
     }
     try {
         connection = await oracledb.getConnection();
-        const result1 = await connection.execute(sql, { imeMomcad: imeMomcad });
-        const result2 = await connection.execute(sql1);
-        const result3 = await connection.execute(sql2);
-        console.log(result1.rows);
-        res.json({
-            igraci: result1.rows,
-            pozicije: result2.rows,
-            drzave: result3.rows,
-        });
+        if (status !== 0) {
+            const result1 = await connection.execute(sql, {
+                imeMomcad: imeMomcad,
+            });
+            const result2 = await connection.execute(sql1);
+            const result3 = await connection.execute(sql2);
+            console.log(result1.rows);
+            return res.json({
+                igraci: result1.rows,
+                pozicije: result2.rows,
+                drzave: result3.rows,
+            });
+        } else {
+            const result1 = await connection.execute(
+                sql,
+                {
+                    imeMomcad: imeMomcad,
+                },
+                { outFormat: oracledb.OBJECT }
+            );
+            return res.json({
+                igraci: result1.rows,
+            });
+        }
     } catch (err) {
         console.log(err);
         res.status(503).send({ message: 'there was an error' });
@@ -1313,6 +1330,38 @@ app.post('/unesiStatistiku', async (req, res) => {
             }
         } catch (err) {
             console.log(err);
+        }
+    }
+});
+
+app.post('/getStatistickiPodatci', async (req, res) => {
+    let connection;
+
+    const sql_statistickiPodatci =
+        'SELECT SP.NAZIV FROM STAT_PODATAK SP ORDER BY SP.SP_ID';
+    const sql_statusi =
+        "SELECT S.NAZIV FROM STATUSI S WHERE S.TABLICA = 'STATISTIKA' ORDER BY S.STATUS_ID";
+    try {
+        connection = await oracledb.getConnection();
+
+        const statistickiPodatci = await connection.execute(
+            sql_statistickiPodatci
+        );
+        const statusi = await connection.execute(sql_statusi);
+
+        res.send({
+            statistickiPodatci: statistickiPodatci.rows,
+            statusi: statusi.rows,
+        });
+    } catch (err) {
+        console.log(err);
+    } finally {
+        if (connection) {
+            try {
+                await connection.close();
+            } catch (error) {
+                console.log(error);
+            }
         }
     }
 });

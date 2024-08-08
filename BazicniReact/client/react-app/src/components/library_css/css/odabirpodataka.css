@@ -1,0 +1,66 @@
+/* Kontejner za dugmadi */
+.container_button {
+    display: flex;
+    flex-direction: column;
+    gap: 15px; /* Povećan razmak između redova */
+    width: 100%;
+    height: 100%;
+    box-sizing: border-box;
+    padding: 15px; /* Povećan padding za dodatni prostor oko kontejnera */
+}
+
+/* Kontejner za tri dugmadi u jednom redu */
+.odabir-button {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px; /* Razmak između dugmadi */
+}
+
+/* Stil za dugmadi */
+.button {
+    flex: 1 1 calc(33.333% - 10px);
+    box-sizing: border-box;
+    padding: 12px; /* Povećan unutrašnji razmak */
+    height: 40px;
+    text-align: center;
+    border: 1px solid #ccc; /* Dodan obrub */
+    border-radius: 8px; /* Zaobljeni rubovi */
+    background-color: #f9f9f9; /* Svetla pozadina */
+    color: #333; /* Tamna boja teksta */
+    font-size: 14px; /* Prilagođen font za bolju čitljivost */
+    font-weight: bold; /* Podebljan tekst */
+    cursor: pointer; /* Promena kursora pri prelasku miša */
+    transition: background-color 0.3s, transform 0.2s; /* Efekti prelaska */
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); /* Blagi sjaj */
+}
+
+.button:hover {
+    background-color: #e0e0e0; /* Promena boje pozadine pri prelasku miša */
+    transform: scale(1.05); /* Efekat povećanja pri prelasku miša */
+}
+
+/* Kontejner za status dugme, sa stilovima za premještanje na dno */
+.status-container {
+    display: flex;
+    justify-content: center;
+    gap: 10px; /* Razmak između status dugmadi */
+}
+
+/* Stil za status dugme */
+.status-button {
+    padding: 12px;
+    border: 1px solid #bbb; /* Dodan obrub */
+    border-radius: 6px; /* Zaobljeni rubovi */
+    background-color: #e0e0e0; /* Pozadina dugmadi */
+    color: #333; /* Boja teksta */
+    font-size: 14px; /* Prilagođen font */
+    font-weight: normal; /* Normalna težina fonta */
+    cursor: pointer; /* Promena kursora pri prelasku miša */
+    transition: background-color 0.3s, transform 0.2s; /* Efekti prelaska */
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); /* Blagi sjaj */
+}
+
+.status-button:hover {
+    background-color: #d0d0d0; /* Promena boje pozadine pri prelasku miša */
+    transform: scale(1.05); /* Efekat povećanja pri prelasku miša */
+}

@@ -16,6 +16,21 @@ body {
     height: 100%;
 }
 
+.logo_back {
+    position: absolute; /* Pozicionira logo unutar momcad_page */
+    top: 0;
+    left: 0;
+    margin-top: 100px;
+    width: 100vw; /* Prekriva cijelu širinu vidljivog dijela ekrana */
+    height: 100vh; /* Prekriva cijelu visinu vidljivog dijela ekrana */
+    display: flex; /* Koristi flexbox za centriranje sadržaja */
+    justify-content: center; /* Centriranje loga horizontalno */
+    align-items: center; /* Centriranje loga vertikalno */
+    z-index: -1; /* Postavlja sliku iza svih elemenata */
+    opacity: 0.1; /* Postavlja prozirnost slike (0.1 je vrlo prozirno, možete promijeniti) */
+    pointer-events: none; /* Onemogućava interakciju s logom */
+}
+
 .momcad_container {
     display: flex;
     position: relative;
@@ -30,6 +45,7 @@ body {
     border-radius: 8px;
     background-color: #f9f9f9;
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    opacity: 0.85;
 }
 
 .header_and_button {
@@ -39,7 +55,7 @@ body {
 }
 
 .stil1 {
-    width: 1200px;
+    width: 50vw;
 }
 .stil2 {
     width: 400px;
