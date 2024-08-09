@@ -6,7 +6,8 @@ import axios from 'axios';
 import DropdownMenu from './library_css/DropdownMenu';
 import Logo from './library_css/Logo';
 import OdabirPodatka from './library_css/OdabirPodatka';
-import Delegat_Igraci from './library_css/Delegat_Igraci';
+import DelegatIgraci from './library_css/Delegat_Igraci';
+
 const Delegat = () => {
     const [momcadi, setMomcadi] = useState([]);
     const [sudci, setSudci] = useState([]);
@@ -16,7 +17,6 @@ const Delegat = () => {
     const [blurano_pocetna, setBluranoPocetna] = useState(true);
     const [datum, setDatum] = useState('');
     const [vrijeme, setVrijeme] = useState('');
-    const [datum_vrijeme, setDatum_vrijeme] = useState('');
     const [domaci, setDomaci] = useState('');
     const [gosti, setGosti] = useState('');
     const [sudac, setSudac] = useState('');
@@ -33,6 +33,12 @@ const Delegat = () => {
     const [statistickiPodatci, setStatistickiPodatci] = useState([]);
     const [igraci_domaci, setIgraciDomaci] = useState([]);
     const [igraci_gosti, setIgraciGosti] = useState([]);
+    const [aktivni_domaci, setAktivniDomaci] = useState([]);
+    const [aktivni_gosti, setAktivniGosti] = useState([]);
+    const [starteri_spremljeni, setStarteriSpremljeni] = useState(false);
+    const [Igrac_promjena, setIgracPromjena] = useState([]);
+    const [oznaceni_podatak, setOznaceniPodatak] = useState('');
+    const [Igrac_ulazi, setIgracUlazi] = useState([]);
 
     const fetchData = async () => {
         try {
@@ -130,9 +136,7 @@ const Delegat = () => {
                 if (
                     result.data.message === 'Insert was completed successfully!'
                 ) {
-                    setErrorMessage(
-                        'Uspješno krenirana utakmica! Klikom na sat započnite vrijeme i krenite zapisivati podatke!'
-                    );
+                    setErrorMessage('Uspješno krenirana utakmica!');
                     await new Promise((resolve) => setTimeout(resolve, 3000));
                     const parsedDate = parse(datum, 'yyyy-MM-dd', new Date());
                     let temp_datum = format(parsedDate, 'MM/dd/yyyy');
@@ -148,7 +152,7 @@ const Delegat = () => {
                     setSveUtakmice([novaUtakmica, ...sveUtakmice]);
 
                     setUtakmica(false);
-                    setNova(true);
+                    setNova(false);
                     setBlurano(false);
                     setOznacena(true);
                     setErrorMessage('');
@@ -175,56 +179,120 @@ const Delegat = () => {
         setUtakmica_ID(rowItem.UTAKMICA_ID);
     };
 
-    const fetchStatistika = async () => {
-        if (utakmica_id > 0) {
-            try {
-                const res = await axios.post(
-                    'http://localhost:4000/prikaziStatistikuUtakmice',
-                    { utakmica_id: utakmica_id }
-                );
-                setStatistika(res.data.statistika);
-                setOznacena(!oznacena);
-            } catch (err) {
-                console.log(err);
-            }
-        }
-    };
-
-    const fetchIgraci = async () => {
-        if (oznacenaUtakmica !== null) {
-            try {
-                const igraci_domaci = await axios.post(
-                    'http://localhost:4000/showRoster',
-                    {
-                        imeMomcad: oznacenaUtakmica.DOMACI_NAZIV,
-                        status: 0,
-                    }
-                );
-                const igraci_gosti = await axios.post(
-                    'http://localhost:4000/showRoster',
-                    {
-                        imeMomcad: oznacenaUtakmica.GOSTI_NAZIV,
-                        status: 0,
-                    }
-                );
-                setIgraciDomaci(igraci_domaci.data.igraci);
-                setIgraciGosti(igraci_gosti.data.igraci);
-            } catch (err) {
-                console.log(err);
-            }
-        }
-    };
     useEffect(() => {
-        if (utakmica_id !== 0) {
-            fetchStatistika();
-            fetchIgraci();
-            setOznacena(true);
-            setUtakmica(false);
-            setBlurano(false);
-            setBluranoPocetna(false);
-        }
+        const fetchData = async () => {
+            if (utakmica_id !== 0) {
+                try {
+                    const [statistikaResponse, igraciResponses] =
+                        await Promise.all([
+                            axios.post(
+                                'http://localhost:4000/prikaziStatistikuUtakmice',
+                                { utakmica_id: utakmica_id }
+                            ),
+                            Promise.all([
+                                axios.post('http://localhost:4000/showRoster', {
+                                    imeMomcad:
+                                        oznacenaUtakmica.DOMACI_NAZIV.toString(),
+                                    status: 0,
+                                }),
+                                axios.post('http://localhost:4000/showRoster', {
+                                    imeMomcad:
+                                        oznacenaUtakmica.GOSTI_NAZIV.toString(),
+                                    status: 0,
+                                }),
+                            ]),
+                        ]);
+
+                    setStatistika(statistikaResponse.data.statistika);
+                    setOznacena(!oznacena);
+
+                    const domaci_temp = igraciResponses[0].data.igraci.map(
+                        (igrac) => ({
+                            ...igrac,
+                            oznacen: false,
+                        })
+                    );
+                    setIgraciDomaci(domaci_temp);
+
+                    const gosti_temp = igraciResponses[1].data.igraci.map(
+                        (igrac) => ({
+                            ...igrac,
+                            oznacen: false,
+                        })
+                    );
+                    setIgraciGosti(gosti_temp);
+
+                    setUtakmica(false);
+                    setBlurano(false);
+                    setBluranoPocetna(false);
+                } catch (err) {
+                    console.log('Error during fetch:', err);
+                }
+            }
+        };
+
+        fetchData();
     }, [utakmica_id]);
 
+    const handleAktivniDomaci = (igrac, status) => {
+        if (status === 0) setAktivniDomaci([...aktivni_domaci, igrac]);
+        else {
+            const newStarteri = aktivni_domaci.filter(
+                (item) => item.NAZIV !== igrac.NAZIV
+            );
+            setAktivniDomaci(newStarteri);
+        }
+    };
+
+    const handleAktivniGosti = (igrac, status) => {
+        if (status === 0) setAktivniGosti([...aktivni_gosti, igrac]);
+        else {
+            const newStarteri = aktivni_gosti.filter(
+                (item) => item.NAZIV !== igrac.NAZIV
+            );
+            setAktivniGosti(newStarteri);
+        }
+    };
+
+    const handleStarteriSave = () => {
+        const domaci_temp = aktivni_domaci.map((igrac) => ({
+            ...igrac,
+            oznacen: false,
+        }));
+        setAktivniDomaci(domaci_temp);
+
+        const gosti_temp = aktivni_gosti.map((igrac) => ({
+            ...igrac,
+            oznacen: false,
+        }));
+        setAktivniGosti(gosti_temp);
+        setStarteriSpremljeni(true);
+    };
+
+    const handleOznacenIgrac = (oznacenIgrac, status) => {
+        if (oznacenIgrac.length === 0 && status === 0) {
+            setIgracPromjena([]);
+        } else if (oznacenIgrac.length !== 0 && status === 0) {
+            setIgracPromjena(oznacenIgrac);
+        } else if (oznacenIgrac.length !== 0 && status === 1) {
+            setIgracUlazi(oznacenIgrac);
+        } else if (oznacenIgrac.length === 0 && status === 1) {
+            setIgracUlazi([]);
+        }
+    };
+
+    const handleOznaceniPodatak = (podatak) => {
+        console.log(podatak);
+        setOznaceniPodatak(podatak);
+    };
+
+    const handleConfirm = async (status) => {
+        try {
+            console.log(oznaceni_podatak, status);
+        } catch (err) {
+            console.log(err);
+        }
+    };
     return (
         <div>
             <div className={`container ${blurano ? 'blurred' : ''}`}>
@@ -237,7 +305,26 @@ const Delegat = () => {
                                 />
                                 <p>{oznacenaUtakmica.DOMACI_NAZIV}</p>
                             </div>
-                            <Delegat_Igraci igraci={igraci_domaci} />
+                            {!starteri_spremljeni ? (
+                                <DelegatIgraci
+                                    igraci={igraci_domaci}
+                                    start={true}
+                                    onSelect={handleAktivniDomaci}
+                                />
+                            ) : (
+                                <DelegatIgraci
+                                    igraci={aktivni_domaci}
+                                    start={false}
+                                    onSelectIgrac={handleOznacenIgrac}
+                                    oznaceniIgrac={Igrac_promjena}
+                                    izlaz={
+                                        oznaceni_podatak == 'Ulaz/Izlaz'
+                                            ? igraci_domaci
+                                            : []
+                                    }
+                                    ulaziIgrac={Igrac_ulazi}
+                                />
+                            )}
                         </>
                     )}
                 </div>
@@ -271,6 +358,9 @@ const Delegat = () => {
                                         setUtakmica_ID(0);
                                         setOznacena(false);
                                         setBluranoPocetna(true);
+                                        setAktivniDomaci([]);
+                                        setAktivniGosti([]);
+                                        setStarteriSpremljeni(false);
                                     }}
                                 >
                                     <p>Klikni za promjenu utakmice</p>
@@ -317,6 +407,14 @@ const Delegat = () => {
                             <OdabirPodatka
                                 statistickiPodatci={statistickiPodatci}
                                 statusi={statusi}
+                                start={starteri_spremljeni ? false : true}
+                                broj_startera={
+                                    aktivni_domaci.length + aktivni_gosti.length
+                                }
+                                onSave={handleStarteriSave}
+                                onSelect={handleOznaceniPodatak}
+                                onConfirm={handleConfirm}
+                                oznacenIgrac={Igrac_promjena}
                             />
                         )}
                     </div>
@@ -330,7 +428,26 @@ const Delegat = () => {
                                 />
                                 <p>{oznacenaUtakmica.GOSTI_NAZIV}</p>
                             </div>
-                            <Delegat_Igraci igraci={igraci_gosti} />
+                            {!starteri_spremljeni ? (
+                                <DelegatIgraci
+                                    igraci={igraci_gosti}
+                                    start={true}
+                                    onSelect={handleAktivniGosti}
+                                />
+                            ) : (
+                                <DelegatIgraci
+                                    igraci={aktivni_gosti}
+                                    start={false}
+                                    onSelectIgrac={handleOznacenIgrac}
+                                    oznaceniIgrac={Igrac_promjena}
+                                    izlaz={
+                                        oznaceni_podatak == 'Ulaz/Izlaz'
+                                            ? igraci_gosti
+                                            : []
+                                    }
+                                    ulaziIgrac={Igrac_ulazi}
+                                />
+                            )}
                         </>
                     )}
                 </div>
@@ -345,6 +462,11 @@ const Delegat = () => {
                             <div className="modal-content">
                                 <div className="dropdown_container">
                                     <DropdownMenu
+                                        items={lige}
+                                        odabir="Odaberi ligu"
+                                        onSelect={handleLiga}
+                                    />
+                                    <DropdownMenu
                                         items={momcadi}
                                         odabir="Odaberi domaćina"
                                         onSelect={handleDomaci}
@@ -358,11 +480,6 @@ const Delegat = () => {
                                         items={sudci}
                                         odabir="Odaberi sudca"
                                         onSelect={handleSudac}
-                                    />
-                                    <DropdownMenu
-                                        items={lige}
-                                        odabir="Odaberi ligu"
-                                        onSelect={handleLiga}
                                     />
                                 </div>
                                 <div className="form-group">
@@ -391,8 +508,17 @@ const Delegat = () => {
                                         }
                                     />
                                 </div>
-                                <button onClick={handleSave}>Spremi</button>
-                                {errorMessage && <p>{errorMessage}</p>}
+                                <button
+                                    className="modal_button"
+                                    onClick={handleSave}
+                                >
+                                    Spremi
+                                </button>
+                                {errorMessage && (
+                                    <p className="dropdown_container_p">
+                                        {errorMessage}
+                                    </p>
+                                )}
                             </div>
 
                             <div className="back_div">

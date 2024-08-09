@@ -308,11 +308,12 @@ app.post('/showRoster', async (req, res) => {
 
     const status = req.body.status;
     const imeMomcad = req.body.imeMomcad;
-    let hasImeMomcad = imeMomcad.trim().length > 0;
+    let hasImeMomcad = imeMomcad ? imeMomcad.trim().length > 0 : false;
+
     let sql2 = 'SELECT D.NAZIV FROM DRZAVE D ORDER BY D.NAZIV';
     let sql1 = 'SELECT P.NAZIV FROM POZICIJE P ORDER BY P.NAZIV';
     let sql =
-        "SELECT I.NAZIV, NVL(I.VISINA, ' '), NVL(D.NAZIV,' '), NVL(P.NAZIV,' '), SUBSTR(VMI.DATUM_OD,1, 10), I.BROJ_DRESA FROM VEZE_MOMCAD_IGRACI VMI, MOMCAD M, IGRACI I, POZICIJE P, DRZAVE D WHERE VMI.MOMCAD_ID = M.MOMCAD_ID AND VMI.IGRAC_ID = I.IGRAC_ID AND I.POZICIJA_ID = P.POZICIJA_ID(+) AND I.DRZAVA_ID = D.DRZAVA_ID(+) AND VMI.STATUS_ID = 1";
+        "SELECT I.NAZIV, NVL(I.VISINA, ' '), NVL(D.NAZIV,' '), NVL(P.NAZIV,' '), SUBSTR(VMI.DATUM_OD,1, 10), I.BROJ_DRESA, M.MOMCAD_ID FROM VEZE_MOMCAD_IGRACI VMI, MOMCAD M, IGRACI I, POZICIJE P, DRZAVE D WHERE VMI.MOMCAD_ID = M.MOMCAD_ID AND VMI.IGRAC_ID = I.IGRAC_ID AND I.POZICIJA_ID = P.POZICIJA_ID(+) AND I.DRZAVA_ID = D.DRZAVA_ID(+) AND VMI.STATUS_ID = 1";
     if (hasImeMomcad) {
         sql += ' AND M.NAZIV = :imeMomcad';
     }

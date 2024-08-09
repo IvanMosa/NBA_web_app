@@ -132,6 +132,14 @@ body {
     gap: 300px; /* Razmak između dropdown menija */
 }
 
+.dropdown_container_p {
+    text-align: center; /* Centriranje teksta */
+    color: #28a745; /* Zelena boja teksta */
+    font-weight: bold; /* Podebljani tekst */
+    font-size: 16px; /* Prilagođena veličina fonta */
+    margin-top: 10px; /* Razmak iznad teksta */
+}
+
 /* Kontejner za cijeli overlay */
 .overlay {
     position: fixed;
@@ -160,6 +168,18 @@ body {
     margin-top: 20vh; /* Razmak od vrha u visini viewporta, prilagodite prema potrebi */
 }
 
+.modal_button {
+    padding: 12px;
+    border: 1px solid #bbb; /* Dodan obrub */
+    border-radius: 6px; /* Zaobljeni rubovi */
+    background-color: #e0e0e0; /* Pozadina dugmadi */
+    color: #333; /* Boja teksta */
+    font-size: 14px; /* Prilagođen font */
+    font-weight: normal; /* Normalna težina fonta */
+    cursor: pointer; /* Promena kursora pri prelasku miša */
+    transition: background-color 0.3s, transform 0.2s; /* Efekti prelaska */
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); /* Blagi sjaj */
+}
 /* Stil za modalne elemente */
 .modal-content {
     display: flex;
@@ -196,6 +216,7 @@ body {
     border-radius: 4px;
     width: 100%;
 }
+
 .back_div {
     display: flex;
     justify-content: center; /* Centriranje horizontalno */
@@ -257,16 +278,19 @@ body {
 .modal table {
     width: 100%;
     border-collapse: collapse;
-    margin-top: 10px;
 }
 
 .statistics th,
 .statistics td,
 .modal th,
 .modal td {
-    border: 1px solid #ccc;
     padding: 10px;
     text-align: left;
+}
+
+.statistics td,
+.modal td {
+    border-bottom: 1px solid #ccc;
 }
 
 .statistics thead th,
@@ -280,7 +304,7 @@ body {
     cursor: pointer;
 }
 .table-container {
-    max-height: 200px; /* Maksimalna visina tablice, dovoljno za 3 retka */
+    max-height: 300px; /* Maksimalna visina tablice, dovoljno za 3 retka */
     overflow-y: auto; /* Vertikalno skrolanje */
 }
 

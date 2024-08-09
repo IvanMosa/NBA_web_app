@@ -3,6 +3,7 @@
     flex-direction: column;
     width: 100%; /* Osigurava da se kontejner proširi da bi zauzeo celu dostupnu širinu */
     padding: 10px; /* Dodaje malo razmaka oko sadržaja */
+    gap: 20px;
     box-sizing: border-box; /* Uključuje padding i border u ukupnu širinu i visinu */
 }
 .del_igr_buttons {
@@ -11,6 +12,7 @@
     gap: 20px;
     justify-content: center;
     align-items: center;
+    position: relative;
 }
 
 .del_igr_button_item {
@@ -28,6 +30,20 @@
     cursor: pointer;
 }
 
+.dres_ikona.oznacen {
+    background-color: rgba(
+        255,
+        215,
+        0,
+        0.3
+    ); /* Light yellow with transparency */
+    border: 2px solid rgba(255, 215, 0, 0.7); /* Solid border in a more opaque color */
+    border-radius: 8px; /* Rounded corners for a more modern look */
+    box-shadow: 0 0 10px rgba(255, 215, 0, 0.5); /* Subtle shadow to lift the element */
+    transition: all 0.1s ease-in-out; /* Smooth transition effect for when the class is added or removed */
+    padding: 1px; /* Add some padding inside the div for better visual balance */
+}
+
 .broj_dresa {
     position: absolute;
     top: 50%;
@@ -41,4 +57,37 @@
 
 .del_igr_button_item p {
     font-size: 16px;
+}
+
+.error_del_Overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 10; /* Ensures it's above other content */
+    border-radius: 8px; /* Match with .dres_ikona if rounded */
+}
+
+/* Error message modal */
+.error_del_Modal {
+    background-color: white;
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    text-align: center;
+    z-index: 11; /* Ensure modal is above overlay */
+    width: 80%; /* Adjust width as needed */
+}
+
+.error_del_Message {
+    color: red;
+    font-weight: bold;
+}
+.blur {
+    filter: blur(5px);
+    pointer-events: none;
 }

@@ -4,7 +4,18 @@
     display: inline-block;
     align-items: center;
 }
-
+.dropdown_button {
+    padding: 12px;
+    border: 1px solid #bbb; /* Dodan obrub */
+    border-radius: 6px; /* Zaobljeni rubovi */
+    background-color: #e0e0e0; /* Pozadina dugmadi */
+    color: #333; /* Boja teksta */
+    font-size: 14px; /* Prilagođen font */
+    font-weight: normal; /* Normalna težina fonta */
+    cursor: pointer; /* Promena kursora pri prelasku miša */
+    transition: background-color 0.3s, transform 0.2s; /* Efekti prelaska */
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); /* Blagi sjaj */
+}
 .dropdown-menu {
     display: flex;
     flex-wrap: wrap;

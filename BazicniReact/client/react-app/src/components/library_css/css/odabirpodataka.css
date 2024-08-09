@@ -7,6 +7,11 @@
     height: 100%;
     box-sizing: border-box;
     padding: 15px; /* Povećan padding za dodatni prostor oko kontejnera */
+    color: darkgray; /* Bela boja teksta */
+    font-size: 18px; /* Veličina fonta */
+    font-weight: bold; /* Podebljani tekst */
+    text-align: center; /* Centriranje teksta */
+    justify-items: center;
 }
 
 /* Kontejner za tri dugmadi u jednom redu */
@@ -64,3 +69,17 @@
     background-color: #d0d0d0; /* Promena boje pozadine pri prelasku miša */
     transform: scale(1.05); /* Efekat povećanja pri prelasku miša */
 }
+
+.blur {
+    filter: blur(5px);
+    pointer-events: none;
+}
+
+/* Klasa za označene podatke */
+.button.oznacen {
+    background-color: #4caf50; /* Zelena boja pozadine za označene podatke */
+    color: white; /* Bijela boja teksta */
+    border-color: #45a049; /* Tamnija zelena za obrub */
+}
+
+/* Klasa za označeni status */

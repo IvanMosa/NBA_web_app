@@ -10,7 +10,7 @@ const DropdownMenu = ({ items, odabir, onSelect }) => {
 
     return (
         <div className="dropdown">
-            <button onClick={handleButtonClick}>
+            <button className="dropdown_button" onClick={handleButtonClick}>
                 {clicked ? clicked : odabir}
             </button>
             {isOpen && (
