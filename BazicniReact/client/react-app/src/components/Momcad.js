@@ -338,7 +338,7 @@ const Momcad = () => {
                                                 }
                                             >
                                                 {rowItem
-                                                    .slice(0, -2)
+                                                    .slice(0, -3)
                                                     .map((row, rowInd) => (
                                                         <React.Fragment
                                                             key={rowInd}

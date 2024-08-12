@@ -39,6 +39,8 @@ const Delegat = () => {
     const [Igrac_promjena, setIgracPromjena] = useState([]);
     const [oznaceni_podatak, setOznaceniPodatak] = useState('');
     const [Igrac_ulazi, setIgracUlazi] = useState([]);
+    const [potvrdaPromjene, setPotvrdaPromjene] = useState(false);
+    const [start, setStart] = useState();
 
     const fetchData = async () => {
         try {
@@ -137,6 +139,7 @@ const Delegat = () => {
                     result.data.message === 'Insert was completed successfully!'
                 ) {
                     setErrorMessage('Uspješno krenirana utakmica!');
+                    setUtakmica_ID(result.data.UTAKMICA_ID);
                     await new Promise((resolve) => setTimeout(resolve, 3000));
                     const parsedDate = parse(datum, 'yyyy-MM-dd', new Date());
                     let temp_datum = format(parsedDate, 'MM/dd/yyyy');
@@ -150,14 +153,12 @@ const Delegat = () => {
                     };
 
                     setSveUtakmice([novaUtakmica, ...sveUtakmice]);
-
                     setUtakmica(false);
                     setNova(false);
                     setBlurano(false);
                     setOznacena(true);
                     setErrorMessage('');
                     setBluranoPocetna(false);
-                    setUtakmica_ID(result.data.UTAKMICA_ID);
                     const result1 = await axios.post(
                         'http://localhost:4000/getStatistikaMomcadi',
                         {
@@ -187,7 +188,13 @@ const Delegat = () => {
                         await Promise.all([
                             axios.post(
                                 'http://localhost:4000/prikaziStatistikuUtakmice',
-                                { utakmica_id: utakmica_id }
+                                {
+                                    utakmica_id: utakmica_id,
+                                    domaci_naziv:
+                                        oznacenaUtakmica.DOMACI_NAZIV.toString(),
+                                    gosti_naziv:
+                                        oznacenaUtakmica.GOSTI_NAZIV.toString(),
+                                }
                             ),
                             Promise.all([
                                 axios.post('http://localhost:4000/showRoster', {
@@ -205,6 +212,21 @@ const Delegat = () => {
 
                     setStatistika(statistikaResponse.data.statistika);
                     setOznacena(!oznacena);
+                    setUtakmica(false);
+                    setBlurano(false);
+                    setBluranoPocetna(false);
+
+                    if (statistikaResponse.data.statistika.length !== 0) {
+                        {
+                            setAktivniDomaci(
+                                statistikaResponse.data.aktivni_domaci
+                            );
+                            setAktivniGosti(
+                                statistikaResponse.data.aktivni_gosti
+                            );
+                        }
+                        setStarteriSpremljeni(true);
+                    }
 
                     const domaci_temp = igraciResponses[0].data.igraci.map(
                         (igrac) => ({
@@ -212,6 +234,7 @@ const Delegat = () => {
                             oznacen: false,
                         })
                     );
+
                     setIgraciDomaci(domaci_temp);
 
                     const gosti_temp = igraciResponses[1].data.igraci.map(
@@ -221,10 +244,6 @@ const Delegat = () => {
                         })
                     );
                     setIgraciGosti(gosti_temp);
-
-                    setUtakmica(false);
-                    setBlurano(false);
-                    setBluranoPocetna(false);
                 } catch (err) {
                     console.log('Error during fetch:', err);
                 }
@@ -254,7 +273,7 @@ const Delegat = () => {
         }
     };
 
-    const handleStarteriSave = () => {
+    const handleStarteriSave = async () => {
         const domaci_temp = aktivni_domaci.map((igrac) => ({
             ...igrac,
             oznacen: false,
@@ -267,6 +286,21 @@ const Delegat = () => {
         }));
         setAktivniGosti(gosti_temp);
         setStarteriSpremljeni(true);
+
+        try {
+            const result = await axios.post(
+                'http://localhost:4000/unesiStatistiku',
+                {
+                    utakmica_id: utakmica_id,
+                    aktivni_domaci: domaci_temp,
+                    aktivni_gosti: gosti_temp,
+                    status: 2,
+                    podatak: 'Ulaz/Izlaz',
+                }
+            );
+        } catch (err) {
+            console.log(err);
+        }
     };
 
     const handleOznacenIgrac = (oznacenIgrac, status) => {
@@ -277,21 +311,37 @@ const Delegat = () => {
         } else if (oznacenIgrac.length !== 0 && status === 1) {
             setIgracUlazi(oznacenIgrac);
         } else if (oznacenIgrac.length === 0 && status === 1) {
+            Igrac_ulazi.oznacen = false;
             setIgracUlazi([]);
         }
     };
 
     const handleOznaceniPodatak = (podatak) => {
-        console.log(podatak);
         setOznaceniPodatak(podatak);
     };
 
-    const handleConfirm = async (status) => {
-        try {
-            console.log(oznaceni_podatak, status);
-        } catch (err) {
-            console.log(err);
-        }
+    const handleConfirm = (status) => {
+        setPotvrdaPromjene(true);
+        unesiPromjene(status, Igrac_promjena, Igrac_ulazi);
+    };
+
+    const unesiPromjene = async (status) => {
+        // try {
+        //     if (oznaceni_podatak == 'Ulaz/Izlaz') {
+        //         const result = await axios.post('http://localhost:4000/');
+        //     } else {
+        //         const result = await axios.post('http://localhost:4000/');
+        //     }
+        //     await new Promise((resolve) => setTimeout(resolve, 750));
+        //     setPotvrdaPromjene(false);
+        //     Igrac_promjena.oznacen = false;
+        //     Igrac_ulazi.oznacen = false;
+        //     setIgracPromjena([]);
+        //     setIgracUlazi([]);
+        //     console.log(status);
+        // } catch (err) {
+        //     console.log(err);
+        // }
     };
     return (
         <div>
@@ -323,6 +373,10 @@ const Delegat = () => {
                                             : []
                                     }
                                     ulaziIgrac={Igrac_ulazi}
+                                    setIgraci={setAktivniDomaci}
+                                    setIzlaz={setIgraciDomaci}
+                                    potvrdaPromjene={potvrdaPromjene}
+                                    setPotvrdaPromjene={setPotvrdaPromjene}
                                 />
                             )}
                         </>
@@ -446,6 +500,10 @@ const Delegat = () => {
                                             : []
                                     }
                                     ulaziIgrac={Igrac_ulazi}
+                                    setIgraci={setAktivniGosti}
+                                    setIzlaz={setIgraciGosti}
+                                    potvrdaPromjene={potvrdaPromjene}
+                                    setPotvrdaPromjene={setPotvrdaPromjene}
                                 />
                             )}
                         </>
