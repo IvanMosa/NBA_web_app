@@ -10,7 +10,7 @@ const DelegatIgraci = ({
     ulaziIgrac,
     izlaz,
     potvrdaPromjene,
-    setPotvrdaPromjene,
+    zavrsena,
 }) => {
     const [starteri, setStarteri] = useState([]);
     const [errorMessage, setErrorMessage] = useState('');

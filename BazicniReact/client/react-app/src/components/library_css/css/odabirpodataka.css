@@ -53,7 +53,10 @@
 
 /* Stil za status dugme */
 .status-button {
+    width: 100px;
+    height: 50px;
     padding: 12px;
+    margin: 6px;
     border: 1px solid #bbb; /* Dodan obrub */
     border-radius: 6px; /* Zaobljeni rubovi */
     background-color: #e0e0e0; /* Pozadina dugmadi */
@@ -82,4 +85,134 @@
     border-color: #45a049; /* Tamnija zelena za obrub */
 }
 
-/* Klasa za označeni status */
+.clockContainer {
+    text-align: center;
+    font-family: Arial, sans-serif;
+    margin-top: 20px;
+    margin-bottom: 40px;
+}
+.timeContainer {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between; /* Postavlja raspored elemenata */
+    align-items: center;
+    gap: 20px; /* Smanjen gap za bolje uklapanje */
+    margin-bottom: 20px;
+    width: 100%; /* Postavlja širinu na 100% */
+    padding: 0 20px; /* Dodaje padding sa strane */
+}
+
+.tekst {
+    font-size: 40px;
+    left: 0;
+}
+
+.edit {
+    display: flex;
+    flex-direction: column; /* Postavlja elemente vertikalno */
+    align-items: center; /* Centriranje elemenata horizontalno */
+}
+
+.editContainer {
+    display: flex;
+    align-items: center; /* Centriranje inputa i teksta vertikalno */
+}
+.timeDisplay {
+    font-size: 48px;
+    font-weight: bold;
+}
+
+.shotClockDisplay {
+    font-size: 36px;
+    color: red;
+    margin-top: 5px;
+}
+
+.buttonsContainer {
+    display: flex;
+    justify-content: center;
+    gap: 20px;
+}
+
+.timeDisplay.edit {
+    display: block; /* Postavi edit display na block */
+    text-align: center; /* Poravnanje centra */
+}
+
+.input {
+    width: 60px; /* Postavi širinu inputa */
+    height: 48px; /* Postavi visinu inputa da se slaže s font-size */
+    font-size: 36px; /* Font veličina usklađena s timeDisplay */
+    text-align: center;
+    margin: 5px; /* Dodaš malo prostora oko inputa */
+}
+
+/*Slider */
+/* Kontejner za switch */
+.switch {
+    position: relative;
+    display: inline-block;
+    width: 60px;
+    height: 34px;
+    right: 0;
+}
+
+/* Sakriva pravi checkbox */
+.switch input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+}
+
+/* Slider */
+.slider {
+    position: absolute;
+    cursor: pointer;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: #ccc;
+    transition: 0.4s;
+    border-radius: 34px;
+}
+
+/* Klizač */
+.slider:before {
+    position: absolute;
+    content: '';
+    height: 26px;
+    width: 26px;
+    left: 4px;
+    bottom: 4px;
+    background-color: white;
+    transition: 0.4s;
+    border-radius: 50%;
+}
+
+/* Kada je checkbox označen */
+input:checked + .slider {
+    background-color: #2196f3;
+}
+
+/* Kada je checkbox označen, premesti klizač */
+input:checked + .slider:before {
+    transform: translateX(26px);
+}
+
+/* Okrugli slider */
+.slider.round {
+    border-radius: 34px;
+}
+
+.slider.round:before {
+    border-radius: 50%;
+}
+
+.switchTekst {
+    margin-bottom: 5px;
+}
+
+.switchTekst.oznacen {
+    color: #2196f3;
+}

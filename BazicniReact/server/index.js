@@ -1323,13 +1323,13 @@ app.post('/prikaziStatistikuUtakmice', async (req, res) => {
         const gosti_id = pronadiGosti.rows[0].MOMCAD_ID;
 
         const aktivni_domaci = await connection.execute(
-            'SELECT I.NAZIV, I.BROJ_DRESA FROM STATISTIKA STAT, IGRACI I, VEZE_MOMCAD_IGRACI VMI WHERE STAT.STATUS_ID = 2 AND STAT.IGRAC_ID = I.IGRAC_ID AND UTAKMICA_ID = :utakmica_id AND VMI.IGRAC_ID = I.IGRAC_ID AND VMI.MOMCAD_ID = :domaci_id AND VMI.STATUS_ID = 1',
+            'SELECT I.NAZIV, I.BROJ_DRESA, VMI.MOMCAD_ID, I.IGRAC_ID FROM STATISTIKA STAT, IGRACI I, VEZE_MOMCAD_IGRACI VMI WHERE STAT.STATUS_ID = 2 AND STAT.IGRAC_ID = I.IGRAC_ID AND UTAKMICA_ID = :utakmica_id AND VMI.IGRAC_ID = I.IGRAC_ID AND VMI.MOMCAD_ID = :domaci_id AND VMI.STATUS_ID = 1',
             { utakmica_id: utakmica_id, domaci_id: domaci_id },
             { outFormat: oracledb.OBJECT }
         );
 
         const aktivni_gosti = await connection.execute(
-            'SELECT I.NAZIV, I.BROJ_DRESA FROM STATISTIKA STAT, IGRACI I, VEZE_MOMCAD_IGRACI VMI WHERE STAT.STATUS_ID = 2 AND STAT.IGRAC_ID = I.IGRAC_ID AND UTAKMICA_ID = :utakmica_id AND VMI.IGRAC_ID = I.IGRAC_ID AND VMI.MOMCAD_ID = :gosti_id AND VMI.STATUS_ID = 1',
+            'SELECT I.NAZIV, I.BROJ_DRESA, VMI.MOMCAD_ID, I.IGRAC_ID FROM STATISTIKA STAT, IGRACI I, VEZE_MOMCAD_IGRACI VMI WHERE STAT.STATUS_ID = 2 AND STAT.IGRAC_ID = I.IGRAC_ID AND UTAKMICA_ID = :utakmica_id AND VMI.IGRAC_ID = I.IGRAC_ID AND VMI.MOMCAD_ID = :gosti_id AND VMI.STATUS_ID = 1',
             { utakmica_id: utakmica_id, gosti_id: gosti_id },
             { outFormat: oracledb.OBJECT }
         );
@@ -1366,14 +1366,20 @@ app.post('/unesiStatistiku', async (req, res) => {
 
     const aktivni_gosti = req.body.aktivni_gosti || [];
 
-    const igracID = req.body.igrac_id;
+    const igracID = req.body.igrac_id ? req.body.igrac_id.IGRAC_ID : null;
 
-    const igracUlazID = req.body.igrac_ulaz_id;
+    const igracUlazID = req.body.igrac_ulaz_id
+        ? req.body.igrac_ulaz_id.IGRAC_ID
+        : null;
 
     const status = req.body.status;
     const podatak = req.body.podatak;
 
+    const minute = req.body.minute;
+    const sekunde = req.body.sekunde;
+
     let podatakID;
+    let statusID;
     try {
         connection = await oracledb.getConnection();
         const podatak_id = await connection.execute(
@@ -1383,6 +1389,21 @@ app.post('/unesiStatistiku', async (req, res) => {
         );
         podatakID = podatak_id.rows[0].SP_ID;
 
+        const status_id = await connection.execute(
+            "SELECT S.STATUS_ID FROM STATUSI S WHERE S.NAZIV = :status AND S.TABLICA = 'STATISTIKA'",
+            { status: status },
+            { outFormat: oracledb.OBJECT }
+        );
+        statusID = status_id.rows[0].STATUS_ID;
+
+        console.log(
+            podatakID,
+            podatak,
+            statusID,
+            igracID,
+            igracUlazID,
+            utakmica_id
+        );
         const unosPocetnogPodatka = async (igrac) => {
             const SQL_upit =
                 "INSERT INTO STATISTIKA(IGRAC_ID, SP_ID, STATUS_ID, UTAKMICA_ID, VRIJEME_POCETAK) VALUES (:igrac_id, :podatak_id, :status, :utakmica_id, '00:00')";
@@ -1416,26 +1437,26 @@ app.post('/unesiStatistiku', async (req, res) => {
                 unosPocetnogPodatka(igrac)
             );
             await Promise.all(gostiPromises);
-        } else if (igrac_id && !igrac_ulaz_id) {
+        } else if (igracID && !igracUlazID) {
             const SQL_upit =
-                'INSERT INTO STATISTIKA(IGRAC_ID, SP_ID, STATUS_ID, UTAKMICA_ID, VRIJEME_POCETAK) VALUES (:igrac_id, :podatak_id, :status, :utakmica_id, :vrijeme)';
-            const igrac_id = igracID;
+                "INSERT INTO STATISTIKA(IGRAC_ID, SP_ID, STATUS_ID, UTAKMICA_ID, VRIJEME_POCETAK) VALUES (:igrac_id, :podatak_id, :status_id, :utakmica_id, trim(TO_CHAR(:minute, '00')) || ':'  ||  trim(TO_CHAR(:sekunde,'00')))";
 
-            const unesi = await connection.post(
+            const unesi = await connection.execute(
                 SQL_upit,
                 {
-                    igrac_id,
-                    podatak_id,
-                    status,
-                    utakmica_id,
-                    vrijeme,
+                    igrac_id: igracID,
+                    podatak_id: podatakID,
+                    status_id: statusID,
+                    utakmica_id: utakmica_id,
+                    minute: minute,
+                    sekunde: sekunde,
                 },
                 { autoCommit: true }
             );
-        } else if (igrac_id && igrac_ulaz_id) {
+        } else if (igracID && igracUlazID) {
             const pronadiStatPodatak = await connection.execute(
                 'SELECT STAT.STAT_ID FROM STATISTIKA STAT WHERE STAT.IGRAC_ID = :igrac_id AND STAT.SP_ID = 11 AND STAT.VRIJEME_KRAJ IS NULL',
-                { igrac_id: igrac_id },
+                { igrac_id: igracID },
                 {
                     outFormat: oracledb.OBJECT,
                 }
@@ -1443,8 +1464,8 @@ app.post('/unesiStatistiku', async (req, res) => {
             const stat_id = pronadiStatPodatak.rows[0].STAT_ID;
 
             const unesiPromjenu = await connection.execute(
-                'UPDATE STATISTIKA SET VRIJEME_KRAJ = :vrijeme WHERE STAT_ID = :stat_id',
-                { vrijeme, stat_id },
+                "UPDATE STATISTIKA SET VRIJEME_KRAJ = trim(TO_CHAR(:minute, '00')) || ':'  ||  trim(TO_CHAR(:sekunde,'00')) WHERE STAT_ID = :stat_id",
+                { minute: minute, sekunde: sekunde, stat_id: stat_id },
                 { autoCommit: true }
             );
 
@@ -1454,16 +1475,17 @@ app.post('/unesiStatistiku', async (req, res) => {
                 { autoCommit: true }
             );
             const SQL_upit =
-                'INSERT INTO STATISTIKA(IGRAC_ID, SP_ID, STATUS_ID, UTAKMICA_ID, VRIJEME_POCETAK) VALUES (:igrac_ulaz_id, :podatak_id, :status, :utakmica_id, :vrijeme)';
-            const igrac_ulaz_id = igracUlazID.IGRAC_ID;
-            const unesi = await connection.post(
+                "INSERT INTO STATISTIKA(IGRAC_ID, SP_ID, STATUS_ID, UTAKMICA_ID, VRIJEME_POCETAK) VALUES (:igrac_ulaz_id, :podatak_id, :status_id, :utakmica_id, trim(TO_CHAR(:minute, '00')) || ':'  ||  trim(TO_CHAR(:sekunde,'00')))";
+
+            const unesi = await connection.execute(
                 SQL_upit,
                 {
-                    igrac_ulaz_id,
-                    podatak_id,
-                    status: 2,
-                    utakmica_id,
-                    vrijeme,
+                    igrac_ulaz_id: igracUlazID,
+                    podatak_id: podatakID,
+                    status_id: 2,
+                    utakmica_id: utakmica_id,
+                    minute: minute,
+                    sekunde: sekunde,
                 },
                 { autoCommit: true }
             );
