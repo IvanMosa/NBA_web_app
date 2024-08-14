@@ -254,7 +254,7 @@ body {
 
 .statistics {
     width: 90%;
-    margin: 20px auto;
+    margin: 0px auto;
     padding: 20px;
     border: 1px solid #ccc;
     border-radius: 8px;
@@ -310,4 +310,18 @@ body {
 
 .modal .table-container {
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+tr {
+    transition: background-color 0.5s ease-in-out, box-shadow 0.5s ease-in-out;
+}
+
+.highlight {
+    background-color: lightgreen;
+    box-shadow: 0 4px 8px rgba(0, 128, 0, 0.3);
+}
+
+.highlight2 {
+    background-color: red;
+    box-shadow: 0 4px 8px rgba(0, 128, 0, 0.3);
 }

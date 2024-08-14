@@ -11,6 +11,8 @@ const OdabirPodatka = ({
     onConfirm,
     oznacenIgrac,
     zavrsena,
+    errorVrijeme,
+    setErrorVrijeme,
 }) => {
     const [temp_index, setTempIndex] = useState([]);
     const [temp_podatak, setTempPodatak] = useState('');
@@ -25,6 +27,7 @@ const OdabirPodatka = ({
     const [cetvrtina, setCetvrtina] = useState(1);
     const [edit, setEdit] = useState(false);
     const [editTekst, setEditTekst] = useState(false);
+    const [editShot, setEditShot] = useState(false);
     const [uzivo, setUzivo] = useState(zavrsena);
     const intervalRef = useRef(null);
     const shotClockRef = useRef(null);
@@ -48,7 +51,8 @@ const OdabirPodatka = ({
                                 setCetvrtina(cetvrtina + 1);
                             }
                             clearInterval(intervalRef.current);
-                            setIsRunning(false);
+                            resetShotClock();
+                            handleReset();
                         }
                     }
                 }
@@ -61,7 +65,7 @@ const OdabirPodatka = ({
 
     useEffect(() => {
         if (isShotClockRunning) {
-            if (shotClockSeconds < 5) {
+            if (shotClockSeconds < 6) {
                 shotClockRef.current = setInterval(() => {
                     if (shotClockTenths > 0) {
                         setShotClockTenths(shotClockTenths - 1);
@@ -90,6 +94,12 @@ const OdabirPodatka = ({
         }
         return () => clearInterval(shotClockRef.current);
     }, [isShotClockRunning, shotClockSeconds, shotClockTenths]);
+
+    useEffect(() => {
+        if (errorVrijeme !== '') {
+            setErrorMessage(errorVrijeme);
+        }
+    }, [errorVrijeme]);
 
     const handleStartStop = () => {
         setIsRunning(!isRunning);
@@ -141,12 +151,14 @@ const OdabirPodatka = ({
 
     const handleError = () => {
         setErrorMessage('');
+        setErrorVrijeme('');
     };
 
     const handleToggle = () => {
         setUzivo(!uzivo);
         handleReset();
         resetShotClock();
+        setCetvrtina(1);
     };
     return (
         <div>
@@ -158,7 +170,7 @@ const OdabirPodatka = ({
                                 <div
                                     className="tekst"
                                     onClick={() => {
-                                        if (!isRunning && !edit)
+                                        if (!isRunning && !edit && !editShot)
                                             setEditTekst(true);
                                     }}
                                 >
@@ -197,7 +209,11 @@ const OdabirPodatka = ({
                                 <div
                                     className="timeDisplay"
                                     onClick={() => {
-                                        if (!isRunning && !editTekst)
+                                        if (
+                                            !isRunning &&
+                                            !editTekst &&
+                                            !editShot
+                                        )
                                             setEdit(true);
                                     }}
                                 >
@@ -251,13 +267,70 @@ const OdabirPodatka = ({
                                     </button>
                                 </div>
                             )}
-                            {uzivo && (
-                                <div className="shotClockDisplay">
-                                    :{formatTime(shotClockSeconds)}
-                                    {shotClockSeconds < 5 &&
-                                        '.' + shotClockTenths}
-                                </div>
-                            )}
+                            {uzivo &&
+                                (!editShot ? (
+                                    <div
+                                        className="shotClockDisplay"
+                                        onClick={() => {
+                                            if (
+                                                !isRunning &&
+                                                !editTekst &&
+                                                !edit
+                                            )
+                                                setEditShot(true);
+                                        }}
+                                    >
+                                        :{formatTime(shotClockSeconds)}
+                                        {shotClockSeconds < 5 &&
+                                            '.' + shotClockTenths}
+                                    </div>
+                                ) : (
+                                    <div className="shotClockDisplay edit">
+                                        <div className="shotClockDisplay">
+                                            :
+                                            <input
+                                                type="number"
+                                                value={shotClockSeconds}
+                                                onChange={(e) =>
+                                                    setShotClockSeconds(
+                                                        Math.max(
+                                                            0,
+                                                            Math.min(
+                                                                24,
+                                                                e.target.value
+                                                            )
+                                                        )
+                                                    )
+                                                }
+                                                className="input"
+                                            />
+                                        </div>
+                                        {shotClockSeconds < 5 && (
+                                            <input
+                                                type="number"
+                                                value={shotClockTenths}
+                                                onChange={(e) =>
+                                                    setShotClockTenths(
+                                                        Math.max(
+                                                            0,
+                                                            Math.min(
+                                                                9,
+                                                                e.target.value
+                                                            )
+                                                        )
+                                                    )
+                                                }
+                                                className="input"
+                                            />
+                                        )}
+                                        <button
+                                            className="button"
+                                            onClick={() => setEditShot(false)}
+                                        >
+                                            Save
+                                        </button>
+                                    </div>
+                                ))}
                             <div>
                                 <p
                                     className={`switchTekst ${

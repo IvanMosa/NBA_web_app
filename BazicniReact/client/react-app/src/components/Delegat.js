@@ -36,11 +36,21 @@ const Delegat = () => {
     const [aktivni_domaci, setAktivniDomaci] = useState([]);
     const [aktivni_gosti, setAktivniGosti] = useState([]);
     const [starteri_spremljeni, setStarteriSpremljeni] = useState(false);
-    const [Igrac_promjena, setIgracPromjena] = useState([]);
-    const [oznaceni_podatak, setOznaceniPodatak] = useState('');
-    const [Igrac_ulazi, setIgracUlazi] = useState([]);
     const [potvrdaPromjene, setPotvrdaPromjene] = useState(false);
     const [zavrsena, setZavrsena] = useState(false);
+
+    const [Igrac_promjena, setIgracPromjena] = useState([]);
+    const [Igrac_ulazi, setIgracUlazi] = useState([]);
+    const [oznaceni_podatak, setOznaceniPodatak] = useState('');
+    const [status, setStatus] = useState('');
+    const [minute, setMinute] = useState(0);
+    const [sekunde, setSekunde] = useState(0);
+    const [errorVrijeme, setErrorVrijeme] = useState('');
+    const [promjene, setPromjene] = useState(false);
+    const [promjeneUlazIzlaz, setPromjeneUlazIzlaz] = useState(false);
+    const [highlight, setHighlight] = useState(false);
+    const [highlight2, setHighlight2] = useState(false);
+    const [pokreni, setPokreni] = useState(false);
 
     const fetchData = async () => {
         try {
@@ -339,61 +349,112 @@ const Delegat = () => {
     };
 
     const handleOznaceniPodatak = (podatak) => {
-        setOznaceniPodatak(podatak);
+        setOznaceniPodatak(podatak.toString());
     };
 
     const handleConfirm = (status, minute, sekunde) => {
-        setPotvrdaPromjene(true);
-        unesiPromjene(status, minute, sekunde, Igrac_promjena, Igrac_ulazi);
+        setPokreni(true);
+        setStatus(status.toString());
+        setMinute(minute);
+        setSekunde(sekunde);
     };
 
-    const unesiPromjene = async (
-        status,
-        minute,
-        sekunde,
-        Igrac_promjena,
-        Igrac_ulazi
-    ) => {
-        try {
-            // if (oznaceni_podatak == 'Ulaz/Izlaz') {
-            //     const result = await axios.post(
-            //         'http://localhost:4000/unesiStatistiku',
-            //         {
-            //             igrac_id: Igrac_promjena,
-            //             igrac_ulaz_id: Igrac_ulazi,
-            //             status: status.toString(),
-            //             minute: minute,
-            //             sekunde: sekunde,
-            //             podatak: oznaceni_podatak.toString(),
-            //             utakmica_id: utakmica_id,
-            //         }
-            //     );
-            // } else {
-            //     const result = await axios.post(
-            //         'http://localhost:4000/unesiStatistiku',
-            //         {
-            //             igrac_id: Igrac_promjena,
-            //             status: status.toString(),
-            //             minute: minute,
-            //             sekunde: sekunde,
-            //             podatak: oznaceni_podatak.toString(),
-            //             utakmica_id: utakmica_id,
-            //         }
-            //     );
-            // }
+    useEffect(() => {
+        const unesiPromjene = async () => {
+            try {
+                let result;
+                if (oznaceni_podatak == 'Ulaz/Izlaz') {
+                    result = await axios.post(
+                        'http://localhost:4000/unesiStatistiku',
+                        {
+                            igrac_id: Igrac_promjena,
+                            igrac_ulaz_id: Igrac_ulazi,
+                            domaci_naziv:
+                                oznacenaUtakmica.DOMACI_NAZIV.toString(),
+                            gosti_naziv:
+                                oznacenaUtakmica.GOSTI_NAZIV.toString(),
+                            status: status,
+                            minute: minute,
+                            sekunde: sekunde,
+                            podatak: oznaceni_podatak,
+                            utakmica_id: utakmica_id,
+                        }
+                    );
 
-            await new Promise((resolve) => setTimeout(resolve, 750));
-            setPotvrdaPromjene(false);
+                    if (result.data.message) {
+                        setErrorVrijeme(result.data.message);
+                    } else {
+                        setPotvrdaPromjene(true);
+                        await new Promise((resolve) =>
+                            setTimeout(resolve, 750)
+                        );
+                        setPotvrdaPromjene(false);
+                        setStatistika((prev) => [
+                            result.data.noviUlaz,
+                            result.data.noviIzlaz,
+                            ...prev,
+                        ]);
+                        setAktivniDomaci(result.data.aktivni_domaci);
+                        setAktivniGosti(result.data.aktivni_gosti);
+                        setPromjeneUlazIzlaz(true);
+                        setPromjene(true);
+                    }
+                } else {
+                    result = await axios.post(
+                        'http://localhost:4000/unesiStatistiku',
+                        {
+                            igrac_id: Igrac_promjena,
+                            status: status.toString(),
+                            minute: minute,
+                            sekunde: sekunde,
+                            podatak: oznaceni_podatak,
+                            utakmica_id: utakmica_id,
+                        }
+                    );
+                    if (result.data.message) {
+                        setErrorVrijeme(result.data.message);
+                    } else {
+                        setStatistika((prev) => [
+                            result.data.noviPodatak,
+                            ...prev,
+                        ]);
+                        setPromjene(true);
+                    }
+                }
 
-            Igrac_promjena.oznacen = false;
-            Igrac_ulazi.oznacen = false;
-            setIgracPromjena([]);
-            setIgracUlazi([]);
-            console.log(status);
-        } catch (err) {
-            console.log(err);
+                Igrac_promjena.oznacen = false;
+                Igrac_ulazi.oznacen = false;
+                setIgracPromjena([]);
+                setIgracUlazi([]);
+                setStatus('');
+                setMinute(0);
+                setSekunde(0);
+                setPokreni(false);
+            } catch (err) {
+                console.log(err);
+            }
+        };
+        if (pokreni === true) {
+            unesiPromjene();
         }
-    };
+    }, [pokreni]);
+
+    useEffect(() => {
+        if (promjene) {
+            if (promjeneUlazIzlaz) {
+                setHighlight2(true);
+            }
+            setHighlight(true);
+            const timer = setTimeout(() => {
+                setHighlight(false);
+                setHighlight2(false);
+                setPromjene(false);
+                setPromjeneUlazIzlaz(false);
+            }, 1000);
+            return () => clearTimeout(timer);
+        }
+    }, [promjene]);
+
     return (
         <div>
             <div className={`container ${blurano ? 'blurred' : ''}`}>
@@ -521,6 +582,8 @@ const Delegat = () => {
                                 onConfirm={handleConfirm}
                                 oznacenIgrac={Igrac_promjena}
                                 zavrsena={zavrsena}
+                                errorVrijeme={errorVrijeme}
+                                setErrorVrijeme={setErrorVrijeme}
                             />
                         )}
                     </div>
@@ -718,9 +781,18 @@ const Delegat = () => {
                             </thead>
                             <tbody>
                                 {statistika.map((rowItem, rowIndex) => (
-                                    <tr key={rowIndex}>
+                                    <tr
+                                        key={rowIndex}
+                                        className={
+                                            rowIndex === 0 && highlight
+                                                ? 'highlight'
+                                                : rowIndex === 1 && highlight2
+                                                ? 'highlight2'
+                                                : ''
+                                        }
+                                    >
                                         {rowItem
-                                            .slice(0, -1)
+                                            .slice(0, -2)
                                             .map((row, rowInd) => (
                                                 <td key={rowInd}>{row}</td>
                                             ))}
