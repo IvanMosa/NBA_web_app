@@ -13,6 +13,7 @@ const OdabirPodatka = ({
     zavrsena,
     errorVrijeme,
     setErrorVrijeme,
+    oznacenaUtakmica,
 }) => {
     const [temp_index, setTempIndex] = useState([]);
     const [temp_podatak, setTempPodatak] = useState('');
@@ -76,6 +77,7 @@ const OdabirPodatka = ({
                         } else {
                             clearInterval(shotClockRef.current);
                             setIsShotClockRunning(false);
+                            setIsRunning(false);
                         }
                     }
                 }, 100);
@@ -112,6 +114,7 @@ const OdabirPodatka = ({
         setMinutes(12);
         setSeconds(0);
         setTenths(0);
+        resetShotClock();
     };
 
     const resetShotClock = () => {
@@ -126,6 +129,7 @@ const OdabirPodatka = ({
         if (podatak == temp_podatak) {
             setTempPodatak('');
             setTempIndex([]);
+            onSelect('');
         } else {
             setTempPodatak(podatak);
             onSelect(podatak);
@@ -163,6 +167,29 @@ const OdabirPodatka = ({
     return (
         <div>
             <div className={`container_button ${errorMessage ? 'blur' : ''}`}>
+                {!start && (
+                    <div className="match-details">
+                        <div className="match_det">
+                            <div className="match-detail">
+                                <span>{oznacenaUtakmica.DOMACI_NAZIV}</span>
+                            </div>
+                            <div className="match-detail">
+                                <span>
+                                    {oznacenaUtakmica.POENI_DOMACI} :
+                                    {oznacenaUtakmica.POENI_GOSTI}
+                                </span>
+                            </div>
+
+                            <div className="match-detail">
+                                <span>{oznacenaUtakmica.GOSTI_NAZIV}</span>
+                            </div>
+                            <div className="match-detail">
+                                <span>{oznacenaUtakmica.DATUM_UTAKMICE}</span>
+                            </div>
+                        </div>
+                        <div className="line"></div>
+                    </div>
+                )}
                 {!start && (
                     <div className="clockContainer">
                         <div className="timeContainer">
@@ -304,25 +331,28 @@ const OdabirPodatka = ({
                                                 }
                                                 className="input"
                                             />
-                                        </div>
-                                        {shotClockSeconds < 5 && (
-                                            <input
-                                                type="number"
-                                                value={shotClockTenths}
-                                                onChange={(e) =>
-                                                    setShotClockTenths(
-                                                        Math.max(
-                                                            0,
-                                                            Math.min(
-                                                                9,
-                                                                e.target.value
+                                            .
+                                            {shotClockSeconds < 5 && (
+                                                <input
+                                                    type="number"
+                                                    value={shotClockTenths}
+                                                    onChange={(e) =>
+                                                        setShotClockTenths(
+                                                            Math.max(
+                                                                0,
+                                                                Math.min(
+                                                                    9,
+                                                                    e.target
+                                                                        .value
+                                                                )
                                                             )
                                                         )
-                                                    )
-                                                }
-                                                className="input"
-                                            />
-                                        )}
+                                                    }
+                                                    className="input"
+                                                />
+                                            )}
+                                        </div>
+
                                         <button
                                             className="button"
                                             onClick={() => setEditShot(false)}

@@ -108,9 +108,8 @@
 }
 
 .edit {
-    display: flex;
-    flex-direction: column; /* Postavlja elemente vertikalno */
-    align-items: center; /* Centriranje elemenata horizontalno */
+    display: block; /* Postavi edit display na block */
+    text-align: center; /* Centriranje elemenata horizontalno */
 }
 
 .editContainer {

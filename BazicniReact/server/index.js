@@ -1162,8 +1162,6 @@ app.post('/getStatistikaMomcadi', async (req, res) => {
 app.post('/kreirajUtakmicu', async (req, res) => {
     let connection;
 
-    console.log(req.body.domaci);
-
     let domaci = req.body.domaci;
     let hasDomaci = domaci ? domaci.trim().length > 0 : false;
 
@@ -1264,7 +1262,6 @@ app.post('/kreirajUtakmicu', async (req, res) => {
                 { outFormat: oracledb.OBJECT }
             );
             let utakmica_id = res5.rows[0].UTAKMICA_ID;
-            console.log(utakmica_id);
             if (result.rowsAffected === 1)
                 res.send({
                     message: 'Insert was completed successfully!',
@@ -1385,6 +1382,8 @@ app.post('/unesiStatistiku', async (req, res) => {
 
     const utakmica_id = req.body.utakmica_id;
 
+    const setStarteri = req.body.setStarteri ? req.body.setStarteri : false;
+
     const domaci_naziv = req.body.domaci_naziv || '';
 
     const gosti_naziv = req.body.gosti_naziv || '';
@@ -1407,6 +1406,7 @@ app.post('/unesiStatistiku', async (req, res) => {
 
     let podatakID;
     let statusID;
+
     try {
         connection = await oracledb.getConnection();
         const podatak_id = await connection.execute(
@@ -1415,7 +1415,7 @@ app.post('/unesiStatistiku', async (req, res) => {
             { outFormat: oracledb.OBJECT }
         );
         podatakID = podatak_id.rows[0].SP_ID;
-        console.log(status);
+
         const status_id = await connection.execute(
             "SELECT S.STATUS_ID FROM STATUSI S WHERE S.NAZIV = :status AND S.TABLICA = 'STATISTIKA'",
             { status: status },
@@ -1432,7 +1432,7 @@ app.post('/unesiStatistiku', async (req, res) => {
                     {
                         igrac_id: igrac.IGRAC_ID,
                         podatak_id: podatakID,
-                        status: status,
+                        status: statusID,
                         utakmica_id: utakmica_id,
                     },
                     { autoCommit: true }
@@ -1442,11 +1442,7 @@ app.post('/unesiStatistiku', async (req, res) => {
             }
         };
 
-        if (
-            aktivni_domaci.length > 0 &&
-            aktivni_gosti.length > 0 &&
-            status === 2
-        ) {
+        if (setStarteri) {
             const domaciPromises = aktivni_domaci.map((igrac) =>
                 unosPocetnogPodatka(igrac)
             );
@@ -1456,27 +1452,8 @@ app.post('/unesiStatistiku', async (req, res) => {
                 unosPocetnogPodatka(igrac)
             );
             await Promise.all(gostiPromises);
+            return res.send({ message: 'Success' });
         } else if (igracID && igracUlazID === null) {
-            const provjeriNoviPodatak_SQL =
-                "SELECT COUNT(*) AS BROJ FROM STATISTIKA STAT WHERE STAT.IGRAC_ID = :igrac_id AND STAT.UTAKMICA_ID = :utakmica_id AND STAT.SP_ID = :podatak_id AND STAT.VRIJEME_POCETAK = trim(TO_CHAR(:minute, '00')) || ':'  ||  trim(TO_CHAR(:sekunde,'00')) ";
-
-            const provjeriNoviPodatak = await connection.execute(
-                provjeriNoviPodatak_SQL,
-                {
-                    igrac_id: igracID,
-                    utakmica_id: utakmica_id,
-                    podatak_id: podatakID,
-                    minute: minute,
-                    sekunde: sekunde,
-                },
-                { outFormat: oracledb.OBJECT }
-            );
-            if (provjeriNoviPodatak.rows[0].BROJ !== 0) {
-                return res.send({
-                    message: 'Ovaj podatak već postoji!',
-                });
-            }
-
             const unesiNoviPodatak_SQL =
                 "INSERT INTO STATISTIKA(IGRAC_ID, SP_ID, STATUS_ID, UTAKMICA_ID, VRIJEME_POCETAK) VALUES (:igrac_id, :podatak_id, :status_id, :utakmica_id, trim(TO_CHAR(:minute, '00')) || ':'  ||  trim(TO_CHAR(:sekunde,'00')))";
 

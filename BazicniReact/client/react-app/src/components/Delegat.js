@@ -7,6 +7,7 @@ import DropdownMenu from './library_css/DropdownMenu';
 import Logo from './library_css/Logo';
 import OdabirPodatka from './library_css/OdabirPodatka';
 import DelegatIgraci from './library_css/Delegat_Igraci';
+import '@fortawesome/fontawesome-free/css/all.min.css';
 
 const Delegat = () => {
     const [momcadi, setMomcadi] = useState([]);
@@ -38,6 +39,7 @@ const Delegat = () => {
     const [starteri_spremljeni, setStarteriSpremljeni] = useState(false);
     const [potvrdaPromjene, setPotvrdaPromjene] = useState(false);
     const [zavrsena, setZavrsena] = useState(false);
+    const [pozivStarteriOznaceni, setPozivStarteriOznaceni] = useState(false);
 
     const [Igrac_promjena, setIgracPromjena] = useState([]);
     const [Igrac_ulazi, setIgracUlazi] = useState([]);
@@ -51,6 +53,10 @@ const Delegat = () => {
     const [highlight, setHighlight] = useState(false);
     const [highlight2, setHighlight2] = useState(false);
     const [pokreni, setPokreni] = useState(false);
+
+    const [editingCell, setEditingCell] = useState(0);
+    const [ondelete, setDelete] = useState(false);
+    const [confirmationDialog, setConfirmationDialog] = useState(null);
 
     const fetchData = async () => {
         try {
@@ -145,12 +151,23 @@ const Delegat = () => {
                         sudac: sudac.toString(),
                     }
                 );
+
                 if (
                     result.data.message === 'Insert was completed successfully!'
                 ) {
+                    const result1 = await axios.post(
+                        'http://localhost:4000/getStatistikaMomcadi',
+                        {
+                            imeMomcad: domaci.toString(),
+                            imeMomcad1: gosti.toString(),
+                            datum: datum + ' ' + vrijeme,
+                        }
+                    );
+                    setOznacenaUtakmica(result1.data.utakmica);
                     setErrorMessage('Uspješno krenirana utakmica!');
-                    setUtakmica_ID(result.data.UTAKMICA_ID);
                     await new Promise((resolve) => setTimeout(resolve, 3000));
+                    setUtakmica_ID(result.data.utakmica_id);
+
                     const parsedDate = parse(datum, 'yyyy-MM-dd', new Date());
                     let temp_datum = format(parsedDate, 'MM/dd/yyyy');
                     const novaUtakmica = {
@@ -170,15 +187,6 @@ const Delegat = () => {
                     setErrorMessage('');
                     setBluranoPocetna(false);
                     setZavrsena(false);
-                    const result1 = await axios.post(
-                        'http://localhost:4000/getStatistikaMomcadi',
-                        {
-                            imeMomcad: domaci.toString(),
-                            imeMomcad1: gosti.toString(),
-                            datum: datum + ' ' + vrijeme,
-                        }
-                    );
-                    setOznacenaUtakmica(result1.data.utakmica);
                 } else setErrorMessage(result.data.message);
             } catch (err) {
                 console.log(err);
@@ -190,100 +198,6 @@ const Delegat = () => {
         setOznacenaUtakmica(rowItem);
         setUtakmica_ID(rowItem.UTAKMICA_ID);
     };
-
-    useEffect(() => {
-        const fetchData = async () => {
-            if (utakmica_id !== 0) {
-                try {
-                    const [statistikaResponse, igraciResponses] =
-                        await Promise.all([
-                            axios.post(
-                                'http://localhost:4000/prikaziStatistikuUtakmice',
-                                {
-                                    utakmica_id: utakmica_id,
-                                    domaci_naziv:
-                                        oznacenaUtakmica.DOMACI_NAZIV.toString(),
-                                    gosti_naziv:
-                                        oznacenaUtakmica.GOSTI_NAZIV.toString(),
-                                }
-                            ),
-                            Promise.all([
-                                axios.post('http://localhost:4000/showRoster', {
-                                    imeMomcad:
-                                        oznacenaUtakmica.DOMACI_NAZIV.toString(),
-                                    status: 0,
-                                }),
-                                axios.post('http://localhost:4000/showRoster', {
-                                    imeMomcad:
-                                        oznacenaUtakmica.GOSTI_NAZIV.toString(),
-                                    status: 0,
-                                }),
-                            ]),
-                        ]);
-
-                    const domaci_temp = igraciResponses[0].data.igraci.map(
-                        (igrac) => ({
-                            ...igrac,
-                            oznacen: false,
-                        })
-                    );
-
-                    const gosti_temp = igraciResponses[1].data.igraci.map(
-                        (igrac) => ({
-                            ...igrac,
-                            oznacen: false,
-                        })
-                    );
-                    if (statistikaResponse.data.statistika.length !== 0) {
-                        const aktivni_domaci_temp =
-                            statistikaResponse.data.aktivni_domaci.map(
-                                (igrac) => ({
-                                    ...igrac,
-                                    oznacen: false,
-                                })
-                            );
-                        const aktivni_gosti_temp =
-                            statistikaResponse.data.aktivni_gosti.map(
-                                (igrac) => ({
-                                    ...igrac,
-                                    oznacen: false,
-                                })
-                            );
-                        if (
-                            aktivni_domaci_temp.length !== 0 &&
-                            aktivni_gosti_temp.length !== 0
-                        ) {
-                            await Promise.all(
-                                [setAktivniDomaci(aktivni_domaci_temp)],
-                                [setAktivniGosti(aktivni_gosti_temp)]
-                            );
-
-                            setIgraciDomaci(domaci_temp);
-                            setIgraciGosti(gosti_temp);
-                            setZavrsena(false);
-                        } else {
-                            await Promise.all(
-                                [setAktivniDomaci(domaci_temp)],
-                                [setAktivniGosti(gosti_temp)]
-                            );
-                            setZavrsena(true);
-                        }
-                        setStarteriSpremljeni(true);
-                    }
-
-                    setStatistika(statistikaResponse.data.statistika);
-                    setOznacena(!oznacena);
-                    setUtakmica(false);
-                    setBlurano(false);
-                    setBluranoPocetna(false);
-                } catch (err) {
-                    console.log('Error during fetch:', err);
-                }
-            }
-        };
-
-        fetchData();
-    }, [utakmica_id]);
 
     const handleAktivniDomaci = (igrac, status) => {
         if (status === 0) setAktivniDomaci([...aktivni_domaci, igrac]);
@@ -317,7 +231,6 @@ const Delegat = () => {
             oznacen: false,
         }));
         setAktivniGosti(gosti_temp);
-        setStarteriSpremljeni(true);
 
         try {
             const result = await axios.post(
@@ -326,14 +239,109 @@ const Delegat = () => {
                     utakmica_id: utakmica_id,
                     aktivni_domaci: domaci_temp,
                     aktivni_gosti: gosti_temp,
-                    status: 2,
+                    status: 'U tijeku',
                     podatak: 'Ulaz/Izlaz',
+                    setStarteri: true,
                 }
             );
+            setPozivStarteriOznaceni(true);
         } catch (err) {
             console.log(err);
         }
     };
+
+    const prikaziStatisiku = async () => {
+        try {
+            const [statistikaResponse, igraciResponses] = await Promise.all([
+                axios.post('http://localhost:4000/prikaziStatistikuUtakmice', {
+                    utakmica_id: utakmica_id,
+                    domaci_naziv: oznacenaUtakmica.DOMACI_NAZIV.toString(),
+                    gosti_naziv: oznacenaUtakmica.GOSTI_NAZIV.toString(),
+                }),
+                Promise.all([
+                    axios.post('http://localhost:4000/showRoster', {
+                        imeMomcad: oznacenaUtakmica.DOMACI_NAZIV.toString(),
+                        status: 0,
+                    }),
+                    axios.post('http://localhost:4000/showRoster', {
+                        imeMomcad: oznacenaUtakmica.GOSTI_NAZIV.toString(),
+                        status: 0,
+                    }),
+                ]),
+            ]);
+
+            const domaci_temp = igraciResponses[0].data.igraci.map((igrac) => ({
+                ...igrac,
+                oznacen: false,
+            }));
+            setIgraciDomaci(domaci_temp);
+            const gosti_temp = igraciResponses[1].data.igraci.map((igrac) => ({
+                ...igrac,
+                oznacen: false,
+            }));
+            setIgraciGosti(gosti_temp);
+            if (statistikaResponse.data.statistika.length !== 0) {
+                const aktivni_domaci_temp =
+                    statistikaResponse.data.aktivni_domaci.map((igrac) => ({
+                        ...igrac,
+                        oznacen: false,
+                    }));
+                const aktivni_gosti_temp =
+                    statistikaResponse.data.aktivni_gosti.map((igrac) => ({
+                        ...igrac,
+                        oznacen: false,
+                    }));
+                if (
+                    aktivni_domaci_temp.length !== 0 &&
+                    aktivni_gosti_temp.length !== 0
+                ) {
+                    await Promise.all(
+                        [setAktivniDomaci(aktivni_domaci_temp)],
+                        [setAktivniGosti(aktivni_gosti_temp)]
+                    );
+
+                    setIgraciDomaci(domaci_temp);
+                    setIgraciGosti(gosti_temp);
+                    setZavrsena(false);
+                } else {
+                    await Promise.all(
+                        [setAktivniDomaci(domaci_temp)],
+                        [setAktivniGosti(gosti_temp)]
+                    );
+                    setZavrsena(true);
+                }
+                setStarteriSpremljeni(true);
+            }
+
+            setStatistika(statistikaResponse.data.statistika);
+            setOznacena(true);
+            setUtakmica(false);
+            setBlurano(false);
+            setBluranoPocetna(false);
+        } catch (err) {
+            console.log('Error during fetch:', err);
+        }
+    };
+
+    useEffect(() => {
+        console.log(utakmica_id);
+        if (utakmica_id !== 0) {
+            prikaziStatisiku();
+        }
+    }, [utakmica_id]);
+
+    useEffect(() => {
+        if (pozivStarteriOznaceni === true) {
+            prikaziStatisiku();
+            setStarteriSpremljeni(true);
+            setPozivStarteriOznaceni(false);
+        }
+    }, [pozivStarteriOznaceni]);
+
+    useEffect(() => {
+        console.log(statistika);
+        console.log(oznacena);
+    }, [statistika]);
 
     const handleOznacenIgrac = (oznacenIgrac, status) => {
         if (oznacenIgrac.length === 0 && status === 0) {
@@ -411,15 +419,8 @@ const Delegat = () => {
                             utakmica_id: utakmica_id,
                         }
                     );
-                    if (result.data.message) {
-                        setErrorVrijeme(result.data.message);
-                    } else {
-                        setStatistika((prev) => [
-                            result.data.noviPodatak,
-                            ...prev,
-                        ]);
-                        setPromjene(true);
-                    }
+                    setStatistika((prev) => [result.data.noviPodatak, ...prev]);
+                    setPromjene(true);
                 }
 
                 Igrac_promjena.oznacen = false;
@@ -429,6 +430,7 @@ const Delegat = () => {
                 setStatus('');
                 setMinute(0);
                 setSekunde(0);
+                setOznaceniPodatak('');
                 setPokreni(false);
             } catch (err) {
                 console.log(err);
@@ -455,6 +457,49 @@ const Delegat = () => {
         }
     }, [promjene]);
 
+    const handleMouseEnter = (rowIndex) => {
+        setEditingCell(rowIndex);
+    };
+
+    const handleMouseClick = (rowIndex) => {
+        setEditingCell(rowIndex);
+    };
+
+    const potvrdi = (izbrisiPodatak) => {
+        return new Promise((resolve) => {
+            const handleConfirm = () => resolve(true);
+            const handleCancel = () => resolve(false);
+
+            setConfirmationDialog({
+                message:
+                    'Jeste li sigurni da želite obrisati podatak: ' +
+                    izbrisiPodatak[1] +
+                    ' za igrača: ' +
+                    izbrisiPodatak[0] +
+                    '?',
+                onConfirm: handleConfirm,
+                onCancel: handleCancel,
+            });
+        });
+    };
+    const handleDeleteClick = async (rowIndex) => {
+        const izbrisiPodatak = statistika[rowIndex];
+
+        setDelete(true);
+        let confirm = await potvrdi(izbrisiPodatak);
+        try {
+            setDelete(false);
+            if (confirm) {
+                // const result = await axios.post(
+                //     'http://localhost:4000/izbrisiPodatak',
+                //     { izbrisiPodatak: izbrisiPodatak}
+                // );
+                prikaziStatisiku();
+            }
+        } catch (err) {
+            console.log(err);
+        }
+    };
     return (
         <div>
             <div className={`container ${blurano ? 'blurred' : ''}`}>
@@ -511,59 +556,23 @@ const Delegat = () => {
                             </div>
                         </div>
                     ) : (
-                        <div
-                            className="above-container"
-                            onMouseEnter={() => setHover(true)}
-                            onMouseLeave={() => setHover(false)}
-                        >
-                            {hover ? (
-                                <div
-                                    className="above-middle stil1"
-                                    onClick={() => {
-                                        setOznacenaUtakmica([]);
-                                        setUtakmica_ID(0);
-                                        setOznacena(false);
-                                        setBluranoPocetna(true);
-                                        setAktivniDomaci([]);
-                                        setAktivniGosti([]);
-                                        setStarteriSpremljeni(false);
-                                    }}
-                                >
-                                    <p>Klikni za promjenu utakmice</p>
-                                </div>
-                            ) : (
-                                <div className="above-middle stil1">
-                                    <h4>Označena utakmica je:</h4>
-                                    <div className="match-details">
-                                        <div className="match-detail">
-                                            <strong>Domaći:</strong>
-                                            <span>
-                                                {oznacenaUtakmica.DOMACI_NAZIV}
-                                            </span>
-                                        </div>
-                                        <div className="match-detail">
-                                            <strong>Gosti:</strong>
-                                            <span>
-                                                {oznacenaUtakmica.GOSTI_NAZIV}
-                                            </span>
-                                        </div>
-                                        <div className="match-detail">
-                                            <strong>Sudac:</strong>
-                                            <span>
-                                                {oznacenaUtakmica.SUDAC}
-                                            </span>
-                                        </div>
-                                        <div className="match-detail">
-                                            <strong>Datum utakmice:</strong>
-                                            <span>
-                                                {
-                                                    oznacenaUtakmica.DATUM_UTAKMICE
-                                                }
-                                            </span>
-                                        </div>
-                                    </div>
-                                </div>
-                            )}
+                        <div className="above-container">
+                            <div
+                                className="above-middle stil1"
+                                onClick={() => {
+                                    setOznacenaUtakmica([]);
+                                    setUtakmica_ID(0);
+                                    setOznacena(false);
+                                    setBluranoPocetna(true);
+                                    setAktivniDomaci([]);
+                                    setAktivniGosti([]);
+                                    setStarteriSpremljeni(false);
+                                    setPozivStarteriOznaceni(false);
+                                    setStatistika([]);
+                                }}
+                            >
+                                <p>Klikni za promjenu utakmice</p>
+                            </div>
                         </div>
                     )}
                     <div
@@ -584,6 +593,7 @@ const Delegat = () => {
                                 zavrsena={zavrsena}
                                 errorVrijeme={errorVrijeme}
                                 setErrorVrijeme={setErrorVrijeme}
+                                oznacenaUtakmica={oznacenaUtakmica}
                             />
                         )}
                     </div>
@@ -763,50 +773,102 @@ const Delegat = () => {
                     </div>
                 )
             ) : null}
-            {oznacena && statistika.length !== 0 ? (
+            {oznacena ? (
                 <div className="statistics">
-                    <div className="table-container">
-                        <table>
-                            <thead>
-                                <tr>
-                                    {[
-                                        'NAZIV',
-                                        'PODATAK',
-                                        'VRIJEME NA SEMAFORU',
-                                        'STATUS',
-                                    ].map((column, columnIndex) => (
-                                        <th key={columnIndex}>{column}</th>
-                                    ))}
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {statistika.map((rowItem, rowIndex) => (
-                                    <tr
-                                        key={rowIndex}
-                                        className={
-                                            rowIndex === 0 && highlight
-                                                ? 'highlight'
-                                                : rowIndex === 1 && highlight2
-                                                ? 'highlight2'
-                                                : ''
-                                        }
-                                    >
-                                        {rowItem
-                                            .slice(0, -2)
-                                            .map((row, rowInd) => (
-                                                <td key={rowInd}>{row}</td>
-                                            ))}
+                    {statistika && statistika.length !== 0 ? (
+                        <div className="table-container">
+                            <table>
+                                <thead>
+                                    <tr>
+                                        {[
+                                            'NAZIV',
+                                            'PODATAK',
+                                            'VRIJEME NA SEMAFORU',
+                                            'STATUS',
+                                            '',
+                                        ].map((column, columnIndex) => (
+                                            <th key={columnIndex}>{column}</th>
+                                        ))}
                                     </tr>
-                                ))}
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-            ) : oznacena ? (
-                <div className="statistics">
-                    <p>
-                        Unesite statističke podatke kako biste ih ovdje vidjeli!
-                    </p>
+                                </thead>
+                                <tbody>
+                                    {statistika.map((rowItem, rowIndex) => (
+                                        <tr
+                                            key={rowIndex}
+                                            className={
+                                                rowIndex === 0 && highlight
+                                                    ? 'highlight'
+                                                    : rowIndex === 1 &&
+                                                      highlight2
+                                                    ? 'highlight2'
+                                                    : ''
+                                            }
+                                            onMouseEnter={() =>
+                                                handleMouseEnter(rowIndex)
+                                            }
+                                            onClick={() =>
+                                                handleMouseClick(rowIndex)
+                                            }
+                                        >
+                                            {rowItem
+                                                .slice(0, -2)
+                                                .map((row, rowInd) => (
+                                                    <td key={rowInd}>{row}</td>
+                                                ))}
+                                            <td className="button_cell statistika">
+                                                {rowIndex === editingCell && (
+                                                    <div className="button_div statistika">
+                                                        <button
+                                                            type="button"
+                                                            onClick={() =>
+                                                                handleDeleteClick(
+                                                                    rowIndex
+                                                                )
+                                                            }
+                                                        >
+                                                            <i class="fa-solid fa-delete-left"></i>
+                                                        </button>
+                                                    </div>
+                                                )}
+                                            </td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </table>
+                            {ondelete && (
+                                <div className="errorOverlay">
+                                    <div className="errorModal">
+                                        <p className="errorMessage">
+                                            {confirmationDialog.message}
+                                        </p>
+                                        <button
+                                            type="button"
+                                            className="okButton"
+                                            onClick={
+                                                confirmationDialog.onConfirm
+                                            }
+                                        >
+                                            Da
+                                        </button>
+                                        <button
+                                            type="button"
+                                            className="okButton"
+                                            onClick={
+                                                confirmationDialog.onCancel
+                                            }
+                                        >
+                                            Odustani
+                                        </button>
+                                    </div>
+                                </div>
+                            )}
+                        </div>
+                    ) : (
+                        <p>
+                            Unesite statističke podatke kako biste ih ovdje
+                            vidjeli!
+                        </p>
+                    )}
                 </div>
             ) : null}
         </div>
