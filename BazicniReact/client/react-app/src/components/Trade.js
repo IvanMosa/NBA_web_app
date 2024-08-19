@@ -98,9 +98,10 @@ function Trade() {
                 );
             }
             if (igrac1 == 'Odaberi igraca') {
-                setErrorMessage(
-                    'Oznaci barem jednog igraca kako bi trade bio omogucen!'
-                );
+                setErrorMessage('Oznaci igrace kako bi trade bio omogucen!');
+            }
+            if (igrac2 == 'Odaberi igraca') {
+                setErrorMessage('Oznaci igrace kako bi trade bio omogucen!');
             }
         };
         fetchData();
@@ -112,17 +113,12 @@ function Trade() {
             igrac1 == 'Odaberi momcad za prikaz'
         ) {
             setTradeAccepted(false);
-            setErrorMessage('Oznaci igraca za jednosmjeran trade!');
+            setErrorMessage('Oznaci igraca!');
         }
         if (momcad1 == 'Odaberi momcad' || momcad2 == 'Odaberi momcad') {
             setTradeAccepted(false);
         }
 
-        console.log(momcad1);
-        console.log(momcad2);
-        console.log(igrac1);
-        console.log(TradeAccepted);
-        console.log(datum_igrac);
         if (TradeAccepted) {
             const result = await axios.post(
                 'http://localhost:4000/insertTrade',

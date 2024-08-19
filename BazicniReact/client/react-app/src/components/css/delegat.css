@@ -113,8 +113,9 @@ body {
 }
 .match-detail {
     display: flex;
-    flex-direction: column;
+    flex-direction: row;
     font-size: 18px;
+    gap: 5px;
 }
 
 .line {

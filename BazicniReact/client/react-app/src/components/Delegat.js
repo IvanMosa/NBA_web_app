@@ -324,7 +324,6 @@ const Delegat = () => {
     };
 
     useEffect(() => {
-        console.log(utakmica_id);
         if (utakmica_id !== 0) {
             prikaziStatisiku();
         }
@@ -421,6 +420,14 @@ const Delegat = () => {
                     );
                     setStatistika((prev) => [result.data.noviPodatak, ...prev]);
                     setPromjene(true);
+                    const momcad = result.data.momcad;
+                    const poeni = result.data.poeni;
+
+                    if (momcad == 'DOMACI') {
+                        oznacenaUtakmica.POENI_DOMACI += poeni;
+                    } else if (momcad == 'GOSTI') {
+                        oznacenaUtakmica.POENI_GOSTI += poeni;
+                    }
                 }
 
                 Igrac_promjena.oznacen = false;
@@ -472,34 +479,52 @@ const Delegat = () => {
 
             setConfirmationDialog({
                 message:
-                    'Jeste li sigurni da želite obrisati podatak: ' +
+                    'Jeste li sigurni da želite obrisati podatak: "' +
                     izbrisiPodatak[1] +
-                    ' za igrača: ' +
+                    '" za igrača: "' +
                     izbrisiPodatak[0] +
-                    '?',
+                    '" ?',
                 onConfirm: handleConfirm,
                 onCancel: handleCancel,
             });
         });
     };
+
     const handleDeleteClick = async (rowIndex) => {
         const izbrisiPodatak = statistika[rowIndex];
 
+        console.log(izbrisiPodatak);
         setDelete(true);
         let confirm = await potvrdi(izbrisiPodatak);
         try {
             setDelete(false);
             if (confirm) {
-                // const result = await axios.post(
-                //     'http://localhost:4000/izbrisiPodatak',
-                //     { izbrisiPodatak: izbrisiPodatak}
-                // );
+                const noviStatistika = [
+                    ...statistika.slice(0, rowIndex),
+                    ...statistika.slice(rowIndex + 1),
+                ];
+                setStatistika(noviStatistika);
+
+                const result = await axios.post(
+                    'http://localhost:4000/izbrisiPodatak',
+                    { izbrisiPodatak: izbrisiPodatak, utakmica_id: utakmica_id }
+                );
+
+                const momcad = result.data.momcad;
+                const poeni = result.data.poeni;
+
+                if (momcad == 'DOMACI') {
+                    oznacenaUtakmica.POENI_DOMACI -= poeni;
+                } else if (momcad == 'GOSTI') {
+                    oznacenaUtakmica.POENI_GOSTI -= poeni;
+                }
                 prikaziStatisiku();
             }
         } catch (err) {
             console.log(err);
         }
     };
+
     return (
         <div>
             <div className={`container ${blurano ? 'blurred' : ''}`}>

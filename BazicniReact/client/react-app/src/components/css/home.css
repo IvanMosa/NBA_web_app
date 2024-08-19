@@ -1,0 +1,102 @@
+.homepage {
+    text-align: center;
+    padding: 40px;
+    background-color: #f0f2f5; /* Svijetlo siva pozadina */
+    height: 100%;
+}
+
+.homepage-title {
+    font-size: 2.5em;
+    margin-bottom: 100px;
+    color: #333;
+}
+
+.cards-container {
+    display: flex;
+    justify-content: center;
+    flex-wrap: wrap;
+    margin-top: 1vh;
+    gap: 30px; /* Razmak između kartica */
+    position: relative; /* Omogućuje karticama da se pravilno slože */
+}
+
+.card {
+    background-color: #fff; /* Bijela pozadina za kartice */
+    border-radius: 10px;
+    padding: 20px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); /* Lagana sjena ispod kartice */
+    flex: 1 1 calc(33.333% - 30px); /* Svaka kartica zauzima trećinu prostora, uzimajući u obzir razmak */
+    max-width: calc(
+        33.333% - 100px
+    ); /* Maksimalna širina kartice je trećina reda */
+    height: 100px; /* Početna visina kartice */
+    cursor: pointer;
+    transition: transform 0.5s ease, box-shadow 0.5s ease, width 0.5s ease,
+        z-index 0.5s ease; /* Animacije za hover */
+    position: relative; /* Za apsolutno pozicioniranje videa unutar kartice */
+    overflow: hidden; /* Sakrij video kad nije prikazan */
+    z-index: 1; /* Osigurava da kartice nisu prekrivene od strane drugih kartica */
+}
+
+.card.hovered {
+    transform: scale(1.1); /* Povećanje kartice na hover */
+    max-width: 80vw;
+    height: 80vh; /* Visina kartice kad je video prikazan, osigurava dovoljno prostora za video */
+    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.3); /* Pojačana sjena kod hovera */
+    z-index: 10; /* Povećava z-index kako bi kartica bila u prvom planu */
+    margin-bottom: 40px;
+}
+
+.hide {
+    display: none; /* Sakrij element */
+}
+.card h2 {
+    font-size: 1.5em;
+    margin-bottom: 10px;
+    color: #007bff; /* Plava boja naslova */
+}
+
+.card p {
+    font-size: 1em;
+    color: #666;
+    margin-bottom: 60px; /* Razmak kako bi se video bio vidljiv ispod teksta */
+}
+
+.card.hovered h2 {
+    font-size: 1.5em;
+    margin-bottom: 5px;
+    color: #007bff; /* Plava boja naslova */
+}
+
+.card.hovered p {
+    display: none;
+}
+.video-container {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    opacity: 0;
+    transition: opacity 0.2s ease, height 1s ease; /* Glatka tranzicija za pojavu videa */
+    background: rgba(
+        0,
+        0,
+        0,
+        0.05
+    ); /* Poluprozirna pozadina za bolji kontrast */
+    overflow: hidden;
+
+    border-top: 2px solid #ccc; /* Dodaje liniju između kartice i videa */
+}
+
+.card.hovered .video-container {
+    opacity: 1; /* Prikazuje video kad je kartica povećana */
+    height: 91%; /* Visina videa kad je kartica hoverana */
+}
+
+.video-container video {
+    width: 100%;
+    height: auto;
+    object-fit: cover;
+    transform: translateY(-5%);
+}

@@ -215,3 +215,17 @@ input:checked + .slider:before {
 .switchTekst.oznacen {
     color: #2196f3;
 }
+
+.promjena {
+    background-color: #ccc; /* Svijetlo žuta pozadina */
+    color: #d9534f;
+    font-weight: bold; /* Podebljan tekst */
+    padding: 1px;
+    border-radius: 5px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    border: 1px solid #d9534f;
+    opacity: 1;
+    transform: scale(1.05);
+    transition: padding 0.5s ease, background-color 0.5s ease, color 0.5s ease,
+        transform 0.5s ease, opacity 0.5s ease;
+}

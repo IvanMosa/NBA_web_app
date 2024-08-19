@@ -29,9 +29,32 @@ const OdabirPodatka = ({
     const [edit, setEdit] = useState(false);
     const [editTekst, setEditTekst] = useState(false);
     const [editShot, setEditShot] = useState(false);
+    const [promjenaDomaci, setPromjenaDomaci] = useState(false);
+    const [promjenaGosti, setPromjenaGosti] = useState(false);
     const [uzivo, setUzivo] = useState(zavrsena);
     const intervalRef = useRef(null);
     const shotClockRef = useRef(null);
+
+    useEffect(() => {
+        setPromjenaDomaci(true);
+        setPromjenaGosti(false);
+        const timer = setTimeout(() => {
+            setPromjenaDomaci(false);
+        }, 3000);
+
+        return () => clearTimeout(timer);
+    }, [oznacenaUtakmica.POENI_DOMACI]);
+
+    useEffect(() => {
+        setPromjenaGosti(true);
+        setPromjenaDomaci(false);
+
+        const timer = setTimeout(() => {
+            setPromjenaGosti(false);
+        }, 3000);
+
+        return () => clearTimeout(timer);
+    }, [oznacenaUtakmica.POENI_GOSTI]);
 
     useEffect(() => {
         if (isRunning) {
@@ -174,8 +197,15 @@ const OdabirPodatka = ({
                                 <span>{oznacenaUtakmica.DOMACI_NAZIV}</span>
                             </div>
                             <div className="match-detail">
-                                <span>
-                                    {oznacenaUtakmica.POENI_DOMACI} :
+                                <span
+                                    className={promjenaDomaci ? 'promjena' : ''}
+                                >
+                                    {oznacenaUtakmica.POENI_DOMACI}
+                                </span>
+                                <span>:</span>
+                                <span
+                                    className={promjenaGosti ? 'promjena' : ''}
+                                >
                                     {oznacenaUtakmica.POENI_GOSTI}
                                 </span>
                             </div>
