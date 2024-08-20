@@ -2,8 +2,8 @@
     display: flex;
     flex-direction: column;
     width: 100%; /* Osigurava da se kontejner proširi da bi zauzeo celu dostupnu širinu */
-    padding: 10px; /* Dodaje malo razmaka oko sadržaja */
-    gap: 20px;
+    padding: 5px; /* Dodaje malo razmaka oko sadržaja */
+    gap: 10px;
     box-sizing: border-box; /* Uključuje padding i border u ukupnu širinu i visinu */
 }
 .del_igr_buttons {
@@ -21,7 +21,7 @@
     align-items: center;
     text-align: center;
     position: relative;
-    width: 125px;
+    width: 5vw;
 }
 
 /* delegat_igraci.css */
@@ -77,6 +77,16 @@
     }
 }
 
+@keyframes slideIn222 {
+    0% {
+        opacity: 1;
+        transform: translateX(0px) translateY(0px);
+    }
+    100% {
+        opacity: 0;
+        transform: translateX(0px) translateY(-80px); /* Pomak desno i gore */
+    }
+}
 .del_igr_button_item.animate1 {
     animation: slideIn1 0.5s ease-in-out;
 }
@@ -91,6 +101,10 @@
 
 .del_igr_button_item.animate22 {
     animation: slideIn22 0.75s ease-in-out;
+}
+
+.del_igr_button_item.animate222 {
+    animation: slideIn222 0.75s ease-in-out;
 }
 .dres_ikona {
     position: relative;

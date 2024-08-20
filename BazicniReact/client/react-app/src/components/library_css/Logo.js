@@ -47,7 +47,7 @@ const Logo = ({ imeMomcad, visina }) => {
                         marginTop: visina ? '500px' : '20px',
                         marginLeft: '10px',
                         width: 'auto',
-                        height: visina ? '150vh' : '80px',
+                        height: visina ? '150vh' : '4vw',
                         objectFit: visina ? 'cover' : '',
                     }}
                 />

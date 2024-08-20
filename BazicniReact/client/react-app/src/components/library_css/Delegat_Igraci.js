@@ -10,7 +10,7 @@ const DelegatIgraci = ({
     ulaziIgrac,
     izlaz,
     potvrdaPromjene,
-    zavrsena,
+    aktivniProtivnik,
 }) => {
     const [starteri, setStarteri] = useState([]);
     const [errorMessage, setErrorMessage] = useState('');
@@ -33,38 +33,62 @@ const DelegatIgraci = ({
         }
     };
 
+    useEffect(() => {
+        if (igraci.length === 0) {
+            setStarteri(true);
+        }
+    }, [igraci]);
     const handleAktivni = (igrac) => {
         const postoji = oznaceniIgrac && oznaceniIgrac.NAZIV === igrac.NAZIV;
 
-        if (!postoji) {
-            oznaceniIgrac.oznacen = false;
-            igrac.oznacen = true;
-            onSelectIgrac(igrac, 0);
+        if (igraci.length === 5 && aktivniProtivnik === 5) {
+            if (!postoji) {
+                oznaceniIgrac.oznacen = false;
+                igrac.oznacen = true;
+                onSelectIgrac(igrac, 0);
 
-            onSelectIgrac([], 1);
-        } else if (postoji && (!izlaz || izlaz.length === 0)) {
-            igrac.oznacen = false;
-            onSelectIgrac([], 0);
-            onSelectIgrac([], 1);
-        } else if (postoji && izlaz && izlaz.length > 0) {
-            igrac.oznacen = false;
-            onSelectIgrac([], 0);
-            onSelectIgrac([], 1);
+                onSelectIgrac([], 1);
+            } else if (postoji && (!izlaz || izlaz.length === 0)) {
+                igrac.oznacen = false;
+                onSelectIgrac([], 0);
+                onSelectIgrac([], 1);
+            } else if (postoji && izlaz && izlaz.length > 0) {
+                igrac.oznacen = false;
+                onSelectIgrac([], 0);
+                onSelectIgrac([], 1);
+            }
+        } else if (aktivniProtivnik < 5) {
+            setErrorMessage('U igri mora biti 10 igrača!');
         }
     };
 
     const handleIzlaz = (igrac) => {
-        const nijeOdobreno =
-            oznaceniIgrac.MOMCAD_ID === igrac.MOMCAD_ID &&
-            ulaziIgrac.NAZIV === igrac.NAZIV;
+        if (oznaceniIgrac.length > 0) {
+            const nijeOdobreno =
+                oznaceniIgrac.MOMCAD_ID === igrac.MOMCAD_ID &&
+                ulaziIgrac.NAZIV === igrac.NAZIV;
 
-        if (!nijeOdobreno) {
-            ulaziIgrac.oznacen = false;
-            igrac.oznacen = true;
-            onSelectIgrac(igrac, 1);
+            if (!nijeOdobreno) {
+                ulaziIgrac.oznacen = false;
+                igrac.oznacen = true;
+                onSelectIgrac(igrac, 1);
+            } else {
+                igrac.oznacen = false;
+                onSelectIgrac([], 1);
+            }
         } else {
-            igrac.oznacen = false;
-            onSelectIgrac([], 1);
+            const nijeOdobreno =
+                igraci[0].MOMCAD_ID === igrac.MOMCAD_ID &&
+                ulaziIgrac.NAZIV === igrac.NAZIV;
+
+            if (!nijeOdobreno) {
+                ulaziIgrac.oznacen = false;
+                igrac.oznacen = true;
+                onSelectIgrac(igrac, 1);
+            } else {
+                igrac.oznacen = false;
+                onSelectIgrac([], 1);
+            }
         }
     };
     const handleError = () => {
@@ -94,7 +118,7 @@ const DelegatIgraci = ({
                                         alt="sport shirt"
                                         style={{
                                             width: 'auto',
-                                            height: '50px',
+                                            height: '6vh',
                                         }}
                                     />
                                     <span className="broj_dresa">
@@ -111,7 +135,6 @@ const DelegatIgraci = ({
                         izlaz.length > 0 &&
                         oznaceniIgrac &&
                         igraci.find((item) => item === oznaceniIgrac) ? (
-                            // Ako postoji izlaz i jedan označeni igrač, prikazujemo samo njega
                             <div
                                 className={`del_igr_button_item ${
                                     potvrdaPromjene ? 'animate11' : 'animate1'
@@ -129,7 +152,7 @@ const DelegatIgraci = ({
                                         alt="sport shirt"
                                         style={{
                                             width: 'auto',
-                                            height: '50px',
+                                            height: '5vh',
                                         }}
                                     />
                                     <span className="broj_dresa">
@@ -147,7 +170,6 @@ const DelegatIgraci = ({
                                 />
                             </div>
                         ) : (
-                            // U suprotnom prikazujemo sve igrače
                             igraci.map((igrac, index) => (
                                 <div
                                     className="del_igr_button_item"
@@ -164,7 +186,7 @@ const DelegatIgraci = ({
                                             alt="sport shirt"
                                             style={{
                                                 width: 'auto',
-                                                height: '50px',
+                                                height: '5vh',
                                             }}
                                         />
                                         <span className="broj_dresa">
@@ -175,6 +197,8 @@ const DelegatIgraci = ({
                                 </div>
                             ))
                         )}
+
+                        <div className="line"></div>
                     </>
                 )}
                 {errorMessage && (
@@ -192,7 +216,11 @@ const DelegatIgraci = ({
                 {ulaziIgrac && izlaz.find((item) => item === ulaziIgrac) ? (
                     <div
                         className={`del_igr_button_item ${
-                            potvrdaPromjene ? 'animate22' : 'animate2'
+                            potvrdaPromjene && oznaceniIgrac.length !== 0
+                                ? 'animate22'
+                                : potvrdaPromjene
+                                ? 'animate222'
+                                : 'animate2'
                         }`}
                         key={ulaziIgrac.NAZIV}
                     >
@@ -216,7 +244,7 @@ const DelegatIgraci = ({
                                 alt="sport shirt"
                                 style={{
                                     width: 'auto',
-                                    height: '50px',
+                                    height: '5vh',
                                 }}
                             />
                             <span className="broj_dresa">
@@ -251,7 +279,43 @@ const DelegatIgraci = ({
                                         alt="sport shirt"
                                         style={{
                                             width: 'auto',
-                                            height: '50px',
+                                            height: '5vh',
+                                        }}
+                                    />
+                                    <span className="broj_dresa">
+                                        {igrac.BROJ_DRESA}
+                                    </span>
+                                </div>
+                                <p>{igrac.NAZIV}</p>
+                            </div>
+                        ))
+                ) : izlaz && igraci.length < 5 && izlaz.length > 0 ? (
+                    izlaz
+                        .filter(
+                            (item) =>
+                                !igraci.some(
+                                    (igrac) => igrac.NAZIV === item.NAZIV
+                                ) && item.MOMCAD_ID === igraci[0].MOMCAD_ID
+                        )
+                        .map((igrac, index) => (
+                            <div
+                                className={`del_igr_button_item ${
+                                    errorMessage ? 'blur' : ''
+                                }`}
+                                key={index}
+                            >
+                                <div
+                                    className={`dres_ikona ${
+                                        igrac.oznacen ? 'oznacen' : ''
+                                    }`}
+                                    onClick={() => handleIzlaz(igrac)}
+                                >
+                                    <img
+                                        src="/sport-shirt.png"
+                                        alt="sport shirt"
+                                        style={{
+                                            width: 'auto',
+                                            height: '5vh',
                                         }}
                                     />
                                     <span className="broj_dresa">

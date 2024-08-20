@@ -16,7 +16,7 @@ body {
 }
 
 .side {
-    width: 500px; /* Možeš prilagoditi širinu prema potrebi */
+    width: 30vw;
     border: 1px solid #ccc;
     border-radius: 8px;
     background-color: #f9f9f9;
@@ -39,7 +39,7 @@ body {
     font-weight: bold;
 }
 .middle-container {
-    width: 800px;
+    width: 45vw;
     display: flex;
     flex-direction: column;
     height: 70vh;
@@ -50,7 +50,7 @@ body {
 }
 
 .middle {
-    width: 800px;
+    width: 45vw;
     border: 1px solid #ccc;
     border-radius: 8px;
     background-color: #f9f9f9;
@@ -61,7 +61,7 @@ body {
     flex: 1; /* Omogućuje middle div-u da se širi u preostalom prostoru */
 }
 .above-container {
-    width: 800px;
+    width: 45vw;
     display: flex;
     justify-content: space-between; /* Razmak između above-middle divova */
     gap: 20px; /* Razmak između above-middle divova */
@@ -88,7 +88,7 @@ body {
     transform: scale(1.02); /* Blago povećanje pri prelasku miša */
 }
 .above-middle.stil1 {
-    width: 800px;
+    width: 45vw;
     height: 7vh;
     padding: 20px;
     background-color: #f9f9f9;
@@ -103,21 +103,26 @@ body {
     justify-content: center;
     margin-top: 5px;
     gap: 10px;
+    width: 100%;
 }
 
 .match_det {
     display: flex;
-    flex-wrap: wrap; /* Allows wrapping to the next line if necessary */
+    flex-wrap: nowrap; /* Allows wrapping to the next line if necessary */
     justify-content: center;
-    gap: 60px;
+    gap: 2em;
 }
 .match-detail {
     display: flex;
     flex-direction: row;
-    font-size: 18px;
+    font-size: 1vw;
     gap: 5px;
 }
 
+.match-detail.edit {
+    display: flex;
+    flex-direction: column;
+}
 .line {
     width: 100%;
     height: 2px;

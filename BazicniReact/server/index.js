@@ -9,7 +9,6 @@ var jwt = require('jsonwebtoken');
 var _ = require('lodash');
 
 const dbConfig = require('./dbConfig');
-const OracleDB = require('oracledb');
 
 app.use(cors());
 app.use(bodyParser.json());
@@ -1455,89 +1454,6 @@ app.post('/unesiStatistiku', async (req, res) => {
             );
             await Promise.all(gostiPromises);
             return res.send({ message: 'Success' });
-        } else if (igracID && igracUlazID === null) {
-            const unesiNoviPodatak_SQL =
-                "INSERT INTO STATISTIKA(IGRAC_ID, SP_ID, STATUS_ID, UTAKMICA_ID, VRIJEME_POCETAK) VALUES (:igrac_id, :podatak_id, :status_id, :utakmica_id, trim(TO_CHAR(:minute, '00')) || ':'  ||  trim(TO_CHAR(:sekunde,'00')))";
-
-            const unesi = await connection.execute(
-                unesiNoviPodatak_SQL,
-                {
-                    igrac_id: igracID,
-                    podatak_id: podatakID,
-                    status_id: statusID,
-                    utakmica_id: utakmica_id,
-                    minute: minute,
-                    sekunde: sekunde,
-                },
-                { autoCommit: true }
-            );
-
-            const pronadiStatID_SQL =
-                "SELECT STAT.STAT_ID FROM STATISTIKA STAT WHERE STAT.IGRAC_ID = :igrac_id AND STAT.VRIJEME_POCETAK = trim(TO_CHAR(:minute, '00')) || ':'  ||  trim(TO_CHAR(:sekunde,'00')) AND STAT.UTAKMICA_ID = :utakmica_id ";
-            const pronadiStatID = await connection.execute(
-                pronadiStatID_SQL,
-                {
-                    igrac_id: igracID,
-                    minute: minute,
-                    sekunde: sekunde,
-                    utakmica_id: utakmica_id,
-                },
-                { outFormat: oracledb.OBJECT }
-            );
-
-            const stat_id = pronadiStatID.rows[0].STAT_ID;
-
-            const pronadiNoviPodatak_SELECT =
-                'SELECT I.NAZIV, SP.NAZIV, STAT.VRIJEME_POCETAK as VRIJEME, S.NAZIV, STAT.UTAKMICA_ID AS UTAKMICA_ID, STAT.STAT_ID ';
-            const pronadiNoviPodatak_FROM =
-                'FROM STATISTIKA STAT, STAT_PODATAK SP, IGRACI I,  STATUSI S ';
-            const pronadiNoviPodatak_WHERE =
-                "WHERE STAT.IGRAC_ID = I.IGRAC_ID AND STAT.SP_ID = SP.SP_ID AND SP.SP_ID != 11 AND STAT.STATUS_ID = S.STATUS_ID AND S.TABLICA = 'STATISTIKA' AND STAT.UTAKMICA_ID = :utakmica_id AND STAT.STAT_ID = :stat_id";
-
-            const pronadiNoviPodatak = await connection.execute(
-                pronadiNoviPodatak_SELECT +
-                    pronadiNoviPodatak_FROM +
-                    pronadiNoviPodatak_WHERE,
-                { utakmica_id: utakmica_id, stat_id: stat_id }
-            );
-
-            let momcad;
-            let poeni;
-            if ([1, 2, 3].includes(podatakID) && statusID === 1) {
-                const pronadiMomcadID = await connection.execute(
-                    'SELECT U.DOMACI_ID, U.GOSTI_ID FROM UTAKMICE U WHERE U.UTAKMICA_ID = :utakmica_id',
-                    {
-                        utakmica_id: utakmica_id,
-                    },
-                    { outFormat: oracledb.OBJECT }
-                );
-                let poeniMomcad;
-                poeni = podatakID;
-
-                if (pronadiMomcadID.rows[0].DOMACI_ID == momcadID) {
-                    momcad = 'DOMACI';
-                } else if (pronadiMomcadID.rows[0].GOSTI_ID == momcadID) {
-                    momcad = 'GOSTI';
-                }
-                poeniMomcad = 'POENI_' + momcad;
-
-                const unesiPoene = await connection.execute(
-                    'UPDATE UTAKMICE SET ' +
-                        poeniMomcad +
-                        '=' +
-                        poeniMomcad +
-                        '+ :poeni' +
-                        ' WHERE UTAKMICA_ID = :utakmica_id',
-                    { poeni: poeni, utakmica_id: utakmica_id },
-                    { autoCommit: true }
-                );
-            }
-
-            return res.send({
-                noviPodatak: pronadiNoviPodatak.rows[0],
-                momcad: momcad ? momcad : '',
-                poeni: poeni ? poeni : null,
-            });
         } else if (igracID && igracUlazID !== null) {
             const pronadiOtvoreniUlaz_SQL =
                 'SELECT STAT.STAT_ID, STAT.VRIJEME_POCETAK FROM STATISTIKA STAT WHERE STAT.IGRAC_ID = :igrac_id AND STAT.SP_ID = 11 AND STAT.VRIJEME_KRAJ IS NULL AND STAT.UTAKMICA_ID = :utakmica_id';
@@ -1646,6 +1562,134 @@ app.post('/unesiStatistiku', async (req, res) => {
                 aktivni_domaci: pronadiAktivneDomace.rows,
                 aktivni_gosti: pronadiAktivneGoste.rows,
             });
+        } else {
+            const unesiNoviPodatak_SQL =
+                "INSERT INTO STATISTIKA(IGRAC_ID, SP_ID, STATUS_ID, UTAKMICA_ID, VRIJEME_POCETAK) VALUES (:igrac_id, :podatak_id, :status_id, :utakmica_id, trim(TO_CHAR(:minute, '00')) || ':'  ||  trim(TO_CHAR(:sekunde,'00')))";
+
+            let igrac_id = igracID ? igracID : igracUlazID ? igracUlazID : null;
+            const unesi = await connection.execute(
+                unesiNoviPodatak_SQL,
+                {
+                    igrac_id: igrac_id,
+                    podatak_id: podatakID,
+                    status_id: statusID,
+                    utakmica_id: utakmica_id,
+                    minute: minute,
+                    sekunde: sekunde,
+                },
+                { autoCommit: true }
+            );
+
+            const pronadiStatID_SQL =
+                "SELECT STAT.STAT_ID FROM STATISTIKA STAT WHERE STAT.IGRAC_ID = :igrac_id AND STAT.VRIJEME_POCETAK = trim(TO_CHAR(:minute, '00')) || ':'  ||  trim(TO_CHAR(:sekunde,'00')) AND STAT.UTAKMICA_ID = :utakmica_id ";
+            const pronadiStatID = await connection.execute(
+                pronadiStatID_SQL,
+                {
+                    igrac_id: igrac_id,
+                    minute: minute,
+                    sekunde: sekunde,
+                    utakmica_id: utakmica_id,
+                },
+                { outFormat: oracledb.OBJECT }
+            );
+
+            const stat_id = pronadiStatID.rows[0].STAT_ID;
+
+            let pronadiNoviPodatak_SELECT;
+            let pronadiNoviPodatak_FROM;
+            let pronadiNoviPodatak_WHERE;
+            if (!igracUlazID) {
+                pronadiNoviPodatak_SELECT =
+                    'SELECT I.NAZIV, SP.NAZIV, STAT.VRIJEME_POCETAK as VRIJEME, S.NAZIV, STAT.UTAKMICA_ID AS UTAKMICA_ID, STAT.STAT_ID ';
+                pronadiNoviPodatak_FROM =
+                    'FROM STATISTIKA STAT, STAT_PODATAK SP, IGRACI I,  STATUSI S ';
+                pronadiNoviPodatak_WHERE =
+                    "WHERE STAT.IGRAC_ID = I.IGRAC_ID AND STAT.SP_ID = SP.SP_ID AND SP.SP_ID != 11 AND STAT.STATUS_ID = S.STATUS_ID AND S.TABLICA = 'STATISTIKA' AND STAT.UTAKMICA_ID = :utakmica_id AND STAT.STAT_ID = :stat_id";
+            } else {
+                pronadiNoviPodatak_SELECT =
+                    "SELECT I.NAZIV, 'Ulaz' as NAZIV, STAT.VRIJEME_POCETAK as VRIJEME, S.NAZIV, STAT.UTAKMICA_ID AS UTAKMICA_ID, STAT.STAT_ID ";
+                pronadiNoviPodatak_FROM =
+                    'FROM STATISTIKA STAT, STAT_PODATAK SP, IGRACI I,  STATUSI S ';
+                pronadiNoviPodatak_WHERE =
+                    "WHERE STAT.IGRAC_ID = I.IGRAC_ID AND STAT.SP_ID = SP.SP_ID AND SP.SP_ID = 11 AND STAT.STATUS_ID = S.STATUS_ID AND S.TABLICA = 'STATISTIKA' AND STAT.UTAKMICA_ID = :utakmica_id AND STAT.STAT_ID = :stat_id";
+            }
+            const pronadiNoviPodatak = await connection.execute(
+                pronadiNoviPodatak_SELECT +
+                    pronadiNoviPodatak_FROM +
+                    pronadiNoviPodatak_WHERE,
+                { utakmica_id: utakmica_id, stat_id: stat_id }
+            );
+
+            let momcad;
+            let poeni;
+            if ([1, 2, 3].includes(podatakID) && statusID === 1) {
+                const pronadiMomcadID = await connection.execute(
+                    'SELECT U.DOMACI_ID, U.GOSTI_ID FROM UTAKMICE U WHERE U.UTAKMICA_ID = :utakmica_id',
+                    {
+                        utakmica_id: utakmica_id,
+                    },
+                    { outFormat: oracledb.OBJECT }
+                );
+                let poeniMomcad;
+                poeni = podatakID;
+
+                if (pronadiMomcadID.rows[0].DOMACI_ID == momcadID) {
+                    momcad = 'DOMACI';
+                } else if (pronadiMomcadID.rows[0].GOSTI_ID == momcadID) {
+                    momcad = 'GOSTI';
+                }
+                poeniMomcad = 'POENI_' + momcad;
+
+                const unesiPoene = await connection.execute(
+                    'UPDATE UTAKMICE SET ' +
+                        poeniMomcad +
+                        '=' +
+                        poeniMomcad +
+                        '+ :poeni' +
+                        ' WHERE UTAKMICA_ID = :utakmica_id',
+                    { poeni: poeni, utakmica_id: utakmica_id },
+                    { autoCommit: true }
+                );
+            } else if (igracUlazID) {
+                const pronadiDomaciID = await connection.execute(
+                    'SELECT M.MOMCAD_ID FROM MOMCAD M WHERE M.NAZIV = :domaci_naziv',
+                    { domaci_naziv: domaci_naziv },
+                    { outFormat: oracledb.OBJECT }
+                );
+
+                const domaci_id = pronadiDomaciID.rows[0].MOMCAD_ID;
+
+                const pronadiGosteID = await connection.execute(
+                    'SELECT M.MOMCAD_ID FROM MOMCAD M WHERE M.NAZIV = :gosti_naziv',
+                    { gosti_naziv: gosti_naziv },
+                    { outFormat: oracledb.OBJECT }
+                );
+
+                const gosti_id = pronadiGosteID.rows[0].MOMCAD_ID;
+
+                const pronadiAktivneDomace = await connection.execute(
+                    'SELECT I.NAZIV, I.BROJ_DRESA, VMI.MOMCAD_ID, I.IGRAC_ID FROM STATISTIKA STAT, IGRACI I, VEZE_MOMCAD_IGRACI VMI WHERE STAT.STATUS_ID = 2 AND STAT.IGRAC_ID = I.IGRAC_ID AND UTAKMICA_ID = :utakmica_id AND VMI.IGRAC_ID = I.IGRAC_ID AND VMI.MOMCAD_ID = :domaci_id AND VMI.STATUS_ID = 1',
+                    { utakmica_id: utakmica_id, domaci_id: domaci_id },
+                    { outFormat: oracledb.OBJECT }
+                );
+
+                const pronadiAktivneGoste = await connection.execute(
+                    'SELECT I.NAZIV, I.BROJ_DRESA, VMI.MOMCAD_ID, I.IGRAC_ID FROM STATISTIKA STAT, IGRACI I, VEZE_MOMCAD_IGRACI VMI WHERE STAT.STATUS_ID = 2 AND STAT.IGRAC_ID = I.IGRAC_ID AND UTAKMICA_ID = :utakmica_id AND VMI.IGRAC_ID = I.IGRAC_ID AND VMI.MOMCAD_ID = :gosti_id AND VMI.STATUS_ID = 1',
+                    { utakmica_id: utakmica_id, gosti_id: gosti_id },
+                    { outFormat: oracledb.OBJECT }
+                );
+                return res.send({
+                    noviPodatak: pronadiNoviPodatak.rows[0],
+                    aktivni_domaci: pronadiAktivneDomace.rows,
+                    aktivni_gosti: pronadiAktivneGoste.rows,
+                });
+            }
+
+            return res.send({
+                noviPodatak: pronadiNoviPodatak.rows[0],
+                momcad: momcad ? momcad : '',
+                poeni: poeni ? poeni : null,
+            });
         }
     } catch (err) {
         console.log(err);
@@ -1669,6 +1713,8 @@ app.post('/izbrisiPodatak', async (req, res) => {
 
     const utakmica_id = req.body.utakmica_id;
 
+    const podatak = req.body.izbrisiPodatak ? req.body.izbrisiPodatak : null;
+
     try {
         connection = await oracledb.getConnection();
 
@@ -1678,69 +1724,94 @@ app.post('/izbrisiPodatak', async (req, res) => {
             { outFormat: oracledb.OBJECT }
         );
 
-        let poeni;
-        let momcad;
-        if (
-            [1, 2, 3].includes(pronadiPodatakStatus.rows[0].SP_ID) &&
-            pronadiPodatakStatus.rows[0].STATUS_ID === 1
-        ) {
-            const pronadiIgracID = await connection.execute(
-                'SELECT I.IGRAC_ID FROM IGRACI I WHERE I.NAZIV = :imeIgrac',
-                { imeIgrac: imeIgrac },
-                { outFormat: oracledb.OBJECT }
-            );
-            const igracID = pronadiIgracID.rows[0].IGRAC_ID;
-
-            const pronadiMomcadID = await connection.execute(
-                'SELECT VMI.MOMCAD_ID FROM VEZE_MOMCAD_IGRACI VMI WHERE VMI.IGRAC_ID = :igrac_id AND VMI.STATUS_ID = 1',
-                { igrac_id: igracID },
-                { outFormat: oracledb.OBJECT }
-            );
-
-            const pronadiMomcadiUtakmiceID = await connection.execute(
-                'SELECT U.DOMACI_ID, U.GOSTI_ID FROM UTAKMICE U WHERE U.UTAKMICA_ID = :utakmica_id',
-                {
-                    utakmica_id: utakmica_id,
-                },
-                { outFormat: oracledb.OBJECT }
-            );
-
-            let poeniMomcad;
-            poeni = pronadiPodatakStatus.rows[0].SP_ID;
-
-            if (
-                pronadiMomcadiUtakmiceID.rows[0].DOMACI_ID ==
-                pronadiMomcadID.rows[0].MOMCAD_ID
-            ) {
-                momcad = 'DOMACI';
-            } else if (
-                pronadiMomcadiUtakmice.rows[0].GOSTI_ID ==
-                pronadiMomcadID.rows[0].MOMCAD_ID
-            ) {
-                momcad = 'GOSTI';
-            }
-            poeniMomcad = 'POENI_' + momcad;
-
-            const unesiPoene = await connection.execute(
-                'UPDATE UTAKMICE SET ' +
-                    poeniMomcad +
-                    '=' +
-                    poeniMomcad +
-                    '- :poeni' +
-                    ' WHERE UTAKMICA_ID = :utakmica_id',
-                { poeni: poeni, utakmica_id: utakmica_id },
+        if (podatak[1] == 'Izlaz') {
+            const azuriraj_vrijeme = await connection.execute(
+                'UPDATE STATISTIKA S SET VRIJEME_KRAJ = null WHERE S.STAT_ID = :izbrisiPodatak',
+                { izbrisiPodatak: izbrisiPodatak },
                 { autoCommit: true }
             );
-        }
-        const izbrisi = await connection.execute(
-            'DELETE FROM STATISTIKA S WHERE S.STAT_ID = :izbrisiPodatak',
-            { izbrisiPodatak: izbrisiPodatak },
-            { autoCommit: true }
-        );
+            const azuriraj_status = await connection.execute(
+                'UPDATE STATISTIKA S SET STATUS_ID = 2 WHERE S.STAT_ID = :izbrisiPodatak',
+                { izbrisiPodatak: izbrisiPodatak },
+                { autoCommit: true }
+            );
+            return;
+        } else {
+            let poeni;
+            let momcad;
+            if (
+                [1, 2, 3].includes(pronadiPodatakStatus.rows[0].SP_ID) &&
+                pronadiPodatakStatus.rows[0].STATUS_ID === 1
+            ) {
+                const pronadiIgracID = await connection.execute(
+                    'SELECT I.IGRAC_ID FROM IGRACI I WHERE I.NAZIV = :imeIgrac',
+                    { imeIgrac: imeIgrac },
+                    { outFormat: oracledb.OBJECT }
+                );
+                const igracID = pronadiIgracID.rows[0].IGRAC_ID;
 
-        res.send({ momcad: momcad ? momcad : '', poeni: poeni ? poeni : null });
+                const pronadiMomcadID = await connection.execute(
+                    'SELECT VMI.MOMCAD_ID FROM VEZE_MOMCAD_IGRACI VMI WHERE VMI.IGRAC_ID = :igrac_id AND VMI.STATUS_ID = 1',
+                    { igrac_id: igracID },
+                    { outFormat: oracledb.OBJECT }
+                );
+
+                const pronadiMomcadiUtakmiceID = await connection.execute(
+                    'SELECT U.DOMACI_ID, U.GOSTI_ID FROM UTAKMICE U WHERE U.UTAKMICA_ID = :utakmica_id',
+                    {
+                        utakmica_id: utakmica_id,
+                    },
+                    { outFormat: oracledb.OBJECT }
+                );
+
+                let poeniMomcad;
+                poeni = pronadiPodatakStatus.rows[0].SP_ID;
+
+                if (
+                    pronadiMomcadiUtakmiceID.rows[0].DOMACI_ID ==
+                    pronadiMomcadID.rows[0].MOMCAD_ID
+                ) {
+                    momcad = 'DOMACI';
+                } else if (
+                    pronadiMomcadiUtakmice.rows[0].GOSTI_ID ==
+                    pronadiMomcadID.rows[0].MOMCAD_ID
+                ) {
+                    momcad = 'GOSTI';
+                }
+                poeniMomcad = 'POENI_' + momcad;
+
+                const unesiPoene = await connection.execute(
+                    'UPDATE UTAKMICE SET ' +
+                        poeniMomcad +
+                        '=' +
+                        poeniMomcad +
+                        '- :poeni' +
+                        ' WHERE UTAKMICA_ID = :utakmica_id',
+                    { poeni: poeni, utakmica_id: utakmica_id },
+                    { autoCommit: true }
+                );
+            }
+            const izbrisi = await connection.execute(
+                'DELETE FROM STATISTIKA S WHERE S.STAT_ID = :izbrisiPodatak',
+                { izbrisiPodatak: izbrisiPodatak },
+                { autoCommit: true }
+            );
+
+            res.send({
+                momcad: momcad ? momcad : '',
+                poeni: poeni ? poeni : null,
+            });
+        }
     } catch (err) {
         console.log(err);
+    } finally {
+        try {
+            if (connection) {
+                await connection.close();
+            }
+        } catch (err) {
+            console.log(err);
+        }
     }
 });
 
@@ -1772,6 +1843,42 @@ app.post('/getStatistickiPodatci', async (req, res) => {
             } catch (error) {
                 console.log(error);
             }
+        }
+    }
+});
+
+app.post('/unesiPoene', async (req, res) => {
+    let connection;
+
+    const poeniDomaci = req.body.poeniDomaci ? req.body.poeniDomaci : null;
+    const poeniGosti = req.body.poeniGosti ? req.body.poeniGosti : null;
+
+    const utakmica_id = req.body.utakmica_id ? req.body.utakmica_id : null;
+    try {
+        connection = await oracledb.getConnection();
+        if (poeniDomaci) {
+            const result = await connection.execute(
+                'UPDATE UTAKMICE SET POENI_DOMACI = :poeniDomaci WHERE UTAKMICA_ID = :utakmica_id',
+                { poeniDomaci: poeniDomaci, utakmica_id: utakmica_id },
+                { autoCommit: true }
+            );
+        }
+        if (poeniGosti) {
+            const result = await connection.execute(
+                'UPDATE UTAKMICE SET POENI_GOSTI = :poeniGosti WHERE UTAKMICA_ID = :utakmica_id',
+                { poeniGosti: poeniGosti, utakmica_id: utakmica_id },
+                { autoCommit: true }
+            );
+        }
+    } catch (err) {
+        console.log(err);
+    } finally {
+        try {
+            if (connection) {
+                await connection.close();
+            }
+        } catch (err) {
+            console.log(err);
         }
     }
 });

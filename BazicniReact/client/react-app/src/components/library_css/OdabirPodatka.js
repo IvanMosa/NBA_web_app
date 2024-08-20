@@ -1,4 +1,5 @@
 import React, { useEffect, useState, useRef } from 'react';
+import axios from 'axios';
 import './css/odabirpodataka.css';
 
 const OdabirPodatka = ({
@@ -10,6 +11,7 @@ const OdabirPodatka = ({
     onSelect,
     onConfirm,
     oznacenIgrac,
+    ulaziIgrac,
     zavrsena,
     errorVrijeme,
     setErrorVrijeme,
@@ -29,8 +31,13 @@ const OdabirPodatka = ({
     const [edit, setEdit] = useState(false);
     const [editTekst, setEditTekst] = useState(false);
     const [editShot, setEditShot] = useState(false);
+    const [editPoeni, setEditPoeni] = useState(false);
     const [promjenaDomaci, setPromjenaDomaci] = useState(false);
     const [promjenaGosti, setPromjenaGosti] = useState(false);
+    const [poeniDomaci, setPoeniDomaci] = useState(
+        oznacenaUtakmica.POENI_DOMACI
+    );
+    const [poeniGosti, setPoeniGosti] = useState(oznacenaUtakmica.POENI_GOSTI);
     const [uzivo, setUzivo] = useState(zavrsena);
     const intervalRef = useRef(null);
     const shotClockRef = useRef(null);
@@ -56,6 +63,31 @@ const OdabirPodatka = ({
         return () => clearTimeout(timer);
     }, [oznacenaUtakmica.POENI_GOSTI]);
 
+    const unesiPoene = async () => {
+        try {
+            const result = await axios.post(
+                'http://localhost:4000/unesiPoene',
+                {
+                    poeniDomaci: poeniDomaci,
+                    poeniGosti: poeniGosti,
+                    utakmica_id: oznacenaUtakmica.UTAKMICA_ID,
+                }
+            );
+        } catch (err) {
+            console.log(err);
+        }
+    };
+
+    useEffect(() => {
+        if (
+            poeniDomaci !== oznacenaUtakmica.POENI_DOMACI ||
+            poeniGosti !== oznacenaUtakmica.POENI_GOSTI
+        ) {
+            unesiPoene();
+            oznacenaUtakmica.POENI_DOMACI = poeniDomaci;
+            oznacenaUtakmica.POENI_GOSTI = poeniGosti;
+        }
+    }, [poeniDomaci, poeniGosti]);
     useEffect(() => {
         if (isRunning) {
             intervalRef.current = setInterval(() => {
@@ -160,20 +192,37 @@ const OdabirPodatka = ({
     };
 
     const handleStatus = (status) => {
-        if (status && temp_podatak && oznacenIgrac.length !== 0) {
-            let minute = (cetvrtina - 1) * 12 + minutes;
-            let sekunde = seconds;
+        if (broj_startera === 10) {
+            if (status && temp_podatak && oznacenIgrac.length !== 0) {
+                let minute = (cetvrtina - 1) * 12 + minutes;
+                let sekunde = seconds;
 
-            onConfirm(status, minute, sekunde);
-            setTempPodatak('');
-        } else if (temp_podatak) {
-            setErrorMessage('Igrač mora biti označen!');
-        } else if (oznacenIgrac.length !== 0)
-            setErrorMessage('Statistički podatak mora biti označen!');
-        else
-            setErrorMessage(
-                'Igrač i statistički podatak moraju biti označeni!'
-            );
+                onConfirm(status, minute, sekunde);
+                setTempPodatak('');
+            } else if (temp_podatak) {
+                setErrorMessage('Igrač mora biti označen!');
+            } else if (oznacenIgrac.length !== 0)
+                setErrorMessage('Statistički podatak mora biti označen!');
+            else
+                setErrorMessage(
+                    'Igrač i statistički podatak moraju biti označeni!'
+                );
+        } else {
+            if (status && temp_podatak && ulaziIgrac.length !== 0) {
+                let minute = (cetvrtina - 1) * 12 + minutes;
+                let sekunde = seconds;
+
+                onConfirm(status, minute, sekunde);
+                setTempPodatak('');
+            } else if (temp_podatak) {
+                setErrorMessage('Igrač za ulaz mora biti označen!');
+            } else if (ulaziIgrac.length !== 0)
+                setErrorMessage('Statistički podatak mora biti označen!');
+            else
+                setErrorMessage(
+                    'Igrač i statistički podatak moraju biti označeni!'
+                );
+        }
     };
 
     const handleError = () => {
@@ -196,19 +245,83 @@ const OdabirPodatka = ({
                             <div className="match-detail">
                                 <span>{oznacenaUtakmica.DOMACI_NAZIV}</span>
                             </div>
-                            <div className="match-detail">
-                                <span
-                                    className={promjenaDomaci ? 'promjena' : ''}
+                            {!editPoeni ? (
+                                <div
+                                    className="match-detail"
+                                    onClick={() => {
+                                        if (
+                                            !isRunning &&
+                                            !edit &&
+                                            !editShot &&
+                                            !editTekst
+                                        )
+                                            setEditPoeni(true);
+                                    }}
                                 >
-                                    {oznacenaUtakmica.POENI_DOMACI}
-                                </span>
-                                <span>:</span>
-                                <span
-                                    className={promjenaGosti ? 'promjena' : ''}
-                                >
-                                    {oznacenaUtakmica.POENI_GOSTI}
-                                </span>
-                            </div>
+                                    <span
+                                        className={
+                                            promjenaDomaci ? 'promjena' : ''
+                                        }
+                                    >
+                                        {oznacenaUtakmica.POENI_DOMACI}
+                                    </span>
+                                    <span>:</span>
+                                    <span
+                                        className={
+                                            promjenaGosti ? 'promjena' : ''
+                                        }
+                                    >
+                                        {oznacenaUtakmica.POENI_GOSTI}
+                                    </span>
+                                </div>
+                            ) : (
+                                <div className="match-detail edit">
+                                    <div className="editPoeni">
+                                        <input
+                                            type="number"
+                                            value={poeniDomaci}
+                                            onChange={(e) =>
+                                                setPoeniDomaci(
+                                                    Math.max(
+                                                        0,
+                                                        Math.min(
+                                                            300,
+                                                            e.target.value
+                                                        )
+                                                    )
+                                                )
+                                            }
+                                            className="input"
+                                        />
+                                        <span>:</span>
+                                        <input
+                                            type="number"
+                                            value={poeniGosti}
+                                            onChange={(e) =>
+                                                setPoeniGosti(
+                                                    Math.max(
+                                                        0,
+                                                        Math.min(
+                                                            300,
+                                                            e.target.value
+                                                        )
+                                                    )
+                                                )
+                                            }
+                                            className="input"
+                                        />
+                                    </div>
+                                    <button
+                                        className="button"
+                                        onClick={() => {
+                                            setEditPoeni(false);
+                                            unesiPoene();
+                                        }}
+                                    >
+                                        Save
+                                    </button>
+                                </div>
+                            )}
 
                             <div className="match-detail">
                                 <span>{oznacenaUtakmica.GOSTI_NAZIV}</span>
@@ -227,7 +340,12 @@ const OdabirPodatka = ({
                                 <div
                                     className="tekst"
                                     onClick={() => {
-                                        if (!isRunning && !edit && !editShot)
+                                        if (
+                                            !isRunning &&
+                                            !edit &&
+                                            !editShot &&
+                                            !editPoeni
+                                        )
                                             setEditTekst(true);
                                     }}
                                 >
@@ -332,7 +450,8 @@ const OdabirPodatka = ({
                                             if (
                                                 !isRunning &&
                                                 !editTekst &&
-                                                !edit
+                                                !edit &&
+                                                !editPoeni
                                             )
                                                 setEditShot(true);
                                         }}
@@ -440,7 +559,7 @@ const OdabirPodatka = ({
                         <div className="odabir-button">
                             {statistickiPodatci &&
                                 statistickiPodatci.map((podatak, index) =>
-                                    index === 10 ? (
+                                    broj_startera === 10 && index === 10 ? (
                                         <>
                                             <button
                                                 key={index}
@@ -457,7 +576,7 @@ const OdabirPodatka = ({
                                                 {['Izlaz']}
                                             </button>
                                         </>
-                                    ) : (
+                                    ) : broj_startera === 10 ? (
                                         <button
                                             key={index}
                                             className={`button ${
@@ -472,31 +591,61 @@ const OdabirPodatka = ({
                                         >
                                             {podatak}
                                         </button>
+                                    ) : (
+                                        index === 10 && (
+                                            <button
+                                                key={index}
+                                                className={`button ${
+                                                    temp_podatak === podatak
+                                                        ? 'oznacen'
+                                                        : ''
+                                                }`}
+                                                onClick={() => {
+                                                    setTempIndex(index);
+                                                    handlePodatak(podatak);
+                                                }}
+                                            >
+                                                {['Ulaz']}
+                                            </button>
+                                        )
                                     )
                                 )}
                         </div>
                         <div className="status_container">
-                            {[0, 1, 2].includes(temp_index) ? (
-                                <>
+                            {broj_startera === 10 ? (
+                                [0, 1, 2].includes(temp_index) ? (
+                                    <>
+                                        <button
+                                            className="status-button"
+                                            onClick={() =>
+                                                handleStatus(statusi[0])
+                                            }
+                                        >
+                                            {statusi[0]}
+                                        </button>
+                                        <button
+                                            className="status-button"
+                                            onClick={() =>
+                                                handleStatus(statusi[1])
+                                            }
+                                        >
+                                            {statusi[1]}
+                                        </button>
+                                    </>
+                                ) : (
                                     <button
                                         className="status-button"
-                                        onClick={() => handleStatus(statusi[0])}
+                                        onClick={() => handleStatus(statusi[3])}
                                     >
-                                        {statusi[0]}
+                                        {statusi[3]}
                                     </button>
-                                    <button
-                                        className="status-button"
-                                        onClick={() => handleStatus(statusi[1])}
-                                    >
-                                        {statusi[1]}
-                                    </button>
-                                </>
+                                )
                             ) : (
                                 <button
                                     className="status-button"
-                                    onClick={() => handleStatus(statusi[3])}
+                                    onClick={() => handleStatus('U tijeku')}
                                 >
-                                    {statusi[3]}
+                                    {['U tijeku']}
                                 </button>
                             )}
                         </div>

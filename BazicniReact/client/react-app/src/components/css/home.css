@@ -2,7 +2,6 @@
     text-align: center;
     padding: 40px;
     background-color: #f0f2f5; /* Svijetlo siva pozadina */
-    height: 100%;
 }
 
 .homepage-title {
@@ -16,7 +15,7 @@
     justify-content: center;
     flex-wrap: wrap;
     margin-top: 1vh;
-    gap: 30px; /* Razmak između kartica */
+    gap: 100px; /* Razmak između kartica */
     position: relative; /* Omogućuje karticama da se pravilno slože */
 }
 
@@ -39,6 +38,13 @@
 }
 
 .card.hovered {
+    transform: scale(1.05); /* Lagano povećanje kartice na hover */
+    height: 150px; /* Povećana visina kartice na hover */
+    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.3);
+    z-index: 10;
+}
+
+.card.clicked {
     transform: scale(1.1); /* Povećanje kartice na hover */
     max-width: 80vw;
     height: 80vh; /* Visina kartice kad je video prikazan, osigurava dovoljno prostora za video */
@@ -62,13 +68,13 @@
     margin-bottom: 60px; /* Razmak kako bi se video bio vidljiv ispod teksta */
 }
 
-.card.hovered h2 {
+.card.clicked h2 {
     font-size: 1.5em;
     margin-bottom: 5px;
     color: #007bff; /* Plava boja naslova */
 }
 
-.card.hovered p {
+.card.clicked p {
     display: none;
 }
 .video-container {
@@ -76,6 +82,7 @@
     bottom: 0;
     left: 0;
     right: 0;
+    height: 100px;
     opacity: 0;
     transition: opacity 0.2s ease, height 1s ease; /* Glatka tranzicija za pojavu videa */
     background: rgba(
@@ -89,7 +96,7 @@
     border-top: 2px solid #ccc; /* Dodaje liniju između kartice i videa */
 }
 
-.card.hovered .video-container {
+.card.card.clicked .video-container {
     opacity: 1; /* Prikazuje video kad je kartica povećana */
     height: 91%; /* Visina videa kad je kartica hoverana */
 }
@@ -99,4 +106,30 @@
     height: auto;
     object-fit: cover;
     transform: translateY(-5%);
+}
+
+.icon-container {
+    position: absolute;
+    bottom: 5px;
+    left: 50%;
+    transform: translateX(-50%);
+    transition: bottom 0.5s ease, top 0.5s ease;
+    z-index: 20;
+    width: 100%;
+}
+
+.icon-container.icon-top {
+    bottom: 0;
+}
+
+.arrow-icon {
+    font-size: 2em;
+    color: #007bff;
+    cursor: pointer;
+    opacity: 1;
+    transition: opacity 0.2s ease;
+}
+
+.card.clicked .arrow-icon {
+    opacity: 1;
 }
