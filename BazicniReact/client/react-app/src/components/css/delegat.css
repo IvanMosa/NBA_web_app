@@ -23,10 +23,12 @@ body {
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
     text-align: center;
     margin: 20px 30px 0 30px;
-    min-height: 70vh;
     max-height: 90vh;
 }
 
+.side.blurred {
+    height: 70vh;
+}
 .p_logo {
     display: flex;
     justify-content: space-between; /* Raspoređuje elemente na lijevo i desno */
@@ -35,8 +37,9 @@ body {
 }
 
 .p_logo p {
-    margin-right: 50px; /* Uklanja marginu iz p elementa */
+    margin-right: 1.2vw; /* Uklanja marginu iz p elementa */
     font-weight: bold;
+    font-size: 1vw;
 }
 .middle-container {
     width: 45vw;

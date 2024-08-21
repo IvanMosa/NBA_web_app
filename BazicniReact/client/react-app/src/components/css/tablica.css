@@ -67,30 +67,30 @@
     text-align: center;
 }
 
-.data-table {
+.data-table1 {
     width: 100%;
     border-collapse: collapse;
 }
 
-.data-table th,
-.data-table td {
+.data-table1 th,
+.data-table1 td {
     border: none;
     padding: 8px;
 }
 
-.data-table th {
+.data-table1 th {
     background-color: #f2f2f2;
     text-align: center;
 }
 
-.data-table td {
+.data-table1 td {
     text-align: center;
 }
-.data-table tr:nth-child(even) {
+.data-table1 tr:nth-child(even) {
     background-color: #f9f9f9;
 }
 
-.data-table tr:hover {
+.data-table1 tr:hover {
     background-color: #ddd;
 }
 

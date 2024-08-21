@@ -1,6 +1,7 @@
 .statistika_container {
     display: grid;
     width: 90vw;
+    max-height: 90vh;
     margin: 0 auto;
     margin-top: 30px;
     margin-bottom: 30px;
@@ -13,7 +14,7 @@
 
 .statistika_naslov {
     text-align: center;
-    font-size: 24px;
+    font-size: 1.2vw;
     margin-bottom: 20px;
 }
 
@@ -36,7 +37,7 @@
     margin-left: 20px;
     width: 12%;
     padding: 10px;
-    font-size: 16px;
+    font-size: 0.8vw;
     border: 1px solid #ccc;
     border-radius: 4px;
     background-color: #fff;
@@ -48,6 +49,16 @@
     border-color: #007bff;
 }
 
+.tablicaStat {
+    display: flex;
+    max-height: 60vh;
+    overflow: auto;
+}
+
+.tablicaStat thead th {
+    position: sticky;
+    top: 0;
+}
 .data-table {
     width: 100%;
     border-collapse: collapse;
@@ -56,8 +67,8 @@
 .data-table th,
 .data-table td {
     border: none;
-    padding: 8px;
-    font-size: 14px; /* Reduced font size */
+    padding: 0.4vw;
+    font-size: 0.6vw; /* Reduced font size */
 }
 
 .data-table th {

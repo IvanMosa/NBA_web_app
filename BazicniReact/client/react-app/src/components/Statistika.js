@@ -41,83 +41,87 @@ const Statistika = () => {
                         ))}
                     </select>
                 </form>
-                <table className="data-table">
-                    <thead>
-                        <tr>
-                            {[
-                                'NAZIV',
-                                'MOMCAD',
-                                'SUSRET',
-                                'DATUM UTAKMICE',
-                                'MINUTE',
-                                'POENI',
-                                'POGODCI IZ POLJA',
-                                'POKUŠAJI IZ POLJA',
-                                'FG%',
-                                'POGOĐENE TRICE',
-                                'PROMAŠENE TRICE',
-                                '3P%',
-                                'POGOĐENA SLOBODNA BACANJA',
-                                'PROMAŠENA SLOBODNA BACANJA',
-                                'SB%',
-                                'NAPADAČKI SKOK',
-                                'OBRAMBENI SKOK',
-                                'SKOKOVI',
-                                'ASISTENCIJE',
-                                'UKRADENE LOPTE',
-                                'BLOKOVI',
-                            ].map((column, columnIndex) => (
-                                <th key={columnIndex}>{column}</th>
-                            ))}
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {igraci
-                            .filter((rowItem) => {
-                                return rowItem.SEZONA == imeSezone;
-                            })
-                            .map((rowItem, rowIndex) => (
-                                <tr key={rowIndex}>
-                                    {Object.values(rowItem)
-                                        .slice(0, -3)
-                                        .map((row, rowInd) => (
-                                            <React.Fragment key={rowInd}>
-                                                {rowInd === 0 ||
-                                                rowInd === 1 ? (
-                                                    <td className="table_link">
-                                                        <Link
-                                                            to={
-                                                                rowInd === 0
-                                                                    ? `/Igrac/${row}`
-                                                                    : `/Momcad/${rowItem.DOMACI_IME}`
-                                                            }
-                                                        >
+                <div className="tablicaStat">
+                    <table className="data-table">
+                        <thead>
+                            <tr>
+                                {[
+                                    'NAZIV',
+                                    'MOMCAD',
+                                    'SUSRET',
+                                    'DATUM UTAKMICE',
+                                    'MINUTE',
+                                    'POENI',
+                                    'POGODCI IZ POLJA',
+                                    'POKUŠAJI IZ POLJA',
+                                    'FG%',
+                                    'POGOĐENE TRICE',
+                                    'PROMAŠENE TRICE',
+                                    '3P%',
+                                    'POGOĐENA SLOBODNA BACANJA',
+                                    'PROMAŠENA SLOBODNA BACANJA',
+                                    'SB%',
+                                    'NAPADAČKI SKOK',
+                                    'OBRAMBENI SKOK',
+                                    'SKOKOVI',
+                                    'ASISTENCIJE',
+                                    'UKRADENE LOPTE',
+                                    'BLOKOVI',
+                                ].map((column, columnIndex) => (
+                                    <th key={columnIndex}>{column}</th>
+                                ))}
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {igraci
+                                .filter((rowItem) => {
+                                    return rowItem.SEZONA == imeSezone;
+                                })
+                                .map((rowItem, rowIndex) => (
+                                    <tr key={rowIndex}>
+                                        {Object.values(rowItem)
+                                            .slice(0, -3)
+                                            .map((row, rowInd) => (
+                                                <React.Fragment key={rowInd}>
+                                                    {rowInd === 0 ||
+                                                    rowInd === 1 ? (
+                                                        <td className="table_link">
+                                                            <Link
+                                                                to={
+                                                                    rowInd === 0
+                                                                        ? `/Igrac/${row}`
+                                                                        : `/Momcad/${rowItem.DOMACI_IME}`
+                                                                }
+                                                            >
+                                                                {row}
+                                                            </Link>
+                                                        </td>
+                                                    ) : rowInd === 2 ? (
+                                                        <td className="table_link">
+                                                            <Link
+                                                                to={`/Momcad/${rowItem.DOMACI_IME}`}
+                                                            >
+                                                                {rowItem.DOMACI}
+                                                            </Link>
+                                                            <span> vs. </span>
+                                                            <Link
+                                                                to={`/Momcad/${rowItem.GOSTI_IME}`}
+                                                            >
+                                                                {rowItem.GOSTI}
+                                                            </Link>
+                                                        </td>
+                                                    ) : (
+                                                        <td key={rowInd}>
                                                             {row}
-                                                        </Link>
-                                                    </td>
-                                                ) : rowInd === 2 ? (
-                                                    <td className="table_link">
-                                                        <Link
-                                                            to={`/Momcad/${rowItem.DOMACI_IME}`}
-                                                        >
-                                                            {rowItem.DOMACI}
-                                                        </Link>
-                                                        <span> vs. </span>
-                                                        <Link
-                                                            to={`/Momcad/${rowItem.GOSTI_IME}`}
-                                                        >
-                                                            {rowItem.GOSTI}
-                                                        </Link>
-                                                    </td>
-                                                ) : (
-                                                    <td key={rowInd}>{row}</td>
-                                                )}
-                                            </React.Fragment>
-                                        ))}
-                                </tr>
-                            ))}
-                    </tbody>
-                </table>
+                                                        </td>
+                                                    )}
+                                                </React.Fragment>
+                                            ))}
+                                    </tr>
+                                ))}
+                        </tbody>
+                    </table>
+                </div>
             </div>
         </div>
     );

@@ -16,6 +16,8 @@ const OdabirPodatka = ({
     errorVrijeme,
     setErrorVrijeme,
     oznacenaUtakmica,
+    uzivoUnos,
+    setUzivoUnos,
 }) => {
     const [temp_index, setTempIndex] = useState([]);
     const [temp_podatak, setTempPodatak] = useState('');
@@ -197,7 +199,7 @@ const OdabirPodatka = ({
                 let minute = (cetvrtina - 1) * 12 + minutes;
                 let sekunde = seconds;
 
-                onConfirm(status, minute, sekunde);
+                onConfirm(status, minute, sekunde, uzivo);
                 setTempPodatak('');
             } else if (temp_podatak) {
                 setErrorMessage('Igrač mora biti označen!');
@@ -232,6 +234,7 @@ const OdabirPodatka = ({
 
     const handleToggle = () => {
         setUzivo(!uzivo);
+        setUzivoUnos(!uzivoUnos);
         handleReset();
         resetShotClock();
         setCetvrtina(1);

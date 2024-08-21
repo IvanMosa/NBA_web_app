@@ -111,7 +111,7 @@ function Tablica() {
                     <div key={index}>
                         <p className="izbor">{item}</p>
                         {FilteredData.length > 0 ? (
-                            <table className="data-table">
+                            <table className="data-table1">
                                 <thead>
                                     <tr>
                                         {[

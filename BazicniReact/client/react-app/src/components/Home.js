@@ -17,7 +17,7 @@ function Home() {
         {
             name: 'Trade players',
             path: '/trade',
-            description: 'Trade: igrač za igrača',
+            description: 'Unos trade-a igrača za igrača',
             videoSrc: 'trade.mp4',
         },
         {

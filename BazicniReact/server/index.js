@@ -1405,6 +1405,7 @@ app.post('/unesiStatistiku', async (req, res) => {
     const minute = req.body.minute;
     const sekunde = req.body.sekunde;
 
+    const uzivo = req.body.uzivo ? req.body.uzivo : null;
     let podatakID;
     let statusID;
 
@@ -1622,7 +1623,7 @@ app.post('/unesiStatistiku', async (req, res) => {
 
             let momcad;
             let poeni;
-            if ([1, 2, 3].includes(podatakID) && statusID === 1) {
+            if ([1, 2, 3].includes(podatakID) && statusID === 1 && uzivo) {
                 const pronadiMomcadID = await connection.execute(
                     'SELECT U.DOMACI_ID, U.GOSTI_ID FROM UTAKMICE U WHERE U.UTAKMICA_ID = :utakmica_id',
                     {
@@ -1709,12 +1710,21 @@ app.post('/izbrisiPodatak', async (req, res) => {
 
     const izbrisiPodatak = req.body.izbrisiPodatak[5];
 
+    const izbrisiPodatakUlaz = req.body.izbrisiPodatakUlaz
+        ? req.body.izbrisiPodatakUlaz[5]
+        : null;
+
+    const podatakUlaz = req.body.izbrisiPodatakUlaz
+        ? req.body.izbrisiPodatakUlaz
+        : null;
+
     const imeIgrac = req.body.izbrisiPodatak[0];
 
     const utakmica_id = req.body.utakmica_id;
 
     const podatak = req.body.izbrisiPodatak ? req.body.izbrisiPodatak : null;
 
+    const uzivo = req.body.uzivo ? req.body.uzivo : null;
     try {
         connection = await oracledb.getConnection();
 
@@ -1724,24 +1734,32 @@ app.post('/izbrisiPodatak', async (req, res) => {
             { outFormat: oracledb.OBJECT }
         );
 
-        if (podatak[1] == 'Izlaz') {
-            const azuriraj_vrijeme = await connection.execute(
+        if (podatak[1] == 'Izlaz' && podatakUlaz[1] == 'Ulaz') {
+            const azurirajVrijemeIzlaz = await connection.execute(
                 'UPDATE STATISTIKA S SET VRIJEME_KRAJ = null WHERE S.STAT_ID = :izbrisiPodatak',
                 { izbrisiPodatak: izbrisiPodatak },
                 { autoCommit: true }
             );
-            const azuriraj_status = await connection.execute(
+            const azurirajStatusIzlaz = await connection.execute(
                 'UPDATE STATISTIKA S SET STATUS_ID = 2 WHERE S.STAT_ID = :izbrisiPodatak',
                 { izbrisiPodatak: izbrisiPodatak },
                 { autoCommit: true }
             );
+
+            const izbrisiUlaz = await connection.execute(
+                'DELETE STATISTIKA WHERE STAT_ID = :izbrisiPodatakUlaz',
+                { izbrisiPodatakUlaz: izbrisiPodatakUlaz },
+                { autoCommit: true }
+            );
+
             return;
         } else {
             let poeni;
             let momcad;
             if (
                 [1, 2, 3].includes(pronadiPodatakStatus.rows[0].SP_ID) &&
-                pronadiPodatakStatus.rows[0].STATUS_ID === 1
+                pronadiPodatakStatus.rows[0].STATUS_ID === 1 &&
+                uzivo
             ) {
                 const pronadiIgracID = await connection.execute(
                     'SELECT I.IGRAC_ID FROM IGRACI I WHERE I.NAZIV = :imeIgrac',

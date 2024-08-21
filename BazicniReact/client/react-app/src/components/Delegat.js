@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import './css/delegat.css';
 import { format, parse } from 'date-fns';
 import axios from 'axios';
@@ -53,6 +53,7 @@ const Delegat = () => {
     const [highlight, setHighlight] = useState(false);
     const [highlight2, setHighlight2] = useState(false);
     const [pokreni, setPokreni] = useState(false);
+    const [uzivoUnos, setUzivoUnos] = useState(false);
 
     const [editingCell, setEditingCell] = useState(0);
     const [ondelete, setDelete] = useState(false);
@@ -455,6 +456,7 @@ const Delegat = () => {
                             sekunde: sekunde,
                             podatak: oznaceni_podatak,
                             utakmica_id: utakmica_id,
+                            uzivo: uzivoUnos,
                         }
                     );
                     setStatistika((prev) => [result.data.noviPodatak, ...prev]);
@@ -511,47 +513,132 @@ const Delegat = () => {
         setEditingCell(rowIndex);
     };
 
-    const potvrdi = (izbrisiPodatak) => {
+    const potvrdi = (izbrisiPodatak, izbrisiPodatakUlaz) => {
         return new Promise((resolve) => {
             const handleConfirm = () => resolve(true);
             const handleCancel = () => resolve(false);
 
-            setConfirmationDialog({
-                message:
-                    'Jeste li sigurni da želite obrisati podatak: "' +
-                    izbrisiPodatak[1] +
-                    '" za igrača: "' +
-                    izbrisiPodatak[0] +
-                    '" ?',
-                onConfirm: handleConfirm,
-                onCancel: handleCancel,
-            });
+            if (
+                izbrisiPodatak[1] == 'Izlaz' &&
+                izbrisiPodatakUlaz[1] == 'Ulaz'
+            ) {
+                setConfirmationDialog({
+                    message:
+                        'Ako izbrišete izlaz igrača\n' +
+                        izbrisiPodatak[0] +
+                        '\nizbrisati će se i ulaz igrača\n' +
+                        izbrisiPodatakUlaz[0],
+                    onConfirm: handleConfirm,
+                    onCancel: handleCancel,
+                });
+            } else if (izbrisiPodatakUlaz && izbrisiPodatakUlaz[1] != 'Ulaz') {
+                setConfirmationDialog({
+                    message: 'Pogreška kod brisanja podatka!',
+                    onCancel: handleCancel,
+                });
+            } else {
+                setConfirmationDialog({
+                    message:
+                        'Jeste li sigurni da želite obrisati podatak: "' +
+                        izbrisiPodatak[1] +
+                        '" za igrača: "' +
+                        izbrisiPodatak[0] +
+                        '" ?',
+                    onConfirm: handleConfirm,
+                    onCancel: handleCancel,
+                });
+            }
         });
     };
 
     const handleDeleteClick = async (rowIndex) => {
         const izbrisiPodatak = statistika[rowIndex];
 
-        console.log(izbrisiPodatak);
         setDelete(true);
-        let confirm = await potvrdi(izbrisiPodatak);
+        let confirm;
+        let izbrisiPodatakUlaz;
+
+        if (izbrisiPodatak[1] == 'Izlaz') {
+            izbrisiPodatakUlaz = statistika[rowIndex - 1];
+            confirm = await potvrdi(izbrisiPodatak, izbrisiPodatakUlaz);
+        } else {
+            confirm = await potvrdi(izbrisiPodatak);
+        }
         try {
             setDelete(false);
             if (confirm) {
-                const noviStatistika = [
-                    ...statistika.slice(0, rowIndex),
-                    ...statistika.slice(rowIndex + 1),
-                ];
-                setStatistika(noviStatistika);
+                let novaStatistika;
+
+                if (izbrisiPodatak[1] == 'Izlaz') {
+                    novaStatistika = [
+                        ...statistika.slice(0, rowIndex - 1),
+                        ...statistika.slice(rowIndex + 1),
+                    ];
+
+                    let stariIgrac = igraci_domaci.find(
+                        (item) => item.NAZIV == izbrisiPodatak[0]
+                    )
+                        ? igraci_domaci.find(
+                              (item) => item.NAZIV == izbrisiPodatak[0]
+                          )
+                        : igraci_gosti.find(
+                              (item) => item.NAZIV == izbrisiPodatak[0]
+                          );
+
+                    let noviIgrac = igraci_domaci.find(
+                        (item) => item.NAZIV == izbrisiPodatakUlaz[0]
+                    )
+                        ? igraci_domaci.find(
+                              (item) => item.NAZIV == izbrisiPodatakUlaz[0]
+                          )
+                        : igraci_gosti.find(
+                              (item) => item.NAZIV == izbrisiPodatakUlaz[0]
+                          );
+
+                    let momcad_id = stariIgrac.MOMCAD_ID;
+
+                    if (igraci_domaci[0].MOMCAD_ID === momcad_id) {
+                        const index = aktivni_domaci.findIndex(
+                            (igrac) => igrac.NAZIV === noviIgrac.NAZIV
+                        );
+
+                        const noviDomaci = [
+                            ...aktivni_domaci.slice(0, index),
+                            ...aktivni_domaci.slice(index + 1),
+                            stariIgrac,
+                        ];
+                        setAktivniDomaci(noviDomaci);
+                    } else if (igraci_gosti[0].MOMCAD_ID === momcad_id) {
+                        const index = aktivni_gosti.findIndex(
+                            (igrac) => igrac.NAZIV === noviIgrac.NAZIV
+                        );
+
+                        const noviGosti = [
+                            ...aktivni_gosti.slice(0, index),
+                            ...aktivni_gosti.slice(index + 1),
+                            stariIgrac,
+                        ];
+                        setAktivniGosti(noviGosti);
+                    }
+                } else {
+                    novaStatistika = [
+                        ...statistika.slice(0, rowIndex),
+                        ...statistika.slice(rowIndex + 1),
+                    ];
+                }
+                setStatistika(novaStatistika);
 
                 const result = await axios.post(
                     'http://localhost:4000/izbrisiPodatak',
                     {
                         izbrisiPodatak: izbrisiPodatak,
+                        izbrisiPodatakUlaz: izbrisiPodatakUlaz,
                         utakmica_id: utakmica_id,
+                        uzivo: uzivoUnos,
                     }
                 );
 
+                prikaziStatistiku();
                 const momcad = result.data.momcad;
                 const poeni = result.data.poeni;
 
@@ -561,7 +648,6 @@ const Delegat = () => {
                     oznacenaUtakmica.POENI_GOSTI -= poeni;
                 }
             }
-            prikaziStatistiku();
         } catch (err) {
             console.log(err);
         }
@@ -572,10 +658,11 @@ const Delegat = () => {
             setStarteriSpremljeni(false);
         }
     }, [statistika]);
+
     return (
         <div>
             <div className={`container ${blurano ? 'blurred' : ''}`}>
-                <div className={`side ${blurano_pocetna ? 'blurred' : ''}`}>
+                <div className={blurano_pocetna ? 'side blurred' : 'side'}>
                     {!blurano_pocetna && (
                         <>
                             <div className="p_logo">
@@ -669,11 +756,13 @@ const Delegat = () => {
                                 errorVrijeme={errorVrijeme}
                                 setErrorVrijeme={setErrorVrijeme}
                                 oznacenaUtakmica={oznacenaUtakmica}
+                                uzivoUnos={uzivoUnos}
+                                setUzivoUnos={setUzivoUnos}
                             />
                         )}
                     </div>
                 </div>
-                <div className={`side ${blurano_pocetna ? 'blurred' : ''}`}>
+                <div className={blurano_pocetna ? 'side blurred' : 'side'}>
                     {!blurano_pocetna && (
                         <>
                             <div className="p_logo">

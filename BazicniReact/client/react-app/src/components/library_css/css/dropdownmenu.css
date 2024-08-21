@@ -10,7 +10,7 @@
     border-radius: 6px; /* Zaobljeni rubovi */
     background-color: #e0e0e0; /* Pozadina dugmadi */
     color: #333; /* Boja teksta */
-    font-size: 14px; /* Prilagođen font */
+    font-size: 0.8vw; /* Prilagođen font */
     font-weight: normal; /* Normalna težina fonta */
     cursor: pointer; /* Promena kursora pri prelasku miša */
     transition: background-color 0.3s, transform 0.2s; /* Efekti prelaska */
@@ -22,19 +22,20 @@
     position: absolute;
     background-color: white;
     border: 1px solid #ddd;
+    border-radius: 8px;
     padding: 5px; /* Smanjen unutrašnji razmak */
     z-index: 1;
-    width: 325px; /* Širina menija, prilagodite prema potrebi */
+    max-width: 15vw; /* Širina menija, prilagodite prema potrebi */
 }
 
 .button-container {
     display: flex;
     flex-wrap: wrap;
-    gap: 5px; /* Razmak između dugmadi */
+    gap: 0.3vw; /* Razmak između dugmadi */
 }
 
 .dropdown-item {
-    flex: 1 1 calc(25% - 10px); /* Četiri dugmadi u jednom redu */
+    flex: 1 1 calc(25% - 0.6vw); /* Četiri dugmadi u jednom redu */
     box-sizing: border-box;
     padding: 5px; /* Manji unutrašnji razmak */
     margin: 2px 0; /* Manji vertikalni razmak između redova */
@@ -42,7 +43,7 @@
     background-color: #f9f9f9;
     cursor: pointer;
     text-align: center; /* Tekst centriran unutar dugmadi */
-    font-size: 12px; /* Manja veličina fonta */
+    font-size: 0.6vw; /* Manja veličina fonta */
 }
 
 .dropdown-item:hover {

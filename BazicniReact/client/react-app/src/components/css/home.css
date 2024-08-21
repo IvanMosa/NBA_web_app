@@ -5,7 +5,7 @@
 }
 
 .homepage-title {
-    font-size: 2.5em;
+    font-size: 2vw;
     margin-bottom: 100px;
     color: #333;
 }
@@ -57,13 +57,13 @@
     display: none; /* Sakrij element */
 }
 .card h2 {
-    font-size: 1.5em;
+    font-size: 1.2vw;
     margin-bottom: 10px;
     color: #007bff; /* Plava boja naslova */
 }
 
 .card p {
-    font-size: 1em;
+    font-size: 0.8vw;
     color: #666;
     margin-bottom: 60px; /* Razmak kako bi se video bio vidljiv ispod teksta */
 }

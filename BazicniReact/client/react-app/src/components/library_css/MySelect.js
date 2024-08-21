@@ -12,10 +12,11 @@ const customStyles = {
         borderRadius: '6px',
         boxShadow: '0 4px 8px rgba(0, 0, 0, 0.1)',
         border: '1px solid #ccc',
-        fontSize: '16px',
+        fontSize: '1vw',
         backgroundColor: '#fff',
-        padding: '4px',
-        height: 'auto', // Ensure it adjusts based on content
+        padding: '0.1vw',
+        width: '100%',
+        height: '0.5vh', // Ensure it adjusts based on content
     }),
     menu: (provided) => ({
         ...provided,
@@ -41,6 +42,8 @@ const customStyles = {
     placeholder: (provided) => ({
         ...provided,
         color: '#aaa',
+        textAlign: 'center', // Center-align the placeholder text
+        width: '100%',
     }),
 };
 

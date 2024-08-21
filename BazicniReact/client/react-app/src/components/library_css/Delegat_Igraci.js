@@ -117,8 +117,8 @@ const DelegatIgraci = ({
                                         src="/sport-shirt.png"
                                         alt="sport shirt"
                                         style={{
-                                            width: 'auto',
-                                            height: '6vh',
+                                            width: '2.5vw',
+                                            height: 'auto',
                                         }}
                                     />
                                     <span className="broj_dresa">
@@ -151,8 +151,8 @@ const DelegatIgraci = ({
                                         src="/sport-shirt.png"
                                         alt="sport shirt"
                                         style={{
-                                            width: 'auto',
-                                            height: '5vh',
+                                            width: '2.5vw',
+                                            height: 'auto',
                                         }}
                                     />
                                     <span className="broj_dresa">
@@ -165,7 +165,7 @@ const DelegatIgraci = ({
                                     alt="red arrow"
                                     style={{
                                         width: 'auto',
-                                        height: '50px',
+                                        height: '5vh',
                                     }}
                                 />
                             </div>
@@ -185,8 +185,8 @@ const DelegatIgraci = ({
                                             src="/sport-shirt.png"
                                             alt="sport shirt"
                                             style={{
-                                                width: 'auto',
-                                                height: '5vh',
+                                                width: '2.5vw',
+                                                height: 'auto',
                                             }}
                                         />
                                         <span className="broj_dresa">
@@ -229,7 +229,7 @@ const DelegatIgraci = ({
                             alt="green arrow"
                             style={{
                                 width: 'auto',
-                                height: '55px',
+                                height: '5.5vh',
                                 marginTop: '50px',
                             }}
                         />
@@ -243,8 +243,8 @@ const DelegatIgraci = ({
                                 src="/sport-shirt.png"
                                 alt="sport shirt"
                                 style={{
-                                    width: 'auto',
-                                    height: '5vh',
+                                    width: '2.5vw',
+                                    height: 'auto',
                                 }}
                             />
                             <span className="broj_dresa">
@@ -278,8 +278,8 @@ const DelegatIgraci = ({
                                         src="/sport-shirt.png"
                                         alt="sport shirt"
                                         style={{
-                                            width: 'auto',
-                                            height: '5vh',
+                                            width: '2.5vw',
+                                            height: 'auto',
                                         }}
                                     />
                                     <span className="broj_dresa">
@@ -314,8 +314,8 @@ const DelegatIgraci = ({
                                         src="/sport-shirt.png"
                                         alt="sport shirt"
                                         style={{
-                                            width: 'auto',
-                                            height: '5vh',
+                                            width: '2.5vw',
+                                            height: 'auto',
                                         }}
                                     />
                                     <span className="broj_dresa">

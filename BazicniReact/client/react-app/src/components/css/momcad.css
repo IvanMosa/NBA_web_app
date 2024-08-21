@@ -117,10 +117,11 @@ body {
     border: none; /* Ako želite da `td` ima border */
     padding: 6px; /* Ako želite padding unutar `td` */
     background-color: transparent;
+    font-size: 0.85vw;
 }
 
 .data_table th {
-    height: 20px;
+    height: 1vh;
     background-color: #f2f2f2;
     text-align: center;
 }
@@ -150,7 +151,7 @@ body {
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); /* Blagi sjaj */
     padding: 4px; /* Padding za unutarnji razmak */
     border: 1px solid #ccc; /* Granični stil */
-    font-size: 16px; /* Veličina fonta */
+    font-size: 1em; /* Veličina fonta */
     background-color: #fff; /* Pozadina inputa */
     appearance: none; /* Uklanja zadani izgled za select */
 }
@@ -203,6 +204,8 @@ body {
     background-color: none;
     cursor: pointer;
     transition: background-color 0.2s;
+    height: 3vh;
+    width: 2vw;
 }
 .button_div:hover {
     background-color: #e0e0e0;
@@ -229,8 +232,9 @@ body {
 
 .button_div .fa-edit,
 .button_div .fa-save,
+.button_div .fa-delete-left,
 .button_div .fa-plus {
-    font-size: 24px; /* Adjust size as needed */
+    font-size: 1.2vw;
     color: black; /* Adjust color as needed */
 }
 
@@ -282,8 +286,7 @@ body {
     border-radius: 8px;
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
     z-index: 1001;
-    max-width: 500px;
-    width: 90%;
+    max-width: 30vw;
     margin: 0 auto;
 }
 
@@ -364,6 +367,7 @@ body {
     margin: 0; /* Uklanja margine oko poruke pogreške */
     flex: 1; /* Poruka pogreške zauzima preostali prostor */
     text-align: left; /* Poravnanje poruke pogreške lijevo */
+    white-space: pre-wrap;
 }
 
 /* Stil za blur efekat na ostatak stranice */
@@ -424,4 +428,42 @@ body {
 
 .okButton:hover {
     background-color: #414a4c; /* Tamnija nijansa boje pri prelasku miša */
+}
+
+.momcadStat {
+    display: flex;
+    max-height: 30vh;
+    overflow: auto;
+}
+
+.momcadStat thead th {
+    position: sticky;
+    top: 0;
+}
+.data-table2 {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.data-table2 th,
+.data-table2 td {
+    border: none;
+    padding: 0.4vw;
+    font-size: 0.8vw; /* Reduced font size */
+}
+
+.data-table2 th {
+    background-color: #f2f2f2;
+    text-align: center;
+}
+
+.data-table2 td {
+    text-align: center;
+}
+.data-table2 tr:nth-child(even) {
+    background-color: #f9f9f9;
+}
+
+.data-table tr:hover {
+    background-color: #ddd;
 }
