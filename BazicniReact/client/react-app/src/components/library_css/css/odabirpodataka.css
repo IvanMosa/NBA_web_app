@@ -26,7 +26,8 @@
     flex: 1 1 calc(33.33% - 10px);
     box-sizing: border-box;
     padding: 12px; /* Povećan unutrašnji razmak */
-    height: 4vh;
+    height: 2vw;
+    align-items: center;
     text-align: center;
     border: 1px solid #ccc; /* Dodan obrub */
     border-radius: 8px; /* Zaobljeni rubovi */
@@ -88,7 +89,7 @@
 .clockContainer {
     text-align: center;
     font-family: Arial, sans-serif;
-    margin-top: 20px;
+    margin-top: 5px;
     margin-bottom: 40px;
 }
 .timeContainer {
@@ -134,7 +135,8 @@
 }
 
 .timeDisplay.edit {
-    display: block; /* Postavi edit display na block */
+    display: flex; /* Postavi edit display na block */
+    flex-direction: column;
     text-align: center; /* Poravnanje centra */
 }
 
@@ -145,7 +147,8 @@
 
 .editPoeni input {
     width: 4vw;
-    height: 4vh;
+    height: 2vw;
+    font-size: 1.5vw;
 }
 
 .input {
@@ -153,7 +156,6 @@
     height: 4.5vh; /* Postavi visinu inputa da se slaže s font-size */
     font-size: 36px; /* Font veličina usklađena s timeDisplay */
     text-align: center;
-    margin: 5px; /* Dodaš malo prostora oko inputa */
 }
 
 /*Slider */

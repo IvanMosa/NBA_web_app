@@ -4,10 +4,11 @@ import '../components/css/statistika.css';
 import axios from 'axios';
 import { Link } from 'react-router-dom';
 
-const Statistika = () => {
+const Statistika = ({ imeIgrac, setPoeni }) => {
     const [igraci, setIgraci] = useState([]);
     const [imeSezone, setimeSezone] = useState('23/24');
     const [sezone, setSezone] = useState([]);
+    const [oznaceniIgrac, setOznaceniIgrac] = useState('Odaberi igrača');
 
     useEffect(() => {
         const fetchData = async () => {
@@ -22,25 +23,70 @@ const Statistika = () => {
             }
         };
         fetchData();
+        if (imeIgrac && imeIgrac.length > 0) {
+            setOznaceniIgrac(imeIgrac);
+
+            let poeni = 0;
+            let brojUtakmica = 0;
+
+            igraci
+                .filter((igrac) => igrac.IGRAC == imeIgrac)
+                .forEach((igrac) => {
+                    poeni += igrac.POENI;
+                    brojUtakmica++;
+                });
+            setPoeni(poeni / brojUtakmica);
+        }
     }, []);
 
+    // useEffect(() => {
+    //     if (imeIgrac.length > 0) setOznaceniIgrac(imeIgrac.imeIgrac.toString());
+    // }, [imeIgrac]);
     return (
         <div className="statistika_container">
-            <p className="statistika_naslov">Statistika igrača</p>
+            <p className="statistika_naslov">
+                {imeIgrac && imeIgrac.length > 0
+                    ? 'Statistika na svim utakmicama'
+                    : 'Statistika svih igrača'}
+            </p>
             <div className="statistika_menu">
-                <form>
-                    <p className="sezona_text">Sezona</p>
-                    <select
-                        value={imeSezone}
-                        onChange={(e) => setimeSezone(e.target.value)}
-                    >
-                        {sezone.map((sezona, index) => (
-                            <option key={index} value={sezona}>
-                                {sezona}
-                            </option>
-                        ))}
-                    </select>
-                </form>
+                <div className="statistika_form">
+                    <form>
+                        <p className="sezona_text">Sezona</p>
+                        <select
+                            value={imeSezone}
+                            onChange={(e) => setimeSezone(e.target.value)}
+                        >
+                            {sezone.map((sezona, index) => (
+                                <option key={index} value={sezona}>
+                                    {sezona}
+                                </option>
+                            ))}
+                        </select>
+                    </form>
+                    {!imeIgrac && (
+                        <form>
+                            <p className="sezona_text">Igrač</p>
+                            <select
+                                value={oznaceniIgrac}
+                                onChange={(e) =>
+                                    setOznaceniIgrac(e.target.value)
+                                }
+                            >
+                                {[
+                                    'Odaberi igrača',
+                                    ...new Set(
+                                        igraci.map((item) => item.IGRAC)
+                                    ),
+                                ].map((igrac, index) => (
+                                    <option key={index} value={igrac}>
+                                        {igrac}
+                                    </option>
+                                ))}
+                            </select>
+                        </form>
+                    )}
+                </div>
                 <div className="tablicaStat">
                     <table className="data-table">
                         <thead>
@@ -75,7 +121,11 @@ const Statistika = () => {
                         <tbody>
                             {igraci
                                 .filter((rowItem) => {
-                                    return rowItem.SEZONA == imeSezone;
+                                    return (
+                                        rowItem.SEZONA == imeSezone &&
+                                        (oznaceniIgrac === 'Odaberi igrača' ||
+                                            rowItem.IGRAC === oznaceniIgrac)
+                                    );
                                 })
                                 .map((rowItem, rowIndex) => (
                                     <tr key={rowIndex}>

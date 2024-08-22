@@ -3,6 +3,7 @@
     flex-direction: column;
     width: 100%; /* Osigurava da se kontejner proširi da bi zauzeo celu dostupnu širinu */
     padding: 10px; /* Dodaje malo razmaka oko sadržaja */
+    margin-bottom: 10px;
     gap: 10px;
     box-sizing: border-box; /* Uključuje padding i border u ukupnu širinu i visinu */
 }

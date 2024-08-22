@@ -11,6 +11,7 @@ const DelegatIgraci = ({
     izlaz,
     potvrdaPromjene,
     aktivniProtivnik,
+    momcadID,
 }) => {
     const [starteri, setStarteri] = useState([]);
     const [errorMessage, setErrorMessage] = useState('');
@@ -34,10 +35,11 @@ const DelegatIgraci = ({
     };
 
     useEffect(() => {
-        if (igraci.length === 0) {
-            setStarteri(true);
-        }
+        console.log(start);
+        console.log(izlaz);
+        console.log(igraci);
     }, [igraci]);
+
     const handleAktivni = (igrac) => {
         const postoji = oznaceniIgrac && oznaceniIgrac.NAZIV === igrac.NAZIV;
 
@@ -78,7 +80,7 @@ const DelegatIgraci = ({
             }
         } else {
             const nijeOdobreno =
-                igraci[0].MOMCAD_ID === igrac.MOMCAD_ID &&
+                momcadID === igrac.MOMCAD_ID &&
                 ulaziIgrac.NAZIV === igrac.NAZIV;
 
             if (!nijeOdobreno) {
@@ -170,6 +172,7 @@ const DelegatIgraci = ({
                                 />
                             </div>
                         ) : (
+                            igraci &&
                             igraci.map((igrac, index) => (
                                 <div
                                     className="del_igr_button_item"
@@ -230,7 +233,7 @@ const DelegatIgraci = ({
                             style={{
                                 width: 'auto',
                                 height: '5.5vh',
-                                marginTop: '50px',
+                                marginTop: '10px',
                             }}
                         />
                         <div
@@ -291,11 +294,12 @@ const DelegatIgraci = ({
                         ))
                 ) : izlaz && igraci.length < 5 && izlaz.length > 0 ? (
                     izlaz
-                        .filter(
-                            (item) =>
-                                !igraci.some(
-                                    (igrac) => igrac.NAZIV === item.NAZIV
-                                ) && item.MOMCAD_ID === igraci[0].MOMCAD_ID
+                        .filter((item) =>
+                            igraci.length > 0
+                                ? !igraci.some(
+                                      (igrac) => igrac.NAZIV === item.NAZIV
+                                  ) && item.MOMCAD_ID === momcadID
+                                : item.MOMCAD_ID === momcadID
                         )
                         .map((igrac, index) => (
                             <div

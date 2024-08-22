@@ -1,5 +1,6 @@
 .statistika_container {
-    display: grid;
+    display: flex;
+    flex-direction: column;
     width: 90vw;
     max-height: 90vh;
     margin: 0 auto;
@@ -24,7 +25,12 @@
     gap: 15px;
 }
 
-.statistika_menu form {
+.statistika_form {
+    display: flex;
+    flex-direction: row;
+    gap: 15px;
+}
+.statistika_form form {
     display: flex;
     flex-direction: column;
     gap: 10px;
@@ -32,10 +38,10 @@
 
 .sezona_text {
     margin-left: 22px;
+    font-size: 0.9vw;
 }
-.statistika_menu select {
+.statistika_form select {
     margin-left: 20px;
-    width: 12%;
     padding: 10px;
     font-size: 0.8vw;
     border: 1px solid #ccc;
@@ -44,7 +50,7 @@
     cursor: pointer;
 }
 
-.statistika_menu select:focus {
+.statistika_form select:focus {
     outline: none;
     border-color: #007bff;
 }

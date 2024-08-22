@@ -12,7 +12,8 @@ body {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    height: 80vh; /* Da bi središnji element bio centriran po visini */
+    margin-top: 20px;
+    height: auto; /* Da bi središnji element bio centriran po visini */
 }
 
 .side {
@@ -129,6 +130,8 @@ body {
 .line {
     width: 100%;
     height: 2px;
+    margin-top: 5px;
+    margin-bottom: 5px;
     background-color: #ccc; /* Boja linije */
 }
 
@@ -272,6 +275,7 @@ body {
 .statistics {
     width: 90%;
     margin: 0px auto;
+    margin-top: 20px;
     padding: 20px;
     border: 1px solid #ccc;
     border-radius: 8px;

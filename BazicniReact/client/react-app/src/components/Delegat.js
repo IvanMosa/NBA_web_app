@@ -304,11 +304,13 @@ const Delegat = () => {
                     setIgraciDomaci(domaci_temp);
                     setIgraciGosti(gosti_temp);
                     setZavrsena(false);
-                } else {
-                    await Promise.all(
-                        [setAktivniDomaci(domaci_temp)],
-                        [setAktivniGosti(gosti_temp)]
-                    );
+                } else if (aktivni_domaci_temp.length !== 0) {
+                    setAktivniDomaci(aktivni_domaci_temp);
+                    setAktivniGosti([]);
+                    setZavrsena(true);
+                } else if (aktivni_gosti_temp.length !== 0) {
+                    setAktivniDomaci([]);
+                    setAktivniGosti(aktivni_gosti_temp);
                     setZavrsena(true);
                 }
                 setStarteriSpremljeni(true);
@@ -338,11 +340,6 @@ const Delegat = () => {
             setPozivStarteriOznaceni(false);
         }
     }, [pozivStarteriOznaceni]);
-
-    useEffect(() => {
-        console.log(statistika);
-        console.log(oznacena);
-    }, [statistika]);
 
     const handleOznacenIgrac = (oznacenIgrac, status) => {
         if (oznacenIgrac.length === 0 && status === 0) {
@@ -407,8 +404,16 @@ const Delegat = () => {
                                 result.data.noviIzlaz,
                                 ...prev,
                             ]);
-                            setAktivniDomaci(result.data.aktivni_domaci);
-                            setAktivniGosti(result.data.aktivni_gosti);
+                            setAktivniDomaci(
+                                result.data.aktivni_domaci
+                                    ? result.data.aktivni_domaci
+                                    : []
+                            );
+                            setAktivniGosti(
+                                result.data.aktivni_gosti
+                                    ? result.data.aktivni_gosti
+                                    : []
+                            );
                             setPromjeneUlazIzlaz(true);
                             setPromjene(true);
                         }
@@ -441,8 +446,16 @@ const Delegat = () => {
                                 result.data.noviPodatak,
                                 ...prev,
                             ]);
-                            setAktivniDomaci(result.data.aktivni_domaci);
-                            setAktivniGosti(result.data.aktivni_gosti);
+                            setAktivniDomaci(
+                                result.data.aktivni_domaci
+                                    ? result.data.aktivni_domaci
+                                    : []
+                            );
+                            setAktivniGosti(
+                                result.data.aktivni_gosti
+                                    ? result.data.aktivni_gosti
+                                    : []
+                            );
                             setPromjene(true);
                         }
                     }
@@ -628,6 +641,12 @@ const Delegat = () => {
                 }
                 setStatistika(novaStatistika);
 
+                if (novaStatistika.length === 0) {
+                    setStarteriSpremljeni(false);
+                    setAktivniDomaci([]);
+                    setAktivniGosti([]);
+                }
+
                 const result = await axios.post(
                     'http://localhost:4000/izbrisiPodatak',
                     {
@@ -652,12 +671,6 @@ const Delegat = () => {
             console.log(err);
         }
     };
-
-    useEffect(() => {
-        if (statistika.length === 0) {
-            setStarteriSpremljeni(false);
-        }
-    }, [statistika]);
 
     return (
         <div>
@@ -695,6 +708,7 @@ const Delegat = () => {
                                     potvrdaPromjene={potvrdaPromjene}
                                     setPotvrdaPromjene={setPotvrdaPromjene}
                                     aktivniProtivnik={aktivni_gosti.length}
+                                    momcadID={igraci_domaci[0].MOMCAD_ID}
                                 />
                             )}
                         </>
@@ -795,6 +809,7 @@ const Delegat = () => {
                                     potvrdaPromjene={potvrdaPromjene}
                                     setPotvrdaPromjene={setPotvrdaPromjene}
                                     aktivniProtivnik={aktivni_domaci.length}
+                                    momcadID={igraci_gosti[0].MOMCAD_ID}
                                 />
                             )}
                         </>
