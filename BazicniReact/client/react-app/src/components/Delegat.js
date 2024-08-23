@@ -714,26 +714,20 @@ const Delegat = () => {
                         </>
                     )}
                 </div>
-                <div className="middle-container">
-                    {oznacenaUtakmica.length === 0 ? (
-                        <div className="above-container">
-                            <div
-                                className="above-middle"
-                                onClick={clickUtakmica}
-                            >
-                                <p>Unesi novu utakmicu</p>
-                            </div>
-                            <div
-                                className="above-middle"
-                                onClick={clickOdaberi}
-                            >
-                                <p>Odaberi završenu utakmicu</p>
-                            </div>
+                {oznacenaUtakmica.length === 0 ? (
+                    <div className="odabirPocetak_container">
+                        <div className="odabirPocetak" onClick={clickUtakmica}>
+                            <p>Unesi novu utakmicu</p>
                         </div>
-                    ) : (
+                        <div className="odabirPocetak" onClick={clickOdaberi}>
+                            <p>Odaberi završenu utakmicu</p>
+                        </div>
+                    </div>
+                ) : (
+                    <div className="middle-container">
                         <div className="above-container">
                             <div
-                                className="above-middle stil1"
+                                className="above-middle"
                                 onClick={() => {
                                     setOznacenaUtakmica([]);
                                     setUtakmica_ID(0);
@@ -749,33 +743,36 @@ const Delegat = () => {
                                 <p>Klikni za promjenu utakmice</p>
                             </div>
                         </div>
-                    )}
-                    <div
-                        className={`middle ${blurano_pocetna ? 'blurred' : ''}`}
-                    >
-                        {!blurano_pocetna && (
-                            <OdabirPodatka
-                                statistickiPodatci={statistickiPodatci}
-                                statusi={statusi}
-                                start={starteri_spremljeni ? false : true}
-                                broj_startera={
-                                    aktivni_domaci.length + aktivni_gosti.length
-                                }
-                                onSave={handleStarteriSave}
-                                onSelect={handleOznaceniPodatak}
-                                onConfirm={handleConfirm}
-                                oznacenIgrac={Igrac_promjena}
-                                ulaziIgrac={Igrac_ulazi}
-                                zavrsena={zavrsena}
-                                errorVrijeme={errorVrijeme}
-                                setErrorVrijeme={setErrorVrijeme}
-                                oznacenaUtakmica={oznacenaUtakmica}
-                                uzivoUnos={uzivoUnos}
-                                setUzivoUnos={setUzivoUnos}
-                            />
-                        )}
+                        <div
+                            className={`middle ${
+                                blurano_pocetna ? 'blurred' : ''
+                            }`}
+                        >
+                            {!blurano_pocetna && (
+                                <OdabirPodatka
+                                    statistickiPodatci={statistickiPodatci}
+                                    statusi={statusi}
+                                    start={starteri_spremljeni ? false : true}
+                                    broj_startera={
+                                        aktivni_domaci.length +
+                                        aktivni_gosti.length
+                                    }
+                                    onSave={handleStarteriSave}
+                                    onSelect={handleOznaceniPodatak}
+                                    onConfirm={handleConfirm}
+                                    oznacenIgrac={Igrac_promjena}
+                                    ulaziIgrac={Igrac_ulazi}
+                                    zavrsena={zavrsena}
+                                    errorVrijeme={errorVrijeme}
+                                    setErrorVrijeme={setErrorVrijeme}
+                                    oznacenaUtakmica={oznacenaUtakmica}
+                                    uzivoUnos={uzivoUnos}
+                                    setUzivoUnos={setUzivoUnos}
+                                />
+                            )}
+                        </div>
                     </div>
-                </div>
+                )}
                 <div className={blurano_pocetna ? 'side blurred' : 'side'}>
                     {!blurano_pocetna && (
                         <>

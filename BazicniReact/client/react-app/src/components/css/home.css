@@ -1,20 +1,37 @@
 .homepage {
     text-align: center;
     padding: 40px;
-    background-color: #f0f2f5; /* Svijetlo siva pozadina */
+    min-height: 96.3vh;
+    position: relative;
 }
 
+.pozadina {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 70vh;
+    z-index: 1;
+    overflow: hidden;
+    margin-top: 10vh;
+    box-shadow: 12px 0px 12px 16px black;
+}
+
+.detalji {
+    position: relative;
+    margin-top: 10vh;
+    z-index: 1;
+}
 .homepage-title {
     font-size: 2vw;
-    margin-bottom: 100px;
-    color: #333;
+    color: lightskyblue;
 }
 
 .cards-container {
     display: flex;
     justify-content: center;
     flex-wrap: wrap;
-    margin-top: 1vh;
+    margin-top: 8vh;
     gap: 100px; /* Razmak između kartica */
     position: relative; /* Omogućuje karticama da se pravilno slože */
 }
@@ -28,7 +45,7 @@
     max-width: calc(
         33.333% - 100px
     ); /* Maksimalna širina kartice je trećina reda */
-    height: 100px; /* Početna visina kartice */
+    height: 11vh; /* Početna visina kartice */
     cursor: pointer;
     transition: transform 0.5s ease, box-shadow 0.5s ease, width 0.5s ease,
         z-index 0.5s ease; /* Animacije za hover */
@@ -39,7 +56,7 @@
 
 .card.hovered {
     transform: scale(1.05); /* Lagano povećanje kartice na hover */
-    height: 150px; /* Povećana visina kartice na hover */
+    height: 15vh; /* Povećana visina kartice na hover */
     box-shadow: 0 8px 16px rgba(0, 0, 0, 0.3);
     z-index: 10;
 }
@@ -50,9 +67,12 @@
     height: 80vh; /* Visina kartice kad je video prikazan, osigurava dovoljno prostora za video */
     box-shadow: 0 8px 16px rgba(0, 0, 0, 0.3); /* Pojačana sjena kod hovera */
     z-index: 10; /* Povećava z-index kako bi kartica bila u prvom planu */
-    margin-bottom: 40px;
 }
 
+.cards-container.clicked {
+    top: -10vh;
+    margin-top: 0;
+}
 .hide {
     display: none; /* Sakrij element */
 }

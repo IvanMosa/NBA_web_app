@@ -12,7 +12,6 @@ import Logo from './library_css/Logo.js';
 
 const Momcad = () => {
     const { imeMomcad } = useParams();
-    console.log(imeMomcad);
     const [igraci, setIgraci] = useState([]);
     const [pozicije, setPozicije] = useState([]);
     const [poz, setPoz] = useState(' ');
@@ -339,7 +338,7 @@ const Momcad = () => {
                                                 }
                                             >
                                                 {rowItem
-                                                    .slice(0, -4)
+                                                    .slice(0, -6)
                                                     .map((row, rowInd) => (
                                                         <React.Fragment
                                                             key={rowInd}

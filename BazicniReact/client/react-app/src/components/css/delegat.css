@@ -28,7 +28,11 @@ body {
 }
 
 .side.blurred {
+    display: none;
     height: 70vh;
+}
+.middle.blurred {
+    display: none;
 }
 .p_logo {
     display: flex;
@@ -71,6 +75,46 @@ body {
     gap: 20px; /* Razmak između above-middle divova */
 }
 
+.odabirPocetak_container {
+    display: flex;
+    flex-direction: row;
+    justify-content: center;
+    width: 100vw;
+    height: 94vh;
+    padding: 50px;
+    gap: 50px;
+    overflow: hidden;
+}
+.odabirPocetak {
+    height: 75vh;
+    width: 40vw;
+    top: 0;
+    background-color: #f2f2f2; /* Za demonstraciju, možeš promijeniti boju */
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    border-radius: 28px;
+    z-index: 10;
+    color: darkgray; /* Bela boja teksta */
+    font-size: 2vw; /* Veličina fonta */
+    font-weight: bold; /* Podebljani tekst */
+    text-align: center; /* Centriranje teksta */
+    justify-items: center;
+    cursor: pointer;
+}
+
+.odabirPocetak p {
+    margin-top: 30%;
+}
+
+.odabirPocetak:hover {
+    background-color: rgb(
+        107,
+        136,
+        102
+    ); /* Tamnija nijansa plave pri prelasku miša */
+    color: black;
+    transform: scale(1.02); /* Blago povećanje pri prelasku miša */
+    transition: background-color 0.75s ease, color 0.75s ease;
+}
 .above-middle {
     height: 8vh;
     top: 0;
@@ -91,7 +135,7 @@ body {
     background-color: #0056b3; /* Tamnija nijansa plave pri prelasku miša */
     transform: scale(1.02); /* Blago povećanje pri prelasku miša */
 }
-.above-middle.stil1 {
+.above-middle {
     width: 45vw;
     height: 7vh;
     padding: 20px;

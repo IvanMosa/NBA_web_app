@@ -17,7 +17,7 @@ function Home() {
         {
             name: 'Trade players',
             path: '/trade',
-            description: 'Unos trade-a igrača za igrača',
+            description: 'Unos trade-a igrač za igrača',
             videoSrc: 'trade.mp4',
         },
         {
@@ -41,84 +41,90 @@ function Home() {
         },
     ];
 
-    useEffect(() => {
-        if (clicked) {
-            window.scrollTo({
-                top: document.documentElement.scrollHeight,
-                behavior: 'smooth', // Glatko pomicanje
-            });
-        } else {
-            window.scrollTo({
-                top: 0,
-                behavior: 'smooth', // Glatko pomicanje
-            });
-        }
-    }, [clicked]);
     return (
         <div className="homepage">
-            <h1 className="homepage-title">Dobrodošli na početnu stranicu</h1>
-            <div className="cards-container">
-                {components.map((component, index) => (
-                    <div
-                        key={index}
-                        className={`card ${
-                            clicked && hoveredIndex === index
-                                ? 'clicked'
-                                : clicked
-                                ? 'hide'
-                                : !clicked &&
+            <div className="pozadina">
+                <img
+                    src="homePozadina.webp"
+                    alt="Home"
+                    style={{
+                        width: '100%',
+                        height: '100%',
+                        objectFit: 'cover',
+                    }}
+                />
+            </div>
+            <div className="detalji">
+                <h1 className="homepage-title">
+                    Dobrodošli na početnu stranicu
+                </h1>
+                <div
+                    className={
+                        clicked ? 'cards-container clicked' : 'cards-container'
+                    }
+                >
+                    {components.map((component, index) => (
+                        <div
+                            key={index}
+                            className={`card ${
+                                clicked && hoveredIndex === index
+                                    ? 'clicked'
+                                    : clicked
+                                    ? 'hide'
+                                    : !clicked &&
+                                      hoveredIndex === index &&
+                                      component.name !== 'Register'
+                                    ? 'hovered'
+                                    : ''
+                            }`}
+                            onClick={() => navigate(component.path)}
+                            onMouseEnter={() => setHoveredIndex(index)}
+                            onMouseLeave={() => {
+                                if (!clicked) setHoveredIndex(null);
+                            }}
+                        >
+                            <h2>{component.name}</h2>
+                            <p>{component.description}</p>
+                            <>
+                                {!clicked &&
+                                hoveredIndex === index &&
+                                component.name !== 'Register' ? (
+                                    <div
+                                        className="icon-container"
+                                        onClick={(e) => {
+                                            e.stopPropagation();
+                                            setClicked(true);
+                                        }}
+                                    >
+                                        <i className="fa-solid fa-chevron-down arrow-icon"></i>
+                                    </div>
+                                ) : clicked &&
                                   hoveredIndex === index &&
-                                  component.name !== 'Register'
-                                ? 'hovered'
-                                : ''
-                        }`}
-                        onClick={() => navigate(component.path)}
-                        onMouseEnter={() => setHoveredIndex(index)}
-                        onMouseLeave={() => {
-                            if (!clicked) setHoveredIndex(null);
-                        }}
-                    >
-                        <h2>{component.name}</h2>
-                        <p>{component.description}</p>
-                        <>
-                            {!clicked &&
-                            hoveredIndex === index &&
-                            component.name !== 'Register' ? (
-                                <div
-                                    className="icon-container"
-                                    onClick={(e) => {
-                                        e.stopPropagation();
-                                        setClicked(true);
-                                    }}
-                                >
-                                    <i className="fa-solid fa-chevron-down arrow-icon"></i>
-                                </div>
-                            ) : clicked &&
-                              hoveredIndex === index &&
-                              component.name !== 'Register' ? (
-                                <div
-                                    className="icon-container icon-top"
-                                    onClick={(e) => {
-                                        e.stopPropagation();
-                                        setClicked(false);
-                                    }}
-                                >
-                                    <i className="fa-solid fa-chevron-up arrow-icon"></i>
-                                </div>
-                            ) : null}
-                        </>
-                        <div className="video-container">
-                            {clicked && hoveredIndex === index && (
-                                <video
-                                    src={component.videoSrc}
-                                    autoPlay
-                                    muted
-                                    loop
-                                />
-                            )}
+                                  component.name !== 'Register' ? (
+                                    <div
+                                        className="icon-container icon-top"
+                                        onClick={(e) => {
+                                            e.stopPropagation();
+                                            setClicked(false);
+                                        }}
+                                    >
+                                        <i className="fa-solid fa-chevron-up arrow-icon"></i>
+                                    </div>
+                                ) : null}
+                            </>
+                            <div className="video-container">
+                                {clicked && hoveredIndex === index && (
+                                    <video
+                                        src={component.videoSrc}
+                                        autoPlay
+                                        muted
+                                        loop
+                                    />
+                                )}
+                            </div>
                         </div>
-                    </div>
-                ))}
+                    ))}
+                </div>
             </div>
         </div>
     );

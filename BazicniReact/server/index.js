@@ -313,7 +313,7 @@ app.post('/showRoster', async (req, res) => {
     let sql2 = 'SELECT D.NAZIV FROM DRZAVE D ORDER BY D.NAZIV';
     let sql1 = 'SELECT P.NAZIV FROM POZICIJE P ORDER BY P.NAZIV';
     let sql =
-        "SELECT I.NAZIV, NVL(I.VISINA, ' '), NVL(D.NAZIV,' '), NVL(P.NAZIV,' '), SUBSTR(VMI.DATUM_OD,1, 10), I.BROJ_DRESA, M.MOMCAD_ID, I.IGRAC_ID, SUBSTR(I.DATUM_ROD,1, 10) FROM VEZE_MOMCAD_IGRACI VMI, MOMCAD M, IGRACI I, POZICIJE P, DRZAVE D WHERE VMI.MOMCAD_ID = M.MOMCAD_ID AND VMI.IGRAC_ID = I.IGRAC_ID AND I.POZICIJA_ID = P.POZICIJA_ID(+) AND I.DRZAVA_ID = D.DRZAVA_ID(+) AND VMI.STATUS_ID = 1";
+        "SELECT I.NAZIV, NVL(I.VISINA, ' '), NVL(D.NAZIV,' '), NVL(P.NAZIV,' '), SUBSTR(VMI.DATUM_OD,1, 10), I.BROJ_DRESA, M.MOMCAD_ID, I.IGRAC_ID, SUBSTR(I.DATUM_ROD,1, 10), I.DRAFT, I.TEZINA FROM VEZE_MOMCAD_IGRACI VMI, MOMCAD M, IGRACI I, POZICIJE P, DRZAVE D WHERE VMI.MOMCAD_ID = M.MOMCAD_ID AND VMI.IGRAC_ID = I.IGRAC_ID AND I.POZICIJA_ID = P.POZICIJA_ID(+) AND I.DRZAVA_ID = D.DRZAVA_ID(+) AND VMI.STATUS_ID = 1";
     if (hasImeMomcad) {
         sql += ' AND M.NAZIV = :imeMomcad';
     }
@@ -986,9 +986,9 @@ app.post('/getStatistikaIgraci', async (req, res) => {
 
     try {
         connection = await oracledb.getConnection();
-        let sql_SELECT = `SELECT Igrac,Domaci, Gosti,  TO_CHAR(DATUM_VRIJEME , 'MM/DD/YYYY') AS DATUM_UTAKMICE ,NBA.RACUNAJ_MINUTE(igrac_id, utakmica_id) as Minute,  "Slobodna Bacanja Pogodena" + "Šut za 2 Pogoden"*2 + "Šut za 3 Pogoden"*3 as Poeni, "Šut za 3 Pogoden" + "Šut za 2 Pogoden" as Pogodci_iz_Polja, "Šut za 3 Pogoden" + "Šut za 3 Promasen" + "Šut za 2 Promasen" + "Šut za 2 Pogoden"  as Pokusaji_iz_Polja, null  as PP ,"Šut za 3 Pogoden" as Sut_za_3_pogoden, "Šut za 3 Promasen" as Sut_za_3_promasen ,null  as TRI_P, "Slobodna Bacanja Pogodena" AS Slobodna_Bacanja_pogodena, "Slobodna Bacanja Promasena" as Slobodna_bacanja_promasena, NULL AS SB,"Napadacki Skok" as Napadacki_skok,"Obrambeni Skok" as Obrambeni_skok,  "Obrambeni Skok" + "Napadacki Skok" as Skokovi,"Asistencije" as Asistencije, "Ukradene Lopte" as Ukradene_lopte,"Blokovi" as Blokovi, Sezona, DOMACI_IME, GOSTI_IME `;
+        let sql_SELECT = `SELECT Igrac, IgracMomcadKratica, IgracMomcad, Domaci, Gosti,  TO_CHAR(DATUM_VRIJEME , 'MM/DD/YYYY') AS DATUM_UTAKMICE ,NBA.RACUNAJ_MINUTE(igrac_id, utakmica_id) as Minute,  "Slobodna Bacanja Pogodena" + "Šut za 2 Pogoden"*2 + "Šut za 3 Pogoden"*3 as Poeni, "Šut za 3 Pogoden" + "Šut za 2 Pogoden" as Pogodci_iz_Polja, "Šut za 3 Pogoden" + "Šut za 3 Promasen" + "Šut za 2 Promasen" + "Šut za 2 Pogoden"  as Pokusaji_iz_Polja, null  as PP ,"Šut za 3 Pogoden" as Sut_za_3_pogoden, "Šut za 3 Promasen" as Sut_za_3_promasen ,null  as TRI_P, "Slobodna Bacanja Pogodena" AS Slobodna_Bacanja_pogodena, "Slobodna Bacanja Promasena" as Slobodna_bacanja_promasena, NULL AS SB,"Napadacki Skok" as Napadacki_skok,"Obrambeni Skok" as Obrambeni_skok,  "Obrambeni Skok" + "Napadacki Skok" as Skokovi,"Asistencije" as Asistencije, "Ukradene Lopte" as Ukradene_lopte,"Blokovi" as Blokovi, Sezona, DOMACI_IME, GOSTI_IME `;
 
-        let sql_FROM = ` FROM (select utk.utakmica_id as Utakmica_id, m1.kratica AS Domaci, m1.naziv as DOMACI_IME, m2.kratica AS Gosti , m2.NAZIV AS GOSTI_IME, i.igrac_id AS Igrac_id, i.naziv AS Igrac, sp.naziv || '_' ||s.naziv AS Podatak, s.naziv AS Status, UTK.DATUM_VRIJEME, l.sezona as Sezona FROM statistika stat,igraci i,utakmice utk,stat_podatak sp,momcad m1,momcad m2,statusi s, lige l where STAT.IGRAC_ID = i.igrac_id and stat.sp_id = sp.sp_id and STAT.STATUS_ID = s.status_id and stat.utakmica_id = utk.utakmica_id and UTK.DOMACI_ID = m1.momcad_id and utk.gosti_id = m2.momcad_id and s.tablica = 'STATISTIKA' and utk.liga_id = l.liga_id ORDER BY DATUM_VRIJEME)`;
+        let sql_FROM = ` FROM (select utk.utakmica_id as Utakmica_id, m.NAZIV AS IgracMomcad, m.kratica AS IgracMomcadKratica, m1.kratica AS Domaci, m1.naziv as DOMACI_IME, m2.kratica AS Gosti , m2.NAZIV AS GOSTI_IME, i.igrac_id AS Igrac_id, i.naziv AS Igrac, sp.naziv || '_' ||s.naziv AS Podatak, s.naziv AS Status, UTK.DATUM_VRIJEME, l.sezona as Sezona FROM statistika stat,igraci i,utakmice utk,stat_podatak sp, momcad m, momcad m1,momcad m2,statusi s, lige l, veze_momcad_igraci vmi where vmi.IGRAC_ID = i.IGRAC_ID AND VMI.STATUS_ID = 1 AND VMI.MOMCAD_ID = M.MOMCAD_ID AND STAT.IGRAC_ID = i.igrac_id and stat.sp_id = sp.sp_id and STAT.STATUS_ID = s.status_id and stat.utakmica_id = utk.utakmica_id and UTK.DOMACI_ID = m1.momcad_id and utk.gosti_id = m2.momcad_id and s.tablica = 'STATISTIKA' and utk.liga_id = l.liga_id ORDER BY DATUM_VRIJEME)`;
 
         let sql_pivot = ` PIVOT ( COUNT(Status) FOR Podatak IN('Slobodno bacanje_Pogođen' AS "Slobodna Bacanja Pogodena",'Slobodno bacanje_Promašen' AS "Slobodna Bacanja Promasena",'Šut za 3_Pogođen' AS "Šut za 3 Pogoden", 'Šut za 3_Promašen' AS "Šut za 3 Promasen",'Šut za 2_Pogođen' AS "Šut za 2 Pogoden", 'Šut za 2_Promašen' AS "Šut za 2 Promasen",'Ulaz/Izlaz_Završen' AS "Ulaz/Izlaz",'Obrambeni skok_Završen' AS "Obrambeni Skok",'Napadački skok_Završen' AS "Napadacki Skok",'Asistencija_Završen' AS "Asistencije",'Izgubljena lopta_Završen' AS "Izgubljene Lopte",'Ukradena lopta_Završen' AS "Ukradene Lopte",'Blokada_Završen' AS "Blokovi")) ORDER BY DATUM_UTAKMICE DESC`;
 
@@ -1887,6 +1887,33 @@ app.post('/unesiPoene', async (req, res) => {
                 { poeniGosti: poeniGosti, utakmica_id: utakmica_id },
                 { autoCommit: true }
             );
+        }
+    } catch (err) {
+        console.log(err);
+    } finally {
+        try {
+            if (connection) {
+                await connection.close();
+            }
+        } catch (err) {
+            console.log(err);
+        }
+    }
+});
+
+app.post('/podatciIgraca', async (req, res) => {
+    let connection;
+
+    const imeIgraca = req.body.imeIgrac || '';
+    try {
+        connection = await oracledb.getConnection();
+
+        if (imeIgraca.length > 0) {
+            const podatci = await connection.execute(
+                "SELECT I.NAZIV, NVL(I.VISINA, ' '), NVL(D.NAZIV,' '), NVL(P.NAZIV,' '), SUBSTR(VMI.DATUM_OD,1, 10), I.BROJ_DRESA, M.MOMCAD_ID, I.IGRAC_ID, SUBSTR(I.DATUM_ROD,1, 10), I.DRAFT, I.TEZINA FROM VEZE_MOMCAD_IGRACI VMI, MOMCAD M, IGRACI I, POZICIJE P, DRZAVE D WHERE VMI.MOMCAD_ID = M.MOMCAD_ID AND VMI.IGRAC_ID = I.IGRAC_ID AND I.NAZIV = :imeIgraca AND I.POZICIJA_ID = P.POZICIJA_ID(+) AND I.DRZAVA_ID = D.DRZAVA_ID(+) AND VMI.STATUS_ID = 1",
+                { imeIgraca: imeIgraca }
+            );
+            res.send({ podatci: podatci.rows[0] });
         }
     } catch (err) {
         console.log(err);

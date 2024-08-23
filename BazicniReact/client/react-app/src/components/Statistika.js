@@ -23,6 +23,9 @@ const Statistika = ({ imeIgrac, setPoeni }) => {
             }
         };
         fetchData();
+    }, []);
+
+    useEffect(() => {
         if (imeIgrac && imeIgrac.length > 0) {
             setOznaceniIgrac(imeIgrac);
 
@@ -35,13 +38,10 @@ const Statistika = ({ imeIgrac, setPoeni }) => {
                     poeni += igrac.POENI;
                     brojUtakmica++;
                 });
-            setPoeni(poeni / brojUtakmica);
+            if (brojUtakmica !== 0) setPoeni(poeni / brojUtakmica);
         }
-    }, []);
+    }, [igraci]);
 
-    // useEffect(() => {
-    //     if (imeIgrac.length > 0) setOznaceniIgrac(imeIgrac.imeIgrac.toString());
-    // }, [imeIgrac]);
     return (
         <div className="statistika_container">
             <p className="statistika_naslov">
@@ -140,8 +140,12 @@ const Statistika = ({ imeIgrac, setPoeni }) => {
                                                                 to={
                                                                     rowInd === 0
                                                                         ? `/Igrac/${row}`
-                                                                        : `/Momcad/${rowItem.DOMACI_IME}`
+                                                                        : `/Momcad/${rowItem.IGRACMOMCAD}`
                                                                 }
+                                                                state={{
+                                                                    imeMomcad:
+                                                                        rowItem.IGRACMOMCAD,
+                                                                }}
                                                             >
                                                                 {row}
                                                             </Link>
@@ -160,7 +164,8 @@ const Statistika = ({ imeIgrac, setPoeni }) => {
                                                                 {rowItem.GOSTI}
                                                             </Link>
                                                         </td>
-                                                    ) : (
+                                                    ) : rowInd === 3 ||
+                                                      rowInd === 4 ? null : (
                                                         <td key={rowInd}>
                                                             {row}
                                                         </td>
