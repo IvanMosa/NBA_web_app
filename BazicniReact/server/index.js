@@ -984,6 +984,8 @@ app.post('/izbrisiIgraca', async (req, res) => {
 app.post('/getStatistikaIgraci', async (req, res) => {
     let connection;
 
+    const imeIgrac = req.body.imeIgrac ? req.body.imeIgrac : null;
+
     try {
         connection = await oracledb.getConnection();
         let sql_SELECT = `SELECT Igrac, IgracMomcadKratica, IgracMomcad, Domaci, Gosti,  TO_CHAR(DATUM_VRIJEME , 'MM/DD/YYYY') AS DATUM_UTAKMICE ,NBA.RACUNAJ_MINUTE(igrac_id, utakmica_id) as Minute,  "Slobodna Bacanja Pogodena" + "Šut za 2 Pogoden"*2 + "Šut za 3 Pogoden"*3 as Poeni, "Šut za 3 Pogoden" + "Šut za 2 Pogoden" as Pogodci_iz_Polja, "Šut za 3 Pogoden" + "Šut za 3 Promasen" + "Šut za 2 Promasen" + "Šut za 2 Pogoden"  as Pokusaji_iz_Polja, null  as PP ,"Šut za 3 Pogoden" as Sut_za_3_pogoden, "Šut za 3 Promasen" as Sut_za_3_promasen ,null  as TRI_P, "Slobodna Bacanja Pogodena" AS Slobodna_Bacanja_pogodena, "Slobodna Bacanja Promasena" as Slobodna_bacanja_promasena, NULL AS SB,"Napadacki Skok" as Napadacki_skok,"Obrambeni Skok" as Obrambeni_skok,  "Obrambeni Skok" + "Napadacki Skok" as Skokovi,"Asistencije" as Asistencije, "Ukradene Lopte" as Ukradene_lopte,"Blokovi" as Blokovi, Sezona, DOMACI_IME, GOSTI_IME `;
@@ -998,6 +1000,21 @@ app.post('/getStatistikaIgraci', async (req, res) => {
             { outFormat: oracledb.OBJECT }
         );
 
+        let karijeraUpit;
+
+        if (imeIgrac !== null) {
+            const sql_SELECT_KARIJERA = `SELECT Igrac, count(*) as BrojUtakmica, null as minute, SUM("Slobodna Bacanja Pogodena" + "Šut za 2 Pogoden"*2 + "Šut za 3 Pogoden"*3)/COUNT(*) as Poeni, SUM("Šut za 3 Pogoden" + "Šut za 2 Pogoden")/COUNT(*) as Pogodci_iz_Polja, SUM("Šut za 3 Pogoden" + "Šut za 3 Promasen" + "Šut za 2 Promasen" + "Šut za 2 Pogoden")/COUNT(*)  as Pokusaji_iz_Polja, SUM("Šut za 3 Pogoden" + "Šut za 2 Pogoden")/sum("Šut za 3 Pogoden" + "Šut za 3 Promasen" + "Šut za 2 Promasen" + "Šut za 2 Pogoden")  as PP ,SUM("Šut za 3 Pogoden")/COUNT(*) as Sut_za_3_pogoden, SUM("Šut za 3 Promasen")/COUNT(*) as Sut_za_3_promasen , SUM("Šut za 3 Pogoden")/SUM("Šut za 3 Pogoden" + "Šut za 3 Promasen")  as TRI_P, SUM("Slobodna Bacanja Pogodena")/COUNT(*) AS Slobodna_Bacanja_pogodena, SUM("Slobodna Bacanja Promasena")/COUNT(*) as Slobodna_bacanja_promasena, SUM("Slobodna Bacanja Pogodena")/SUM("Slobodna Bacanja Pogodena"+"Slobodna Bacanja Promasena") AS SB,SUM("Napadacki Skok")/COUNT(*) as Napadacki_skok,SUM("Obrambeni Skok")/COUNT(*) as Obrambeni_skok,  SUM("Obrambeni Skok" + "Napadacki Skok")/COUNT(*) as Skokovi,SUM("Asistencije")/COUNT(*) as Asistencije, SUM("Ukradene Lopte")/COUNT(*) as Ukradene_lopte,SUM("Blokovi")/COUNT(*) as Blokovi, IgracMomcadKratica, Sezona`;
+
+            const sql_FROM_KARIJERA = ` FROM (select utk.utakmica_id as Utakmica_id, m.NAZIV AS IgracMomcad, m.kratica AS IgracMomcadKratica, m1.kratica AS Domaci, m1.naziv as DOMACI_IME, m2.kratica AS Gosti , m2.NAZIV AS GOSTI_IME, i.igrac_id AS Igrac_id, i.naziv AS Igrac, sp.naziv || '_' ||s.naziv AS Podatak, s.naziv AS Status, UTK.DATUM_VRIJEME, l.sezona as Sezona FROM statistika stat,igraci i,utakmice utk,stat_podatak sp, momcad m, momcad m1,momcad m2,statusi s, lige l, veze_momcad_igraci vmi where vmi.IGRAC_ID = i.IGRAC_ID AND VMI.STATUS_ID = 1 AND VMI.MOMCAD_ID = M.MOMCAD_ID AND STAT.IGRAC_ID = i.igrac_id and stat.sp_id = sp.sp_id and STAT.STATUS_ID = s.status_id and stat.utakmica_id = utk.utakmica_id and UTK.DOMACI_ID = m1.momcad_id and utk.gosti_id = m2.momcad_id and s.tablica = 'STATISTIKA' and utk.liga_id = l.liga_id and i.naziv = :imeIgrac ) `;
+
+            const sql_PIVOT_KARIJERA = `PIVOT ( COUNT(Status) FOR Podatak IN('Slobodno bacanje_Pogođen' AS "Slobodna Bacanja Pogodena",'Slobodno bacanje_Promašen' AS "Slobodna Bacanja Promasena",'Šut za 3_Pogođen' AS "Šut za 3 Pogoden", 'Šut za 3_Promašen' AS "Šut za 3 Promasen",'Šut za 2_Pogođen' AS "Šut za 2 Pogoden", 'Šut za 2_Promašen' AS "Šut za 2 Promasen",'Ulaz/Izlaz_Završen' AS "Ulaz/Izlaz",'Obrambeni skok_Završen' AS "Obrambeni Skok",'Napadački skok_Završen' AS "Napadacki Skok",'Asistencija_Završen' AS "Asistencije",'Izgubljena lopta_Završen' AS "Izgubljene Lopte",'Ukradena lopta_Završen' AS "Ukradene Lopte",'Blokada_Završen' AS "Blokovi")) GROUP BY IGRAC , IGRACMOMCADKRATICA, sezona`;
+
+            karijeraUpit = await connection.execute(
+                sql_SELECT_KARIJERA + sql_FROM_KARIJERA + sql_PIVOT_KARIJERA,
+                { imeIgrac: imeIgrac },
+                { outFormat: oracledb.OBJECT }
+            );
+        }
         for (let i = 0; i < result.rows.length; i++) {
             if (result.rows[i].POKUSAJI_IZ_POLJA > 0) {
                 if (result.rows[i].POGODCI_IZ_POLJA === '0.0') {
@@ -1046,7 +1063,11 @@ app.post('/getStatistikaIgraci', async (req, res) => {
 
         const result1 = await connection.execute(`SELECT L.SEZONA FROM LIGE L`);
 
-        res.send({ igraci: result.rows, sezone: result1.rows });
+        res.send({
+            igraci: result.rows,
+            sezone: result1.rows,
+            karijera: karijeraUpit ? karijeraUpit.rows : null,
+        });
     } catch (err) {
         console.log(err);
     } finally {
@@ -1913,7 +1934,16 @@ app.post('/podatciIgraca', async (req, res) => {
                 "SELECT I.NAZIV, NVL(I.VISINA, ' '), NVL(D.NAZIV,' '), NVL(P.NAZIV,' '), SUBSTR(VMI.DATUM_OD,1, 10), I.BROJ_DRESA, M.MOMCAD_ID, I.IGRAC_ID, SUBSTR(I.DATUM_ROD,1, 10), I.DRAFT, I.TEZINA FROM VEZE_MOMCAD_IGRACI VMI, MOMCAD M, IGRACI I, POZICIJE P, DRZAVE D WHERE VMI.MOMCAD_ID = M.MOMCAD_ID AND VMI.IGRAC_ID = I.IGRAC_ID AND I.NAZIV = :imeIgraca AND I.POZICIJA_ID = P.POZICIJA_ID(+) AND I.DRZAVA_ID = D.DRZAVA_ID(+) AND VMI.STATUS_ID = 1",
                 { imeIgraca: imeIgraca }
             );
-            res.send({ podatci: podatci.rows[0] });
+            const ugovoriIgraca = await connection.execute(
+                "SELECT TO_CHAR(VMI.DATUM_OD, 'YYYY') AS DATUM_OD, TO_CHAR(VMI.DATUM_DO, 'YY') AS DATUM_DO, M.KRATICA, M.NAZIV, TO_CHAR(VMI.DATUM_OD, 'YY') || '/' || SUBSTR(NVL(VMI.DATUM_DO, SYSDATE), 9, 2) AS SEZONA FROM VEZE_MOMCAD_IGRACI VMI, MOMCAD M, IGRACI I WHERE VMI.IGRAC_ID = I.IGRAC_ID AND I.NAZIV = :imeIgraca AND VMI.MOMCAD_ID = M.MOMCAD_ID",
+                { imeIgraca: imeIgraca },
+                { outFormat: oracledb.OBJECT }
+            );
+
+            res.send({
+                podatci: podatci.rows[0],
+                ugovoriIgraca: ugovoriIgraca.rows,
+            });
         }
     } catch (err) {
         console.log(err);

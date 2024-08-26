@@ -15,11 +15,9 @@ const Logo = ({ imeMomcad, visina, style, setDominantColor }) => {
             try {
                 const fac = new FastAverageColor();
                 const imageUrl = `/LOGOs/${imeMomcad}.png`;
-
-                // Check if imageRef is set and image is loaded
                 if (slikaRef.current) {
                     const color = await fac.getColorAsync(imageUrl);
-                    setDominantColor(color.rgba); // Set the dominant color
+                    setDominantColor(color.rgba);
                 }
             } catch (error) {
                 console.error('Error extracting color: ', error);

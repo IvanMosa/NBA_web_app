@@ -60,8 +60,3 @@
 .app_content {
     z-index: 1; /* Pomerite sadržaj iznad slike */
 }
-
-.appPozadina {
-    background-color: rgba(2, 1, 0, 0.8);
-    min-height: 100vh;
-}

@@ -5,18 +5,25 @@ import Logo from './library_css/Logo';
 import './css/igrac.css';
 import axios from 'axios';
 import Statistika from './Statistika';
+import { Link } from 'react-router-dom';
 
 function Igrac() {
     const location = useLocation();
     const { imeIgrac } = useParams();
     const [podatci, setPodatci] = useState(location.state?.rowItem || null);
+    const [ugovoriIgrac, setUgovoriIgrac] = useState(null);
     const imeMomcad = location.state?.imeMomcad || null;
     const [poeni, setPoeni] = useState(0.0);
     const [dominantColor, setDominantColor] = useState(null);
     const [darkDominantColor, setDarkDominantColor] = useState(null);
-
+    const [statistika, setStatistika] = useState(true);
+    const [karijera, setKarijera] = useState(false);
+    const [hoverStatistika, setHoverStatistika] = useState(true);
+    const [hoverKarijera, setHoverKarijera] = useState(false);
+    const [statistikaSezona, setStatistikaSezona] = useState(null);
     const prikaziPodatke = async () => {
         let podatci;
+        let ugovoriIgrac;
         try {
             console.log('usao');
             const result = await axios.post(
@@ -27,19 +34,24 @@ function Igrac() {
             );
 
             console.log(result.data.podatci);
+            console.log(result.data.ugovoriIgraca);
             podatci = result.data.podatci;
+            ugovoriIgrac = result.data.ugovoriIgraca;
         } catch (err) {
             console.log(err);
         } finally {
-            return podatci;
+            return { podatci: podatci, ugovoriIgrac: ugovoriIgrac };
         }
     };
 
     useEffect(() => {
-        if (!podatci) {
-            prikaziPodatke().then((data) => setPodatci(data));
-            console.log(podatci);
-        }
+        if (!podatci || !ugovoriIgrac)
+            prikaziPodatke().then((data) => {
+                setPodatci(data.podatci);
+                setUgovoriIgrac(data.ugovoriIgrac);
+            });
+        console.log(podatci);
+        console.log(statistikaSezona);
     }, [podatci]);
 
     const parseRgba = (rgbaString) => {
@@ -130,13 +142,230 @@ function Igrac() {
                         <h5>{podatci && podatci[9]}</h5>
                     </div>
                     <div className="podatak">
+                        <h4>VISINA</h4>
+                        <h5>{podatci && podatci[1]}</h5>
+                    </div>
+                    <div className="podatak">
                         <h4>TEŽINA</h4>
-                        <h5>{podatci && podatci[10]}kg</h5>
+                        <h5>
+                            {podatci && podatci[10]}kg (
+                            {podatci && (podatci[10] * 2.2).toFixed(1)}lbs)
+                        </h5>
                     </div>
                 </div>
             </div>
-            <div className="statistikaIgrac">
-                <Statistika imeIgrac={imeIgrac} setPoeni={setPoeni} />
+            <div className="statistikaKarijeraIgrac">
+                <div className="izborNavigacija">
+                    <div className="izborIgrac">
+                        <button
+                            onClick={() => {
+                                setStatistika(true);
+                                setKarijera(false);
+                                setHoverKarijera(false);
+                                setHoverStatistika(true);
+                            }}
+                            onMouseEnter={() => setHoverStatistika(true)}
+                            onMouseLeave={() =>
+                                karijera && setHoverStatistika(false)
+                            }
+                            className={statistika && !karijera ? 'oznacen' : ''}
+                            style={{
+                                borderBottom: hoverStatistika
+                                    ? '3px solid black'
+                                    : '',
+                            }}
+                        >
+                            Statistika
+                        </button>
+                        <button
+                            onClick={() => {
+                                setKarijera(true);
+                                setStatistika(false);
+                                setHoverKarijera(true);
+                                setHoverStatistika(false);
+                            }}
+                            onMouseEnter={() => setHoverKarijera(true)}
+                            onMouseLeave={() =>
+                                statistika && setHoverKarijera(false)
+                            }
+                            className={!statistika && karijera ? 'oznacen' : ''}
+                            style={{
+                                borderBottom: hoverKarijera
+                                    ? '3px solid black'
+                                    : '',
+                            }}
+                        >
+                            Karijera
+                        </button>
+                    </div>
+                </div>
+                {statistika && !karijera && (
+                    <div className="statistikaIgrac">
+                        <Statistika
+                            imeIgrac={imeIgrac}
+                            setPoeni={setPoeni}
+                            setStatistikaSezona={setStatistikaSezona}
+                        />
+                    </div>
+                )}
+                {!statistika && karijera && (
+                    <div className="karijeraIgrac">
+                        <div className="karijeraContainer">
+                            <div className="karijeraKomponenta">
+                                <div className="karijeraNaslov">
+                                    Karijera igrača
+                                </div>
+                                <div className="karijeraTablica">
+                                    <table className="data-table">
+                                        <thead>
+                                            <tr>
+                                                {[
+                                                    'RAZDOBLJE',
+                                                    'MOMČAD',
+                                                    'BROJ UTAKMICA',
+                                                    'MINUTE',
+                                                    'POENI',
+                                                    'POGODCI IZ POLJA',
+                                                    'POKUŠAJI IZ POLJA',
+                                                    'FG%',
+                                                    'POGOĐENE TRICE',
+                                                    'PROMAŠENE TRICE',
+                                                    '3P%',
+                                                    'POGOĐENA SLOBODNA BACANJA',
+                                                    'PROMAŠENA SLOBODNA BACANJA',
+                                                    'SB%',
+                                                ].map((column, columnIndex) => (
+                                                    <th key={columnIndex}>
+                                                        {column}
+                                                    </th>
+                                                ))}
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            {ugovoriIgrac.map(
+                                                (ugovor, index) => {
+                                                    // Extract start and end years from the contract period
+                                                    const startYear = parseInt(
+                                                        ugovor.DATUM_OD
+                                                    );
+                                                    const endYear =
+                                                        ugovor.DATUM_DO === ''
+                                                            ? new Date().getFullYear()
+                                                            : parseInt(
+                                                                  ugovor.DATUM_DO +
+                                                                      2000
+                                                              );
+
+                                                    // Find statistics for each season within the contract period
+                                                    const rows = [];
+
+                                                    for (
+                                                        let year = startYear;
+                                                        year <= endYear;
+                                                        year++
+                                                    ) {
+                                                        const season = `${year}-${String(
+                                                            year + 1
+                                                        ).slice(-2)}`; // Format as 'YY-YY'
+
+                                                        const statsForSeason =
+                                                            statistikaSezona.find(
+                                                                (stat) =>
+                                                                    stat.sezona ===
+                                                                        season &&
+                                                                    stat.imeMomcad ===
+                                                                        ugovor.NAZIV
+                                                            );
+
+                                                        // If statistics exist for the season, create a row
+                                                        if (statsForSeason) {
+                                                            rows.push(
+                                                                <tr
+                                                                    key={`${ugovor.NAZIV}-${season}`}
+                                                                >
+                                                                    <td>{`${season}`}</td>
+                                                                    <td className="table_link">
+                                                                        <Link
+                                                                            to={`/Momcad/${ugovor.NAZIV}`}
+                                                                        >
+                                                                            {
+                                                                                ugovor.KRATICA
+                                                                            }
+                                                                        </Link>
+                                                                    </td>
+                                                                    <td>
+                                                                        {
+                                                                            statsForSeason.minute
+                                                                        }
+                                                                    </td>
+                                                                    <td>
+                                                                        {
+                                                                            statsForSeason.poeni
+                                                                        }
+                                                                    </td>
+                                                                    <td>
+                                                                        {
+                                                                            statsForSeason.POGODCIIZPOLJA
+                                                                        }
+                                                                    </td>
+                                                                    <td>
+                                                                        {
+                                                                            statsForSeason.pokusajiIzPolja
+                                                                        }
+                                                                    </td>
+                                                                    <td>
+                                                                        {
+                                                                            statsForSeason.fgPercentage
+                                                                        }
+                                                                        %
+                                                                    </td>
+                                                                    <td>
+                                                                        {
+                                                                            statsForSeason.pogodeneTrice
+                                                                        }
+                                                                    </td>
+                                                                    <td>
+                                                                        {
+                                                                            statsForSeason.promaseneTrice
+                                                                        }
+                                                                    </td>
+                                                                    <td>
+                                                                        {
+                                                                            statsForSeason.triPPercentage
+                                                                        }
+                                                                        %
+                                                                    </td>
+                                                                    <td>
+                                                                        {
+                                                                            statsForSeason.pogodenaSlobodnaBacanja
+                                                                        }
+                                                                    </td>
+                                                                    <td>
+                                                                        {
+                                                                            statsForSeason.promasenaSlobodnaBacanja
+                                                                        }
+                                                                    </td>
+                                                                    <td>
+                                                                        {
+                                                                            statsForSeason.sbPercentage
+                                                                        }
+                                                                        %
+                                                                    </td>
+                                                                </tr>
+                                                            );
+                                                        }
+                                                    }
+
+                                                    return rows;
+                                                }
+                                            )}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                )}
             </div>
         </div>
     );

@@ -4,7 +4,7 @@ import '../components/css/statistika.css';
 import axios from 'axios';
 import { Link } from 'react-router-dom';
 
-const Statistika = ({ imeIgrac, setPoeni }) => {
+const Statistika = ({ imeIgrac, setPoeni, setStatistikaSezona }) => {
     const [igraci, setIgraci] = useState([]);
     const [imeSezone, setimeSezone] = useState('23/24');
     const [sezone, setSezone] = useState([]);
@@ -14,10 +14,15 @@ const Statistika = ({ imeIgrac, setPoeni }) => {
         const fetchData = async () => {
             try {
                 const result = await axios.post(
-                    'http://localhost:4000/getStatistikaIgraci'
+                    'http://localhost:4000/getStatistikaIgraci',
+                    { imeIgrac: imeIgrac ? imeIgrac : null }
                 );
                 setIgraci(result.data.igraci);
                 setSezone(result.data.sezone);
+                setStatistikaSezona(
+                    result.data.karijera ? result.data.karijera : null
+                );
+                console.log(result.data.karijera);
             } catch (err) {
                 console.log(err);
             }
@@ -31,7 +36,6 @@ const Statistika = ({ imeIgrac, setPoeni }) => {
 
             let poeni = 0;
             let brojUtakmica = 0;
-
             igraci
                 .filter((igrac) => igrac.IGRAC == imeIgrac)
                 .forEach((igrac) => {

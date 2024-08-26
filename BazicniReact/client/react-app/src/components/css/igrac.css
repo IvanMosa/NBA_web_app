@@ -15,7 +15,7 @@
     justify-content: center;
     height: 50vh;
     width: 100vw;
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.5);
+    border-bottom: 1px groove black;
 }
 
 .igrac {
@@ -53,9 +53,42 @@
     border-color: black;
 }
 
+.statistikaKarijeraIgrac {
+    display: flex;
+    flex-direction: column;
+    width: 100vw;
+    align-self: center;
+}
+
+.izborNavigacija {
+    display: flex;
+    box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
+    height: 4vh;
+}
+.izborIgrac {
+    display: flex;
+    flex-direction: row;
+    margin-left: 5vw;
+    gap: 10px;
+}
+
+.izborIgrac button {
+    padding: 0.5vw;
+    border: none;
+    cursor: pointer;
+    font: bold;
+    font-size: 0.8vw;
+    background-color: inherit;
+}
+
+.izborIgrac button.oznacen {
+    background-color: inherit;
+    transition: background-color 0.5s ease, color 0.5s ease;
+    color: black;
+}
+
 .statistikaIgrac {
     display: flex;
-    margin-top: 5vh;
 }
 
 .visePodataka {
@@ -88,4 +121,32 @@
 }
 .podatak:last-child {
     border-right: 1px groove black;
+}
+
+.karijeraContainer {
+    display: flex;
+    flex-direction: column;
+    height: 35vh;
+    margin-top: 3vh;
+}
+
+.karijeraKomponenta {
+    display: flex;
+    flex-direction: column;
+    align-self: center;
+    width: 90vw;
+    height: 30vh;
+    border-radius: 12px;
+    box-shadow: 0px 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+.karijeraNaslov {
+    align-self: center;
+    text-align: center;
+    margin-top: 2vh;
+    padding: 5px;
+    font-size: 1.2vw;
+    margin-bottom: 20px;
+    width: 30vw;
+    border-bottom: 1px groove black;
 }

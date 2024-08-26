@@ -7,16 +7,18 @@
     margin-top: 30px;
     margin-bottom: 30px;
     padding: 20px;
-    border: 1px solid #ccc;
     border-radius: 8px;
-    background-color: #f9f9f9;
-    box-shadow: 0 1px 1px rgba(0, 0, 0, 0.1);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
 }
 
 .statistika_naslov {
+    align-self: center;
     text-align: center;
+    padding: 5px;
     font-size: 1.2vw;
     margin-bottom: 20px;
+    width: 30vw;
+    border-bottom: 1px groove black;
 }
 
 .statistika_menu {

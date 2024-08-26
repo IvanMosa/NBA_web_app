@@ -674,22 +674,29 @@ const Momcad = () => {
             )}
 
             <div className="statistika_momcad">
-                <div className="statistika_container">
+                <div
+                    className="statistika_container"
+                    style={{ backgroundColor: '#f9f9f9' }}
+                >
                     <p className="statistika_naslov">Statistika momčadi</p>
                     <div className="statistika_menu">
-                        <form>
-                            <p className="sezona_text">Sezona</p>
-                            <select
-                                value={imeSezone}
-                                onChange={(e) => setimeSezone(e.target.value)}
-                            >
-                                {sezone.map((sezona, index) => (
-                                    <option key={index} value={sezona}>
-                                        {sezona}
-                                    </option>
-                                ))}
-                            </select>
-                        </form>
+                        <div className="statistika_form">
+                            <form>
+                                <p className="sezona_text">Sezona</p>
+                                <select
+                                    value={imeSezone}
+                                    onChange={(e) =>
+                                        setimeSezone(e.target.value)
+                                    }
+                                >
+                                    {sezone.map((sezona, index) => (
+                                        <option key={index} value={sezona}>
+                                            {sezona}
+                                        </option>
+                                    ))}
+                                </select>
+                            </form>
+                        </div>
                         <div className="momcadStat">
                             <table className="data-table2">
                                 <thead>
