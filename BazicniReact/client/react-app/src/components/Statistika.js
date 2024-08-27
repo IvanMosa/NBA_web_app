@@ -47,139 +47,169 @@ const Statistika = ({ imeIgrac, setPoeni, setStatistikaSezona }) => {
     }, [igraci]);
 
     return (
-        <div className="statistika_container">
-            <p className="statistika_naslov">
-                {imeIgrac && imeIgrac.length > 0
-                    ? 'Statistika na svim utakmicama'
-                    : 'Statistika svih igrača'}
-            </p>
-            <div className="statistika_menu">
-                <div className="statistika_form">
-                    <form>
-                        <p className="sezona_text">Sezona</p>
-                        <select
-                            value={imeSezone}
-                            onChange={(e) => setimeSezone(e.target.value)}
-                        >
-                            {sezone.map((sezona, index) => (
-                                <option key={index} value={sezona}>
-                                    {sezona}
-                                </option>
-                            ))}
-                        </select>
-                    </form>
-                    {!imeIgrac && (
+        <div className="statistikaPage">
+            {!imeIgrac && (
+                <div className="statistikaVrh">
+                    <p className="statistika_naslov">
+                        {imeIgrac && imeIgrac.length > 0
+                            ? 'Statistika na svim utakmicama'
+                            : 'NBA Statistika'}
+                    </p>
+                    <div className="statistikaSlika">
+                        <img
+                            src="/Proba.webp"
+                            style={{
+                                zIndex: '1',
+                                position: 'relative',
+                                display: 'block',
+                                width: '100%',
+                                objectFit: 'contain',
+                            }}
+                        />
+                    </div>
+                </div>
+            )}
+            <div className="statistika_container">
+                <div className="statistika_menu">
+                    <div className="statistika_form">
                         <form>
-                            <p className="sezona_text">Igrač</p>
+                            <p className="sezona_text">SEZONA</p>
                             <select
-                                value={oznaceniIgrac}
-                                onChange={(e) =>
-                                    setOznaceniIgrac(e.target.value)
-                                }
+                                value={imeSezone}
+                                onChange={(e) => setimeSezone(e.target.value)}
                             >
-                                {[
-                                    'Odaberi igrača',
-                                    ...new Set(
-                                        igraci.map((item) => item.IGRAC)
-                                    ),
-                                ].map((igrac, index) => (
-                                    <option key={index} value={igrac}>
-                                        {igrac}
+                                {sezone.map((sezona, index) => (
+                                    <option key={index} value={sezona}>
+                                        {sezona}
                                     </option>
                                 ))}
                             </select>
                         </form>
-                    )}
-                </div>
-                <div className="tablicaStat">
-                    <table className="data-table">
-                        <thead>
-                            <tr>
-                                {[
-                                    'NAZIV',
-                                    'MOMCAD',
-                                    'SUSRET',
-                                    'DATUM UTAKMICE',
-                                    'MINUTE',
-                                    'POENI',
-                                    'POGODCI IZ POLJA',
-                                    'POKUŠAJI IZ POLJA',
-                                    'FG%',
-                                    'POGOĐENE TRICE',
-                                    'PROMAŠENE TRICE',
-                                    '3P%',
-                                    'POGOĐENA SLOBODNA BACANJA',
-                                    'PROMAŠENA SLOBODNA BACANJA',
-                                    'SB%',
-                                    'NAPADAČKI SKOK',
-                                    'OBRAMBENI SKOK',
-                                    'SKOKOVI',
-                                    'ASISTENCIJE',
-                                    'UKRADENE LOPTE',
-                                    'BLOKOVI',
-                                ].map((column, columnIndex) => (
-                                    <th key={columnIndex}>{column}</th>
-                                ))}
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {igraci
-                                .filter((rowItem) => {
-                                    return (
-                                        rowItem.SEZONA == imeSezone &&
-                                        (oznaceniIgrac === 'Odaberi igrača' ||
-                                            rowItem.IGRAC === oznaceniIgrac)
-                                    );
-                                })
-                                .map((rowItem, rowIndex) => (
-                                    <tr key={rowIndex}>
-                                        {Object.values(rowItem)
-                                            .slice(0, -3)
-                                            .map((row, rowInd) => (
-                                                <React.Fragment key={rowInd}>
-                                                    {rowInd === 0 ||
-                                                    rowInd === 1 ? (
-                                                        <td className="table_link">
-                                                            <Link
-                                                                to={
-                                                                    rowInd === 0
-                                                                        ? `/Igrac/${row}`
-                                                                        : `/Momcad/${rowItem.IGRACMOMCAD}`
-                                                                }
-                                                                state={{
-                                                                    imeMomcad:
-                                                                        rowItem.IGRACMOMCAD,
-                                                                }}
-                                                            >
+                        {!imeIgrac && (
+                            <form>
+                                <p className="sezona_text">IGRAČ</p>
+                                <select
+                                    value={oznaceniIgrac}
+                                    onChange={(e) =>
+                                        setOznaceniIgrac(e.target.value)
+                                    }
+                                >
+                                    {[
+                                        'Odaberi igrača',
+                                        ...new Set(
+                                            igraci.map((item) => item.IGRAC)
+                                        ),
+                                    ].map((igrac, index) => (
+                                        <option key={index} value={igrac}>
+                                            {igrac}
+                                        </option>
+                                    ))}
+                                </select>
+                            </form>
+                        )}
+                    </div>
+                    <div className="tablicaStat">
+                        <table className="data-table">
+                            <thead>
+                                <tr>
+                                    {[
+                                        'NAZIV',
+                                        'MOMCAD',
+                                        'SUSRET',
+                                        'DATUM UTAKMICE',
+                                        'MINUTE',
+                                        'POENI',
+                                        'POGODCI IZ POLJA',
+                                        'POKUŠAJI IZ POLJA',
+                                        'FG%',
+                                        'POGOĐENE TRICE',
+                                        'PROMAŠENE TRICE',
+                                        '3P%',
+                                        'POGOĐENA SLOBODNA BACANJA',
+                                        'PROMAŠENA SLOBODNA BACANJA',
+                                        'SB%',
+                                        'NAPADAČKI SKOK',
+                                        'OBRAMBENI SKOK',
+                                        'SKOKOVI',
+                                        'ASISTENCIJE',
+                                        'UKRADENE LOPTE',
+                                        'BLOKOVI',
+                                    ].map((column, columnIndex) => (
+                                        <th key={columnIndex}>{column}</th>
+                                    ))}
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {igraci
+                                    .filter((rowItem) => {
+                                        return (
+                                            rowItem.SEZONA == imeSezone &&
+                                            (oznaceniIgrac ===
+                                                'Odaberi igrača' ||
+                                                rowItem.IGRAC === oznaceniIgrac)
+                                        );
+                                    })
+                                    .map((rowItem, rowIndex) => (
+                                        <tr key={rowIndex}>
+                                            {Object.values(rowItem)
+                                                .slice(0, -3)
+                                                .map((row, rowInd) => (
+                                                    <React.Fragment
+                                                        key={rowInd}
+                                                    >
+                                                        {rowInd === 0 ||
+                                                        rowInd === 1 ? (
+                                                            <td className="table_link">
+                                                                <Link
+                                                                    to={
+                                                                        rowInd ===
+                                                                        0
+                                                                            ? `/Igrac/${row}`
+                                                                            : `/Momcad/${rowItem.IGRACMOMCAD}`
+                                                                    }
+                                                                    state={{
+                                                                        imeMomcad:
+                                                                            rowItem.IGRACMOMCAD,
+                                                                    }}
+                                                                >
+                                                                    {row}
+                                                                </Link>
+                                                            </td>
+                                                        ) : rowInd === 2 ? (
+                                                            <td className="table_link">
+                                                                <Link
+                                                                    to={`/Momcad/${rowItem.DOMACI_IME}`}
+                                                                >
+                                                                    {
+                                                                        rowItem.DOMACI
+                                                                    }
+                                                                </Link>
+                                                                <span>
+                                                                    {' '}
+                                                                    vs.{' '}
+                                                                </span>
+                                                                <Link
+                                                                    to={`/Momcad/${rowItem.GOSTI_IME}`}
+                                                                >
+                                                                    {
+                                                                        rowItem.GOSTI
+                                                                    }
+                                                                </Link>
+                                                            </td>
+                                                        ) : rowInd === 3 ||
+                                                          rowInd ===
+                                                              4 ? null : (
+                                                            <td key={rowInd}>
                                                                 {row}
-                                                            </Link>
-                                                        </td>
-                                                    ) : rowInd === 2 ? (
-                                                        <td className="table_link">
-                                                            <Link
-                                                                to={`/Momcad/${rowItem.DOMACI_IME}`}
-                                                            >
-                                                                {rowItem.DOMACI}
-                                                            </Link>
-                                                            <span> vs. </span>
-                                                            <Link
-                                                                to={`/Momcad/${rowItem.GOSTI_IME}`}
-                                                            >
-                                                                {rowItem.GOSTI}
-                                                            </Link>
-                                                        </td>
-                                                    ) : rowInd === 3 ||
-                                                      rowInd === 4 ? null : (
-                                                        <td key={rowInd}>
-                                                            {row}
-                                                        </td>
-                                                    )}
-                                                </React.Fragment>
-                                            ))}
-                                    </tr>
-                                ))}
-                        </tbody>
-                    </table>
+                                                            </td>
+                                                        )}
+                                                    </React.Fragment>
+                                                ))}
+                                        </tr>
+                                    ))}
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
             </div>
         </div>

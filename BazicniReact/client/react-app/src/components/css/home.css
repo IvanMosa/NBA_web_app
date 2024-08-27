@@ -1,30 +1,44 @@
 .homepage {
     text-align: center;
     padding: 40px;
-    min-height: 96.3vh;
+    height: 100vh;
+    max-height: 100vh;
     position: relative;
+    background-color: rgb(12, 30, 80);
+    overflow: hidden;
 }
 
 .pozadina {
+    display: grid;
     position: absolute;
     top: 0;
     left: 0;
     width: 100vw;
-    height: 70vh;
-    z-index: 1;
+    height: 100vh;
+    z-index: 0;
+    filter: blur(1px);
     overflow: hidden;
-    margin-top: 10vh;
-    box-shadow: 12px 0px 12px 16px black;
+    box-shadow: 12px 0px 12px 16px rgb(3, 8, 46);
 }
 
 .detalji {
+    display: flex;
+    flex-direction: column;
     position: relative;
-    margin-top: 10vh;
+    margin-top: 15vh;
     z-index: 1;
 }
-.homepage-title {
+
+.naslov {
+    align-self: center;
+    width: 35vw;
+    background-color: rgba(255, 255, 255, 0.8);
+    border-radius: 18px;
+}
+.naslov h1 {
+    padding: 0.2vw;
     font-size: 2vw;
-    color: lightskyblue;
+    color: rgb(31, 3, 158);
 }
 
 .cards-container {

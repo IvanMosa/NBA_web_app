@@ -1,50 +1,76 @@
+.statistikaPage {
+    display: flex;
+    flex-direction: column;
+    width: 100vw;
+    background-color: rgb(226, 226, 226);
+}
 .statistika_container {
     display: flex;
     flex-direction: column;
-    width: 90vw;
-    max-height: 90vh;
-    margin: 0 auto;
-    margin-top: 30px;
+    width: 100%;
+    min-height: 76.9vh;
     margin-bottom: 30px;
-    padding: 20px;
-    border-radius: 8px;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
 }
 
+.statistikaVrh {
+    display: flex;
+    width: 100vw;
+    height: 20vh;
+    overflow: hidden;
+    align-items: center;
+    border-bottom: 0.1px groove white;
+    position: relative;
+}
 .statistika_naslov {
-    align-self: center;
-    text-align: center;
+    position: relative;
+    margin-top: 8vh;
+    margin-left: 3vw;
+    text-align: left;
+    color: white;
+    font-family: fantasy;
     padding: 5px;
-    font-size: 1.2vw;
+    font-size: 2vw;
     margin-bottom: 20px;
     width: 30vw;
-    border-bottom: 1px groove black;
+    z-index: 10;
 }
 
+.statistikaSlika {
+    position: absolute;
+    z-index: 1;
+}
 .statistika_menu {
     display: flex;
     flex-direction: column;
-    gap: 15px;
+    gap: 20px;
 }
 
 .statistika_form {
+    background-color: rgb(241, 241, 241);
     display: flex;
     flex-direction: row;
+    width: 100vw;
+    height: 7vh;
     gap: 15px;
+    box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
 }
 .statistika_form form {
     display: flex;
     flex-direction: column;
-    gap: 10px;
+    padding: 8px;
+    gap: 1px;
 }
 
+.statistika_form form:first-child {
+    margin-left: 9.5vw;
+}
 .sezona_text {
-    margin-left: 22px;
-    font-size: 0.9vw;
+    font-weight: 500;
+    font-size: 0.6vw;
+    color: gray;
 }
 .statistika_form select {
-    margin-left: 20px;
-    padding: 10px;
+    padding: 5px;
     font-size: 0.8vw;
     border: 1px solid #ccc;
     border-radius: 4px;
@@ -52,43 +78,60 @@
     cursor: pointer;
 }
 
+.statistika_form select:hover {
+    outline: none;
+    border-color: darkgreen;
+}
 .statistika_form select:focus {
     outline: none;
-    border-color: #007bff;
+    border-color: darkgreen;
 }
 
 .tablicaStat {
     display: flex;
-    max-height: 60vh;
-    overflow: auto;
+    width: 80vw;
+    align-self: center;
+    justify-content: center;
+    background-color: white;
+    padding-left: 2.5vw;
+    padding-right: 2.5vw;
+    padding-top: 1.5vw;
+    padding-bottom: 1.5vw;
 }
 
 .tablicaStat thead th {
     position: sticky;
     top: 0;
 }
+
 .data-table {
     width: 100%;
     border-collapse: collapse;
-}
-
-.data-table th,
-.data-table td {
-    border: none;
-    padding: 0.4vw;
-    font-size: 0.6vw; /* Reduced font size */
+    padding-left: 10px;
 }
 
 .data-table th {
-    background-color: #f2f2f2;
+    border: none;
+    padding: 0.2vw;
+    font-size: 0.55vw; /* Reduced font size */
+}
+.data-table td {
+    border: none;
+    padding: 0.4vw;
+    padding-top: 1vh;
+    padding-bottom: 1vh;
+    font-size: 0.7vw; /* Reduced font size */
+}
+
+.data-table th {
+    background-color: rgb(248, 248, 248);
     text-align: center;
 }
 
 .data-table td {
     text-align: center;
-}
-.data-table tr:nth-child(even) {
-    background-color: #f9f9f9;
+    font-family: 'Gill Sans', sans-serif;
+    border-bottom: 0.1px groove rgb(201, 201, 201);
 }
 
 .data-table tr:hover {

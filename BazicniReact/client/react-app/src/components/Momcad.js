@@ -674,13 +674,12 @@ const Momcad = () => {
             )}
 
             <div className="statistika_momcad">
-                <div
-                    className="statistika_container"
-                    style={{ backgroundColor: '#f9f9f9' }}
-                >
-                    <p className="statistika_naslov">Statistika momčadi</p>
-                    <div className="statistika_menu">
-                        <div className="statistika_form">
+                <div className="statistika_container_momcad">
+                    <p className="statistika_naslov_momcad">
+                        Statistika momčadi
+                    </p>
+                    <div className="statistika_menu" style={{ gap: '0px' }}>
+                        <div className="statistika_form_momcad">
                             <form>
                                 <p className="sezona_text">Sezona</p>
                                 <select

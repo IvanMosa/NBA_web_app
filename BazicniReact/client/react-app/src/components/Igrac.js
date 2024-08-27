@@ -6,6 +6,7 @@ import './css/igrac.css';
 import axios from 'axios';
 import Statistika from './Statistika';
 import { Link } from 'react-router-dom';
+import KarijeraMomcadi from './library_css/karijeraMomcadi';
 
 function Igrac() {
     const location = useLocation();
@@ -21,6 +22,21 @@ function Igrac() {
     const [hoverStatistika, setHoverStatistika] = useState(true);
     const [hoverKarijera, setHoverKarijera] = useState(false);
     const [statistikaSezona, setStatistikaSezona] = useState(null);
+
+    const statistikaKarijere = [];
+    const [currentIndex, setCurrentIndex] = useState(0);
+    const handleNext = () => {
+        if (currentIndex < ugovoriIgrac.length - 1) {
+            setCurrentIndex(currentIndex + 1);
+        }
+    };
+
+    const handlePrevious = () => {
+        if (currentIndex > 0) {
+            setCurrentIndex(currentIndex - 1);
+        }
+    };
+
     const prikaziPodatke = async () => {
         let podatci;
         let ugovoriIgrac;
@@ -52,6 +68,7 @@ function Igrac() {
             });
         console.log(podatci);
         console.log(statistikaSezona);
+        console.log(ugovoriIgrac);
     }, [podatci]);
 
     const parseRgba = (rgbaString) => {
@@ -97,7 +114,7 @@ function Igrac() {
                         }}
                     />
                     <img
-                        src={`/${imeIgrac}.webp`}
+                        src={`/Slike igraca/${imeIgrac}.webp`}
                         alt={`${imeIgrac} picture`}
                         style={{
                             height: 'auto',
@@ -210,6 +227,12 @@ function Igrac() {
                 )}
                 {!statistika && karijera && (
                     <div className="karijeraIgrac">
+                        <div className="karijeraIgracMomcadi">
+                            <KarijeraMomcadi
+                                ugovoriIgrac={ugovoriIgrac}
+                                statistikaSezona={statistikaSezona}
+                            />
+                        </div>
                         <div className="karijeraContainer">
                             <div className="karijeraKomponenta">
                                 <div className="karijeraNaslov">
@@ -244,19 +267,18 @@ function Igrac() {
                                         <tbody>
                                             {ugovoriIgrac.map(
                                                 (ugovor, index) => {
-                                                    // Extract start and end years from the contract period
                                                     const startYear = parseInt(
                                                         ugovor.DATUM_OD
                                                     );
+
                                                     const endYear =
-                                                        ugovor.DATUM_DO === ''
+                                                        ugovor.DATUM_DO === null
                                                             ? new Date().getFullYear()
                                                             : parseInt(
                                                                   ugovor.DATUM_DO +
                                                                       2000
                                                               );
 
-                                                    // Find statistics for each season within the contract period
                                                     const rows = [];
 
                                                     for (
@@ -264,26 +286,44 @@ function Igrac() {
                                                         year <= endYear;
                                                         year++
                                                     ) {
-                                                        const season = `${year}-${String(
+                                                        const season = `${String(
+                                                            year
+                                                        ).slice(-2)}/${String(
                                                             year + 1
-                                                        ).slice(-2)}`; // Format as 'YY-YY'
+                                                        ).slice(-2)}`;
+
+                                                        const sezonaPrikaz = `${String(
+                                                            year
+                                                        ).slice(-2)}-${String(
+                                                            year + 1
+                                                        ).slice(-2)}`;
 
                                                         const statsForSeason =
                                                             statistikaSezona.find(
                                                                 (stat) =>
-                                                                    stat.sezona ===
+                                                                    stat.SEZONA ==
                                                                         season &&
-                                                                    stat.imeMomcad ===
-                                                                        ugovor.NAZIV
+                                                                    stat.IGRACMOMCADKRATICA ==
+                                                                        ugovor.KRATICA
                                                             );
 
-                                                        // If statistics exist for the season, create a row
                                                         if (statsForSeason) {
-                                                            rows.push(
+                                                            console.log(
+                                                                'ovooo',
+                                                                statsForSeason
+                                                            );
+
+                                                            const MINUTE =
+                                                                statsForSeason.MINUTE /
+                                                                statsForSeason.BROJUTAKMICA;
+                                                            const minutes =
+                                                                MINUTE / 60;
+
+                                                            rows.unshift(
                                                                 <tr
                                                                     key={`${ugovor.NAZIV}-${season}`}
                                                                 >
-                                                                    <td>{`${season}`}</td>
+                                                                    <td>{`${sezonaPrikaz}`}</td>
                                                                     <td className="table_link">
                                                                         <Link
                                                                             to={`/Momcad/${ugovor.NAZIV}`}
@@ -295,61 +335,72 @@ function Igrac() {
                                                                     </td>
                                                                     <td>
                                                                         {
-                                                                            statsForSeason.minute
+                                                                            statsForSeason.BROJUTAKMICA
                                                                         }
                                                                     </td>
                                                                     <td>
-                                                                        {
-                                                                            statsForSeason.poeni
-                                                                        }
+                                                                        {minutes.toFixed(
+                                                                            1
+                                                                        )}
                                                                     </td>
                                                                     <td>
-                                                                        {
-                                                                            statsForSeason.POGODCIIZPOLJA
-                                                                        }
+                                                                        {statsForSeason.POENI.toFixed(
+                                                                            1
+                                                                        )}
                                                                     </td>
                                                                     <td>
-                                                                        {
-                                                                            statsForSeason.pokusajiIzPolja
-                                                                        }
+                                                                        {statsForSeason.POGODCI_IZ_POLJA.toFixed(
+                                                                            1
+                                                                        )}
                                                                     </td>
                                                                     <td>
-                                                                        {
-                                                                            statsForSeason.fgPercentage
-                                                                        }
-                                                                        %
+                                                                        {statsForSeason.POKUSAJI_IZ_POLJA.toFixed(
+                                                                            1
+                                                                        )}
                                                                     </td>
                                                                     <td>
-                                                                        {
-                                                                            statsForSeason.pogodeneTrice
-                                                                        }
+                                                                        {(
+                                                                            statsForSeason.PP *
+                                                                            100
+                                                                        ).toFixed(
+                                                                            1
+                                                                        )}
                                                                     </td>
                                                                     <td>
-                                                                        {
-                                                                            statsForSeason.promaseneTrice
-                                                                        }
+                                                                        {statsForSeason.SUT_ZA_3_POGODEN.toFixed(
+                                                                            1
+                                                                        )}
                                                                     </td>
                                                                     <td>
-                                                                        {
-                                                                            statsForSeason.triPPercentage
-                                                                        }
-                                                                        %
+                                                                        {statsForSeason.SUT_ZA_3_PROMASEN.toFixed(
+                                                                            1
+                                                                        )}
                                                                     </td>
                                                                     <td>
-                                                                        {
-                                                                            statsForSeason.pogodenaSlobodnaBacanja
-                                                                        }
+                                                                        {(
+                                                                            statsForSeason.TRI_P *
+                                                                            100
+                                                                        ).toFixed(
+                                                                            1
+                                                                        )}
                                                                     </td>
                                                                     <td>
-                                                                        {
-                                                                            statsForSeason.promasenaSlobodnaBacanja
-                                                                        }
+                                                                        {statsForSeason.SLOBODNA_BACANJA_POGODENA.toFixed(
+                                                                            1
+                                                                        )}
                                                                     </td>
                                                                     <td>
-                                                                        {
-                                                                            statsForSeason.sbPercentage
-                                                                        }
-                                                                        %
+                                                                        {statsForSeason.SLOBODNA_BACANJA_PROMASENA.toFixed(
+                                                                            1
+                                                                        )}
+                                                                    </td>
+                                                                    <td>
+                                                                        {(
+                                                                            statsForSeason.SB *
+                                                                            100
+                                                                        ).toFixed(
+                                                                            1
+                                                                        )}
                                                                     </td>
                                                                 </tr>
                                                             );

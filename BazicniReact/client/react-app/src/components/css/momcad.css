@@ -14,6 +14,7 @@ body {
     flex-direction: column;
     width: 100%;
     height: 100%;
+    margin-top: 5vh;
 }
 
 .logo_back {
@@ -66,6 +67,12 @@ body {
     margin: 0 0 15px 0;
 }
 
+.statistika_momcad {
+    display: flex;
+    width: 100vw;
+    align-self: center;
+}
+
 .line_momcad {
     border: none;
     height: 1px;
@@ -74,6 +81,61 @@ body {
     margin-bottom: 20px;
 }
 
+.statistika_container_momcad {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    margin-bottom: 30px;
+    background-color: rgb(231, 231, 231);
+}
+.statistika_naslov_momcad {
+    position: relative;
+    margin-top: 2vh;
+    margin-left: 3vw;
+    text-align: left;
+    color: rgb(55, 56, 55);
+    font-family: fantasy;
+    font-size: 2vw;
+    margin-bottom: 2vh;
+    z-index: 10;
+}
+.statistika_form_momcad {
+    background-color: rgb(255, 255, 255);
+    display: flex;
+    flex-direction: row;
+    width: 100%;
+    height: 7vh;
+    gap: 15px;
+    box-shadow: 0 1px 1px 0 rgba(0, 0, 0, 0.1), 0 1px 1px 0 rgba(0, 0, 0, 0.06);
+}
+.statistika_form_momcad form {
+    display: flex;
+    flex-direction: column;
+    padding: 8px;
+    gap: 1px;
+}
+
+.statistika_form_momcad form:first-child {
+    margin-left: 5vw;
+}
+
+.statistika_form_momcad select {
+    padding: 5px;
+    font-size: 0.8vw;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    background-color: #fff;
+    cursor: pointer;
+}
+
+.statistika_form_momcad select:hover {
+    outline: none;
+    border-color: darkgreen;
+}
+.statistika_form_momcad select:focus {
+    outline: none;
+    border-color: darkgreen;
+}
 .table_div {
     /* width: 75%;
     display: flex;
@@ -434,6 +496,7 @@ body {
     display: flex;
     max-height: 30vh;
     overflow: auto;
+    padding: 2vw;
 }
 
 .momcadStat thead th {
@@ -445,8 +508,14 @@ body {
     border-collapse: collapse;
 }
 
-.data-table2 th,
+.data-table2 th {
+    background-color: white;
+    border: none;
+    padding: 0.5vw;
+    font-size: 0.6vw; /* Reduced font size */
+}
 .data-table2 td {
+    background-color: white;
     border: none;
     padding: 0.4vw;
     font-size: 0.8vw; /* Reduced font size */

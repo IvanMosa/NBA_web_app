@@ -3,6 +3,7 @@
     flex-direction: column;
     align-items: center;
     height: 100vh;
+    margin-top: 5vh;
 }
 .registration_form {
     width: 300px;

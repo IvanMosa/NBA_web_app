@@ -55,9 +55,9 @@ function Home() {
                 />
             </div>
             <div className="detalji">
-                <h1 className="homepage-title">
-                    Dobrodošli na početnu stranicu
-                </h1>
+                <div className="naslov">
+                    <h1>Dobrodošli na početnu stranicu</h1>
+                </div>
                 <div
                     className={
                         clicked ? 'cards-container clicked' : 'cards-container'

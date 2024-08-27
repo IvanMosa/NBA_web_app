@@ -16,16 +16,28 @@
     transition: background-color 0.3s, transform 0.2s; /* Efekti prelaska */
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); /* Blagi sjaj */
 }
+
+.dropdown_button:hover {
+    background-color: rgb(
+        107,
+        136,
+        102
+    ); /* Tamnija nijansa plave pri prelasku miša */
+    color: black;
+    transform: scale(1.02); /* Blago povećanje pri prelasku miša */
+    transition: background-color 0.3s ease, color 0.3s ease;
+}
 .dropdown-menu {
     display: flex;
     flex-wrap: wrap;
     position: absolute;
     background-color: white;
     border: 1px solid #ddd;
+    margin-top: 1vh;
     border-radius: 8px;
     padding: 5px; /* Smanjen unutrašnji razmak */
     z-index: 1;
-    max-width: 15vw; /* Širina menija, prilagodite prema potrebi */
+    width: 15vw; /* Širina menija, prilagodite prema potrebi */
 }
 
 .button-container {
@@ -47,5 +59,12 @@
 }
 
 .dropdown-item:hover {
-    background-color: #ddd;
+    background-color: rgb(
+        107,
+        136,
+        102
+    ); /* Tamnija nijansa plave pri prelasku miša */
+    color: black;
+    transform: scale(1.02); /* Blago povećanje pri prelasku miša */
+    transition: background-color 0.3s ease, color 0.3s ease;
 }

@@ -4,6 +4,7 @@
     justify-content: space-between;
     width: 100%;
     height: 100%;
+    margin-top: 35px;
 }
 
 .igrac_container {
@@ -89,6 +90,7 @@
 
 .statistikaIgrac {
     display: flex;
+    min-height: 42.3vh;
 }
 
 .visePodataka {
@@ -123,6 +125,22 @@
     border-right: 1px groove black;
 }
 
+.karijeraIgrac {
+    display: flex;
+    flex-direction: row;
+    min-height: 42.3vh;
+    align-items: center;
+    justify-content: center;
+    background-color: rgb(228, 228, 228);
+    gap: 4vw;
+}
+
+.karijeraIgracMomcadi {
+    width: 20vw;
+    height: 25vh;
+    background-color: white;
+    margin-bottom: 3vh;
+}
 .karijeraContainer {
     display: flex;
     flex-direction: column;
@@ -133,11 +151,9 @@
 .karijeraKomponenta {
     display: flex;
     flex-direction: column;
-    align-self: center;
-    width: 90vw;
+    width: 70vw;
     height: 30vh;
-    border-radius: 12px;
-    box-shadow: 0px 2px 4px rgba(0, 0, 0, 0.3);
+    background-color: white;
 }
 
 .karijeraNaslov {
