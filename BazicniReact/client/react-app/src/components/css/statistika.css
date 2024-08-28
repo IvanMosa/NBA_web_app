@@ -112,14 +112,14 @@
 
 .data-table th {
     border: none;
-    padding: 0.2vw;
+    padding: 0.5vw;
     font-size: 0.55vw; /* Reduced font size */
 }
 .data-table td {
     border: none;
-    padding: 0.4vw;
-    padding-top: 1vh;
-    padding-bottom: 1vh;
+    padding: 0.6vw;
+    padding-top: 2vh;
+    padding-bottom: 2vh;
     font-size: 0.7vw; /* Reduced font size */
 }
 
@@ -136,4 +136,30 @@
 
 .data-table tr:hover {
     background-color: #ddd;
+}
+
+.tooltip-container {
+    position: relative; /* Position relative to allow absolute positioning of the full name */
+}
+
+.short {
+    display: block; /* Display the short text by default */
+}
+
+.full {
+    position: absolute; /* Position it absolutely within the th */
+    bottom: 100%; /* Position it above the th element */
+    left: 50%; /* Center it horizontally */
+    transform: translateX(-50%); /* Center adjustment */
+    background-color: black; /* Background for visibility */
+    color: white; /* Text color for visibility */
+    padding: 5px; /* Padding for better appearance */
+    border-radius: 5px; /* Rounded corners */
+    white-space: nowrap; /* Prevent text wrapping */
+    opacity: 0;
+}
+
+.tooltip-container:hover .full {
+    opacity: 1;
+    transition: opacity 0.5s ease;
 }

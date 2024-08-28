@@ -2,7 +2,7 @@ import React from 'react';
 import { useRef, useEffect } from 'react';
 import { FastAverageColor } from 'fast-average-color';
 
-const Logo = ({ imeMomcad, visina, style, setDominantColor }) => {
+const Logo = ({ imeMomcad, visina, style, setDominantColor, none }) => {
     const slikaRef = useRef(null);
 
     useEffect(() => {
@@ -36,13 +36,13 @@ const Logo = ({ imeMomcad, visina, style, setDominantColor }) => {
                 alt={`${imeMomcad} logo`}
                 ref={slikaRef}
                 style={{
-                    marginTop: visina ? '500px' : '20px',
-                    marginLeft: style ? '' : '10px',
+                    marginTop: none ? '3vh' : visina ? '500px' : '20px',
+                    marginLeft: none ? '' : style ? '' : '10px',
                     left: style ? style.left : '',
                     top: style ? style.top : '',
                     position: style ? style.position : '',
                     width: 'auto',
-                    height: visina ? '150vh' : '4vw',
+                    height: none ? '3vw' : visina ? '150vh' : '4vw',
                     objectFit: visina ? 'cover' : '',
                 }}
             />

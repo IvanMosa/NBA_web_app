@@ -94,9 +94,10 @@
 }
 
 .table_link a {
+    font-size: 0.7vw;
     text-decoration: none;
     color: inherit;
-    font-weight: 650;
+    font-weight: 750;
     text-align: left;
 }
 .table_link a:hover {

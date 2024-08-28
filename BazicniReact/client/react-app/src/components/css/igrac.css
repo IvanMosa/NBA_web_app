@@ -136,7 +136,7 @@
 }
 
 .karijeraIgracMomcadi {
-    width: 20vw;
+    width: 25vw;
     height: 25vh;
     background-color: white;
     margin-bottom: 3vh;
@@ -151,7 +151,7 @@
 .karijeraKomponenta {
     display: flex;
     flex-direction: column;
-    width: 70vw;
+    width: 65vw;
     height: 30vh;
     background-color: white;
 }

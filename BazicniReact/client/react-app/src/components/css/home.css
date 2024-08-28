@@ -4,7 +4,6 @@
     height: 100vh;
     max-height: 100vh;
     position: relative;
-    background-color: rgb(12, 30, 80);
     overflow: hidden;
 }
 
@@ -16,154 +15,102 @@
     width: 100vw;
     height: 100vh;
     z-index: 0;
-    filter: blur(1px);
     overflow: hidden;
     box-shadow: 12px 0px 12px 16px rgb(3, 8, 46);
 }
 
-.detalji {
+.naslov {
     display: flex;
-    flex-direction: column;
-    position: relative;
-    margin-top: 15vh;
+    flex-direction: row;
+    position: absolute;
+    justify-self: center;
+    align-self: center;
+    justify-content: center;
+    top: 3vh;
+    width: 100vw;
+    gap: 20vw;
+    background-color: rgb(61, 61, 61);
+    box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
     z-index: 1;
 }
-
-.naslov {
-    align-self: center;
-    width: 35vw;
-    background-color: rgba(255, 255, 255, 0.8);
-    border-radius: 18px;
-}
 .naslov h1 {
-    padding: 0.2vw;
-    font-size: 2vw;
-    color: rgb(31, 3, 158);
+    width: 20vw;
+    padding-bottom: 1vh;
+    padding-top: 2vh;
+    font-size: 1.5vw;
+    color: rgb(197, 197, 197);
 }
 
-.cards-container {
+.homePodatci {
     display: flex;
+    flex-direction: row;
+    position: absolute;
+    margin-top: 10vh;
+    align-items: center;
     justify-content: center;
-    flex-wrap: wrap;
-    margin-top: 8vh;
-    gap: 100px; /* Razmak između kartica */
-    position: relative; /* Omogućuje karticama da se pravilno slože */
-}
-
-.card {
-    background-color: #fff; /* Bijela pozadina za kartice */
-    border-radius: 10px;
-    padding: 20px;
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); /* Lagana sjena ispod kartice */
-    flex: 1 1 calc(33.333% - 30px); /* Svaka kartica zauzima trećinu prostora, uzimajući u obzir razmak */
-    max-width: calc(
-        33.333% - 100px
-    ); /* Maksimalna širina kartice je trećina reda */
-    height: 11vh; /* Početna visina kartice */
-    cursor: pointer;
-    transition: transform 0.5s ease, box-shadow 0.5s ease, width 0.5s ease,
-        z-index 0.5s ease; /* Animacije za hover */
-    position: relative; /* Za apsolutno pozicioniranje videa unutar kartice */
-    overflow: hidden; /* Sakrij video kad nije prikazan */
-    z-index: 1; /* Osigurava da kartice nisu prekrivene od strane drugih kartica */
-}
-
-.card.hovered {
-    transform: scale(1.05); /* Lagano povećanje kartice na hover */
-    height: 15vh; /* Povećana visina kartice na hover */
-    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.3);
-    z-index: 10;
-}
-
-.card.clicked {
-    transform: scale(1.1); /* Povećanje kartice na hover */
-    max-width: 80vw;
-    height: 80vh; /* Visina kartice kad je video prikazan, osigurava dovoljno prostora za video */
-    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.3); /* Pojačana sjena kod hovera */
-    z-index: 10; /* Povećava z-index kako bi kartica bila u prvom planu */
-}
-
-.cards-container.clicked {
-    top: -10vh;
-    margin-top: 0;
-}
-.hide {
-    display: none; /* Sakrij element */
-}
-.card h2 {
-    font-size: 1.2vw;
-    margin-bottom: 10px;
-    color: #007bff; /* Plava boja naslova */
-}
-
-.card p {
-    font-size: 0.8vw;
-    color: #666;
-    margin-bottom: 60px; /* Razmak kako bi se video bio vidljiv ispod teksta */
-}
-
-.card.clicked h2 {
-    font-size: 1.5em;
-    margin-bottom: 5px;
-    color: #007bff; /* Plava boja naslova */
-}
-
-.card.clicked p {
-    display: none;
-}
-.video-container {
-    position: absolute;
-    bottom: 0;
     left: 0;
-    right: 0;
-    height: 100px;
-    opacity: 0;
-    transition: opacity 0.2s ease, height 1s ease; /* Glatka tranzicija za pojavu videa */
-    background: rgba(
-        0,
-        0,
-        0,
-        0.05
-    ); /* Poluprozirna pozadina za bolji kontrast */
-    overflow: hidden;
-
-    border-top: 2px solid #ccc; /* Dodaje liniju između kartice i videa */
+    width: 100vw;
+    height: 80vh;
+    z-index: 10;
+    gap: 10vw;
 }
 
-.card.card.clicked .video-container {
-    opacity: 1; /* Prikazuje video kad je kartica povećana */
-    height: 91%; /* Visina videa kad je kartica hoverana */
+.homeUtakmica {
+    top: 0;
+    left: 20vw;
+    width: 30vw;
+    height: 30vh;
+    background-color: white;
 }
 
-.video-container video {
+.homeIgrac {
+    width: 25vw;
+    height: 25vh;
+}
+
+.homePodatak {
+    display: flex;
+    flex-direction: row;
     width: 100%;
-    height: auto;
-    object-fit: cover;
-    transform: translateY(-5%);
+    height: 60%;
+    align-items: center;
+    justify-content: center;
+    border-bottom: 1px groove rgb(204, 204, 204);
 }
 
-.icon-container {
-    position: absolute;
-    bottom: 5px;
-    left: 50%;
-    transform: translateX(-50%);
-    transition: bottom 0.5s ease, top 0.5s ease;
-    z-index: 20;
+.homePodatak h4 {
+    text-align: center;
+    align-content: center;
+    height: 100%;
+    width: 33.333%;
+    border-left: 1px groove rgb(204, 204, 204);
+    border-right: 1px groove rgb(204, 204, 204);
+}
+
+.homePodatak h4:first-child {
+    border-left: none;
+}
+
+.homePodatak h4:last-child {
+    border-right: none;
+}
+.homePodatak h5 {
+    text-align: center;
+    width: 33.333%;
+}
+
+.homePodatak1 {
+    display: flex;
+    flex-direction: row;
     width: 100%;
+    height: 40%;
+}
+.homePodatak1 h4 {
+    text-align: center;
+    width: 50%;
+    align-content: center;
 }
 
-.icon-container.icon-top {
-    bottom: 0;
-}
-
-.arrow-icon {
-    font-size: 2em;
-    color: #007bff;
-    cursor: pointer;
-    opacity: 1;
-    transition: opacity 0.2s ease;
-}
-
-.card.clicked .arrow-icon {
-    opacity: 1;
+.homePodatak1 h4:first-child {
+    border-right: 1px groove rgb(204, 204, 204);
 }

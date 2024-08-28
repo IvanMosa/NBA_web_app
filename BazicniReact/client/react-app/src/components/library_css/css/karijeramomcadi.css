@@ -49,24 +49,23 @@
     color: #007bff;
 }
 
-/* Postavka za data-container */
 .data-container {
+    display: flex;
     transition: transform 0.5s ease, opacity 0.5s ease;
     position: absolute;
     top: 50%;
     left: 50%;
+    width: 100%;
     transform: translate(-50%, -50%);
-    backface-visibility: hidden; /* Sprječava prikazivanje stražnje strane prilikom rotacije */
+    backface-visibility: hidden;
 }
 
-/* Animacija za izlaz prema gore i dolazak prema gore */
 .data-container.up.animating {
-    animation: slideOutUp 0.5s forwards, slideInUp 0.5s forwards 0.5s;
+    animation: slideOutUp 0.35s forwards, slideInUp 0.35s forwards 0.35s;
 }
 
-/* Animacija za izlaz prema dolje i dolazak prema dolje */
 .data-container.down.animating {
-    animation: slideOutDown 0.5s forwards, slideInDown 0.5s forwards 0.5s;
+    animation: slideOutDown 0.35s forwards, slideInDown 0.35s forwards 0.35s;
 }
 
 /* Keyframes za izlaz i ulaz sa 3D rotacijom prema gore */
@@ -99,7 +98,7 @@
         opacity: 1;
     }
     100% {
-        transform: translate(-50%, 25%) rotateX(90deg);
+        transform: translate(-50%, 0%) rotateX(90deg);
         opacity: 0;
     }
 }
@@ -113,4 +112,40 @@
         transform: translate(-50%, -50%) rotateX(0deg);
         opacity: 1;
     }
+}
+
+.karijeraPodatak {
+    display: flex;
+    flex-direction: column;
+    height: 14vh;
+    width: 33.3333%;
+    border-top: 1px groove gray;
+    border-bottom: 1px groove gray;
+    border-right: 1px groove gray;
+    gap: 2px;
+    align-items: center;
+}
+
+.karijeraPodatak:last-child {
+    border-right: none;
+}
+
+.karijeraMaliPodatak {
+    align-items: center;
+    width: 100%;
+    height: 50%;
+    gap: 10px;
+}
+.karijeraMaliPodatak:first-child {
+    border-bottom: 0.5px groove gray;
+}
+
+.karijeraMaliPodatak h4 {
+    margin-top: 0.8vh;
+    font-size: 0.7vw;
+    font-weight: 500;
+}
+.karijeraMaliPodatak h5 {
+    font-size: 0.65vw;
+    font-weight: 499;
 }

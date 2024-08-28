@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import './css/karijeramomcadi.css';
 import Logo from './Logo';
+import { Link } from 'react-router-dom';
 
 const KarijeraMomcadi = ({ ugovoriIgrac, statistikaSezona }) => {
     const [currentIndex, setCurrentIndex] = useState(0);
@@ -31,71 +32,110 @@ const KarijeraMomcadi = ({ ugovoriIgrac, statistikaSezona }) => {
         }
     });
 
-    const handlePrevious = () => {
+    const handleNext = () => {
         if (currentIndex < sveSezone.length - 1 && !isAnimating) {
             setDirection('down');
             setIsAnimating(true);
             setTimeout(() => {
                 setCurrentIndex((prevIndex) => prevIndex + 1);
                 setIsAnimating(false);
-            }, 500); // Vrijeme animacije
+            }, 700);
         }
     };
 
-    const handleNext = () => {
+    const handlePrevious = () => {
         if (currentIndex > 0 && !isAnimating) {
             setDirection('up');
             setIsAnimating(true);
             setTimeout(() => {
                 setCurrentIndex((prevIndex) => prevIndex - 1);
                 setIsAnimating(false);
-            }, 500); // Vrijeme animacije
+            }, 700);
         }
     };
 
-    const currentSeasonData = sveSezone[currentIndex];
-    const statsForSeason = statistikaSezona.find(
-        (stat) =>
-            stat.SEZONA === currentSeasonData.season &&
-            stat.IGRACMOMCADKRATICA === currentSeasonData.kratica
-    );
-
+    const statsForSeason = statistikaSezona;
+    console.log(statsForSeason);
+    console.log(currentIndex);
     return (
         <div className="karijeraMomcadi">
             <div className="info-box">
                 <div className="navigation">
                     <div
-                        onClick={handleNext}
+                        onClick={handlePrevious}
                         className={`icon-button ${
                             currentIndex === 0 ? 'disabled' : ''
                         }`}
                     >
                         <i className="fa-solid fa-chevron-up"></i>
                     </div>
-                    {statsForSeason ? (
+                    {statsForSeason[currentIndex] && (
                         <div
                             className={`data-container ${direction} ${
                                 isAnimating ? 'animating' : ''
                             }`}
                         >
-                            <Logo imeMomcad={statsForSeason.IGRACMOMCAD} />
-                            <p>
-                                {`Season: ${
-                                    currentSeasonData.sezonaPrikaz
-                                } - Average Minutes: ${(
-                                    statsForSeason.MINUTE /
-                                    statsForSeason.BROJUTAKMICA /
-                                    60
-                                ).toFixed(2)}`}
-                            </p>
+                            <div className="karijeraPodatak">
+                                <Logo
+                                    imeMomcad={
+                                        statsForSeason[currentIndex].IGRACMOMCAD
+                                    }
+                                    none={true}
+                                />
+                                <h4 className="table_link">
+                                    <Link
+                                        to={`/Momcad/${statsForSeason[currentIndex].IGRACMOMCAD}`}
+                                    >
+                                        {
+                                            statsForSeason[currentIndex]
+                                                .IGRACMOMCAD
+                                        }
+                                    </Link>
+                                </h4>
+                            </div>
+                            <div className="karijeraPodatak">
+                                <div className="karijeraMaliPodatak">
+                                    <h4>SEZONA</h4>
+                                    <h5>
+                                        {statsForSeason[currentIndex].SEZONA}
+                                    </h5>
+                                </div>
+                                <div className="karijeraMaliPodatak">
+                                    <h4>BROJ UTAKMICA</h4>
+                                    <h5>
+                                        {
+                                            statsForSeason[currentIndex]
+                                                .BROJUTAKMICA
+                                        }
+                                    </h5>
+                                </div>
+                            </div>
+                            <div className="karijeraPodatak">
+                                <div className="karijeraMaliPodatak">
+                                    <h4>PLASMAN MOMČADI</h4>
+                                    <h5>
+                                        {statsForSeason[currentIndex].PLASMAN}
+                                    </h5>
+                                </div>
+                                <div className="karijeraMaliPodatak">
+                                    <h4>MINUTE</h4>
+                                    <h5>
+                                        {(
+                                            statsForSeason[currentIndex]
+                                                .MINUTE /
+                                            statsForSeason[currentIndex]
+                                                .BROJUTAKMICA /
+                                            60
+                                        ).toFixed(1)}
+                                    </h5>
+                                </div>
+                            </div>
                         </div>
-                    ) : (
-                        <p>No data available for this season</p>
                     )}
                     <div
-                        onClick={handlePrevious}
+                        onClick={handleNext}
                         className={`icon-button ${
-                            currentIndex === sveSezone.length - 1
+                            currentIndex === statistikaSezona.length - 1
                                 ? 'disabled'
                                 : ''
                         }`}

@@ -68,3 +68,31 @@
 .navigation-logOut1:hover {
     font-weight: 600;
 }
+
+.tutorial-tab {
+    position: relative;
+}
+
+.tutorial-dropdown {
+    position: absolute;
+    top: 100%; /* Position below the tab */
+    left: 0;
+    width: 30vw; /* Adjust width as needed */
+    background-color: white;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    border-radius: 5px;
+    z-index: 1000; /* Ensure it's above other elements */
+    padding: 1vh 0; /* Padding around the dropdown content */
+}
+
+/* Optional: Add some additional styling for card items */
+.tutorial-dropdown .card {
+    width: 100%; /* Ensure full width inside dropdown */
+    margin: 0;
+    padding: 0.5vh 1vw;
+    border-bottom: 1px solid #ddd; /* Add a divider between items */
+}
+
+.tutorial-dropdown .card:last-child {
+    border-bottom: none; /* Remove divider from the last item */
+}

@@ -1005,11 +1005,11 @@ app.post('/getStatistikaIgraci', async (req, res) => {
         let karijeraUpit;
 
         if (imeIgrac !== null) {
-            const sql_SELECT_KARIJERA = `SELECT Igrac, count(*) as BrojUtakmica, SUM(TO_NUMBER(SUBSTR(NBA.RACUNAJ_MINUTE(igrac_id, utakmica_id), 1, 2))*60 + TO_NUMBER(SUBSTR(NBA.RACUNAJ_MINUTE(igrac_id, utakmica_id), 4, 2))) as minute, SUM("Slobodna Bacanja Pogodena" + "Šut za 2 Pogoden"*2 + "Šut za 3 Pogoden"*3)/COUNT(*) as Poeni, SUM("Šut za 3 Pogoden" + "Šut za 2 Pogoden")/COUNT(*) as Pogodci_iz_Polja, SUM("Šut za 3 Pogoden" + "Šut za 3 Promasen" + "Šut za 2 Promasen" + "Šut za 2 Pogoden")/COUNT(*)  as Pokusaji_iz_Polja, CASE WHEN SUM("Šut za 3 Pogoden" + "Šut za 3 Promasen" + "Šut za 2 Promasen" + "Šut za 2 Pogoden") = 0 THEN 0 ELSE SUM("Šut za 3 Pogoden" + "Šut za 2 Pogoden") / SUM("Šut za 3 Pogoden" + "Šut za 3 Promasen" + "Šut za 2 Promasen" + "Šut za 2 Pogoden") END as PP ,SUM("Šut za 3 Pogoden")/COUNT(*) as Sut_za_3_pogoden, SUM("Šut za 3 Promasen")/COUNT(*) as Sut_za_3_promasen ,  CASE WHEN SUM("Šut za 3 Pogoden" + "Šut za 3 Promasen") = 0 THEN 0 ELSE SUM("Šut za 3 Pogoden")/SUM("Šut za 3 Pogoden" + "Šut za 3 Promasen") END   as TRI_P, SUM("Slobodna Bacanja Pogodena")/COUNT(*) AS Slobodna_Bacanja_pogodena, SUM("Slobodna Bacanja Promasena")/COUNT(*) as Slobodna_bacanja_promasena,  CASE WHEN SUM("Slobodna Bacanja Pogodena"+"Slobodna Bacanja Promasena") = 0 THEN 0 ELSE SUM("Slobodna Bacanja Pogodena")/SUM("Slobodna Bacanja Pogodena"+"Slobodna Bacanja Promasena")  END  AS SB,SUM("Napadacki Skok")/COUNT(*) as Napadacki_skok,SUM("Obrambeni Skok")/COUNT(*) as Obrambeni_skok,  SUM("Obrambeni Skok" + "Napadacki Skok")/COUNT(*) as Skokovi, SUM("Asistencije")/COUNT(*) as Asistencije, SUM("Ukradene Lopte")/COUNT(*) as Ukradene_lopte,SUM("Blokovi")/COUNT(*) as Blokovi, IgracMomcad, IgracMomcadKratica, Sezona`;
+            const sql_SELECT_KARIJERA = `SELECT Igrac, count(*) as BrojUtakmica, SUM(TO_NUMBER(SUBSTR(NBA.RACUNAJ_MINUTE(igrac_id, utakmica_id), 1, 2))*60 + TO_NUMBER(SUBSTR(NBA.RACUNAJ_MINUTE(igrac_id, utakmica_id), 4, 2))) as minute, SUM("Slobodna Bacanja Pogodena" + "Šut za 2 Pogoden"*2 + "Šut za 3 Pogoden"*3)/COUNT(*) as Poeni, SUM("Šut za 3 Pogoden" + "Šut za 2 Pogoden")/COUNT(*) as Pogodci_iz_Polja, SUM("Šut za 3 Pogoden" + "Šut za 3 Promasen" + "Šut za 2 Promasen" + "Šut za 2 Pogoden")/COUNT(*)  as Pokusaji_iz_Polja, CASE WHEN SUM("Šut za 3 Pogoden" + "Šut za 3 Promasen" + "Šut za 2 Promasen" + "Šut za 2 Pogoden") = 0 THEN 0 ELSE SUM("Šut za 3 Pogoden" + "Šut za 2 Pogoden") / SUM("Šut za 3 Pogoden" + "Šut za 3 Promasen" + "Šut za 2 Promasen" + "Šut za 2 Pogoden") END as PP ,SUM("Šut za 3 Pogoden")/COUNT(*) as Sut_za_3_pogoden, SUM("Šut za 3 Promasen")/COUNT(*) as Sut_za_3_promasen ,  CASE WHEN SUM("Šut za 3 Pogoden" + "Šut za 3 Promasen") = 0 THEN 0 ELSE SUM("Šut za 3 Pogoden")/SUM("Šut za 3 Pogoden" + "Šut za 3 Promasen") END   as TRI_P, SUM("Slobodna Bacanja Pogodena")/COUNT(*) AS Slobodna_Bacanja_pogodena, SUM("Slobodna Bacanja Promasena")/COUNT(*) as Slobodna_bacanja_promasena,  CASE WHEN SUM("Slobodna Bacanja Pogodena"+"Slobodna Bacanja Promasena") = 0 THEN 0 ELSE SUM("Slobodna Bacanja Pogodena")/SUM("Slobodna Bacanja Pogodena"+"Slobodna Bacanja Promasena")  END  AS SB,SUM("Napadacki Skok")/COUNT(*) as Napadacki_skok,SUM("Obrambeni Skok")/COUNT(*) as Obrambeni_skok,  SUM("Obrambeni Skok" + "Napadacki Skok")/COUNT(*) as Skokovi, SUM("Asistencije")/COUNT(*) as Asistencije, SUM("Ukradene Lopte")/COUNT(*) as Ukradene_lopte,SUM("Blokovi")/COUNT(*) as Blokovi, IgracMomcad, IgracMomcadKratica, Sezona, plasman`;
 
-            const sql_FROM_KARIJERA = ` FROM (select utk.utakmica_id as Utakmica_id, m.NAZIV AS IgracMomcad, m.kratica AS IgracMomcadKratica, m1.kratica AS Domaci, m1.naziv as DOMACI_IME, m2.kratica AS Gosti , m2.NAZIV AS GOSTI_IME, i.igrac_id AS Igrac_id, i.naziv AS Igrac, sp.naziv || '_' ||s.naziv AS Podatak, s.naziv AS Status, UTK.DATUM_VRIJEME, l.sezona as Sezona FROM statistika stat,igraci i,utakmice utk,stat_podatak sp, momcad m, momcad m1,momcad m2,statusi s, lige l, veze_momcad_igraci vmi where vmi.IGRAC_ID = i.IGRAC_ID AND VMI.STATUS_ID = 1 AND VMI.MOMCAD_ID = M.MOMCAD_ID AND STAT.IGRAC_ID = i.igrac_id and stat.sp_id = sp.sp_id and STAT.STATUS_ID = s.status_id and stat.utakmica_id = utk.utakmica_id and UTK.DOMACI_ID = m1.momcad_id and utk.gosti_id = m2.momcad_id and s.tablica = 'STATISTIKA' and utk.liga_id = l.liga_id and i.naziv = :imeIgrac ) `;
+            const sql_FROM_KARIJERA = ` FROM (select utk.utakmica_id as Utakmica_id, vml.konacni_plasman as plasman, m.NAZIV AS IgracMomcad, m.kratica AS IgracMomcadKratica, m1.kratica AS Domaci, m1.naziv as DOMACI_IME, m2.kratica AS Gosti , m2.NAZIV AS GOSTI_IME, i.igrac_id AS Igrac_id, i.naziv AS Igrac, sp.naziv || '_' ||s.naziv AS Podatak, s.naziv AS Status, UTK.DATUM_VRIJEME, l.sezona as Sezona FROM statistika stat,igraci i,utakmice utk,stat_podatak sp, momcad m, momcad m1,momcad m2,statusi s, lige l, veze_momcad_igraci vmi, veze_momcad_lige vml where vml.momcad_id = m.momcad_id and vml.liga_id = l.liga_id and vmi.IGRAC_ID = i.IGRAC_ID AND VMI.STATUS_ID = 1 AND VMI.MOMCAD_ID = M.MOMCAD_ID AND STAT.IGRAC_ID = i.igrac_id and stat.sp_id = sp.sp_id and STAT.STATUS_ID = s.status_id and stat.utakmica_id = utk.utakmica_id and UTK.DOMACI_ID = m1.momcad_id and utk.gosti_id = m2.momcad_id and s.tablica = 'STATISTIKA' and utk.liga_id = l.liga_id and i.naziv = :imeIgrac ) `;
 
-            const sql_PIVOT_KARIJERA = `PIVOT ( COUNT(Status) FOR Podatak IN('Slobodno bacanje_Pogođen' AS "Slobodna Bacanja Pogodena",'Slobodno bacanje_Promašen' AS "Slobodna Bacanja Promasena",'Šut za 3_Pogođen' AS "Šut za 3 Pogoden", 'Šut za 3_Promašen' AS "Šut za 3 Promasen",'Šut za 2_Pogođen' AS "Šut za 2 Pogoden", 'Šut za 2_Promašen' AS "Šut za 2 Promasen",'Ulaz/Izlaz_Završen' AS "Ulaz/Izlaz",'Obrambeni skok_Završen' AS "Obrambeni Skok",'Napadački skok_Završen' AS "Napadacki Skok",'Asistencija_Završen' AS "Asistencije",'Izgubljena lopta_Završen' AS "Izgubljene Lopte",'Ukradena lopta_Završen' AS "Ukradene Lopte",'Blokada_Završen' AS "Blokovi")) GROUP BY IGRAC , IGRACMOMCAD,  IGRACMOMCADKRATICA, sezona`;
+            const sql_PIVOT_KARIJERA = `PIVOT ( COUNT(Status) FOR Podatak IN('Slobodno bacanje_Pogođen' AS "Slobodna Bacanja Pogodena",'Slobodno bacanje_Promašen' AS "Slobodna Bacanja Promasena",'Šut za 3_Pogođen' AS "Šut za 3 Pogoden", 'Šut za 3_Promašen' AS "Šut za 3 Promasen",'Šut za 2_Pogođen' AS "Šut za 2 Pogoden", 'Šut za 2_Promašen' AS "Šut za 2 Promasen",'Ulaz/Izlaz_Završen' AS "Ulaz/Izlaz",'Obrambeni skok_Završen' AS "Obrambeni Skok",'Napadački skok_Završen' AS "Napadacki Skok",'Asistencija_Završen' AS "Asistencije",'Izgubljena lopta_Završen' AS "Izgubljene Lopte",'Ukradena lopta_Završen' AS "Ukradene Lopte",'Blokada_Završen' AS "Blokovi")) GROUP BY IGRAC , IGRACMOMCAD,  IGRACMOMCADKRATICA, sezona, plasman ORDER BY Poeni DESC FETCH FIRST 1 ROW ONLY`;
 
             karijeraUpit = await connection.execute(
                 sql_SELECT_KARIJERA + sql_FROM_KARIJERA + sql_PIVOT_KARIJERA,
@@ -1168,6 +1168,7 @@ app.post('/getStatistikaMomcadi', async (req, res) => {
                 [],
                 { outFormat: oracledb.OBJECT }
             );
+
             res.send({ utakmice: result.rows });
         }
     } catch (err) {
@@ -1958,6 +1959,44 @@ app.post('/podatciIgraca', async (req, res) => {
             }
         } catch (err) {
             console.log(err);
+        }
+    }
+});
+
+app.post('/podatciPocetna', async (req, res) => {
+    let connection;
+
+    try {
+        connection = await oracledb.getConnection();
+
+        const utakmica = await connection.execute(
+            'SELECT M1.KRATICA AS DOMACI_KRATICA, M2.KRATICA AS GOSTI_KRATICA, UTK.POENI_DOMACI, UTK.POENI_GOSTI, UTK.DATUM_VRIJEME, S.NAZIV, M1.NAZIV AS DOMACI_NAZIV, M2.NAZIV AS GOSTI_NAZIV FROM UTAKMICE UTK, MOMCAD M1, MOMCAD M2, SUDCI S WHERE UTK.DOMACI_ID = M1.MOMCAD_ID AND UTK.GOSTI_ID = M2.MOMCAD_ID AND UTK.SUDAC_ID = S.SUDAC_ID  ORDER BY DATUM_VRIJEME DESC FETCH FIRST 1 ROW ONLY',
+            [],
+            { outFormat: oracledb.OBJECT }
+        );
+
+        const sql_SELECT_IGRAC = `SELECT Igrac, count(*) as BrojUtakmica, SUM(TO_NUMBER(SUBSTR(NBA.RACUNAJ_MINUTE(igrac_id, utakmica_id), 1, 2))*60 + TO_NUMBER(SUBSTR(NBA.RACUNAJ_MINUTE(igrac_id, utakmica_id), 4, 2))) as minute, SUM("Slobodna Bacanja Pogodena" + "Šut za 2 Pogoden"*2 + "Šut za 3 Pogoden"*3)/COUNT(*) as Poeni, SUM("Šut za 3 Pogoden" + "Šut za 2 Pogoden")/COUNT(*) as Pogodci_iz_Polja, SUM("Šut za 3 Pogoden" + "Šut za 3 Promasen" + "Šut za 2 Promasen" + "Šut za 2 Pogoden")/COUNT(*)  as Pokusaji_iz_Polja, CASE WHEN SUM("Šut za 3 Pogoden" + "Šut za 3 Promasen" + "Šut za 2 Promasen" + "Šut za 2 Pogoden") = 0 THEN 0 ELSE SUM("Šut za 3 Pogoden" + "Šut za 2 Pogoden") / SUM("Šut za 3 Pogoden" + "Šut za 3 Promasen" + "Šut za 2 Promasen" + "Šut za 2 Pogoden") END as PP ,SUM("Šut za 3 Pogoden")/COUNT(*) as Sut_za_3_pogoden, SUM("Šut za 3 Promasen")/COUNT(*) as Sut_za_3_promasen ,  CASE WHEN SUM("Šut za 3 Pogoden" + "Šut za 3 Promasen") = 0 THEN 0 ELSE SUM("Šut za 3 Pogoden")/SUM("Šut za 3 Pogoden" + "Šut za 3 Promasen") END   as TRI_P, SUM("Slobodna Bacanja Pogodena")/COUNT(*) AS Slobodna_Bacanja_pogodena, SUM("Slobodna Bacanja Promasena")/COUNT(*) as Slobodna_bacanja_promasena,  CASE WHEN SUM("Slobodna Bacanja Pogodena"+"Slobodna Bacanja Promasena") = 0 THEN 0 ELSE SUM("Slobodna Bacanja Pogodena")/SUM("Slobodna Bacanja Pogodena"+"Slobodna Bacanja Promasena")  END  AS SB,SUM("Napadacki Skok")/COUNT(*) as Napadacki_skok,SUM("Obrambeni Skok")/COUNT(*) as Obrambeni_skok,  SUM("Obrambeni Skok" + "Napadacki Skok")/COUNT(*) as Skokovi, SUM("Asistencije")/COUNT(*) as Asistencije, SUM("Ukradene Lopte")/COUNT(*) as Ukradene_lopte,SUM("Blokovi")/COUNT(*) as Blokovi, IgracMomcad, IgracMomcadKratica, Sezona, plasman`;
+
+        const sql_FROM_IGRAC = ` FROM (select utk.utakmica_id as Utakmica_id, vml.konacni_plasman as plasman, m.NAZIV AS IgracMomcad, m.kratica AS IgracMomcadKratica, m1.kratica AS Domaci, m1.naziv as DOMACI_IME, m2.kratica AS Gosti , m2.NAZIV AS GOSTI_IME, i.igrac_id AS Igrac_id, i.naziv AS Igrac, sp.naziv || '_' ||s.naziv AS Podatak, s.naziv AS Status, UTK.DATUM_VRIJEME, l.sezona as Sezona FROM statistika stat,igraci i,utakmice utk,stat_podatak sp, momcad m, momcad m1,momcad m2,statusi s, lige l, veze_momcad_igraci vmi, veze_momcad_lige vml where vml.momcad_id = m.momcad_id and vml.liga_id = l.liga_id and vmi.IGRAC_ID = i.IGRAC_ID AND VMI.STATUS_ID = 1 AND VMI.MOMCAD_ID = M.MOMCAD_ID AND STAT.IGRAC_ID = i.igrac_id and stat.sp_id = sp.sp_id and STAT.STATUS_ID = s.status_id and stat.utakmica_id = utk.utakmica_id and UTK.DOMACI_ID = m1.momcad_id and utk.gosti_id = m2.momcad_id and s.tablica = 'STATISTIKA' and utk.liga_id = l.liga_id and l.sezona = '23/24' ) `;
+
+        const sql_PIVOT_IGRAC = `PIVOT ( COUNT(Status) FOR Podatak IN('Slobodno bacanje_Pogođen' AS "Slobodna Bacanja Pogodena",'Slobodno bacanje_Promašen' AS "Slobodna Bacanja Promasena",'Šut za 3_Pogođen' AS "Šut za 3 Pogoden", 'Šut za 3_Promašen' AS "Šut za 3 Promasen",'Šut za 2_Pogođen' AS "Šut za 2 Pogoden", 'Šut za 2_Promašen' AS "Šut za 2 Promasen",'Ulaz/Izlaz_Završen' AS "Ulaz/Izlaz",'Obrambeni skok_Završen' AS "Obrambeni Skok",'Napadački skok_Završen' AS "Napadacki Skok",'Asistencija_Završen' AS "Asistencije",'Izgubljena lopta_Završen' AS "Izgubljene Lopte",'Ukradena lopta_Završen' AS "Ukradene Lopte",'Blokada_Završen' AS "Blokovi")) GROUP BY IGRAC , IGRACMOMCAD,  IGRACMOMCADKRATICA, sezona, plasman ORDER BY Poeni DESC FETCH FIRST 1 ROW ONLY`;
+
+        const igrac = await connection.execute(
+            sql_SELECT_IGRAC + sql_FROM_IGRAC + sql_PIVOT_IGRAC,
+            [],
+            { outFormat: oracledb.OBJECT }
+        );
+
+        res.send({ utakmica: utakmica.rows, igrac: igrac.rows });
+    } catch (err) {
+        console.log(err);
+    } finally {
+        if (connection) {
+            try {
+                await connection.close();
+            } catch (err) {
+                console.log(err);
+            }
         }
     }
 });

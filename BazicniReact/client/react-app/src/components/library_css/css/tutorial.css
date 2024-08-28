@@ -1,0 +1,122 @@
+.detalji {
+    display: flex;
+    flex-direction: column;
+    position: relative;
+    margin-top: 0;
+    z-index: 1;
+    height: 100%;
+}
+
+.cards-container {
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+    flex-wrap: nowrap;
+    width: 100%;
+    gap: 1vh;
+    position: relative;
+    padding: 1vh 0;
+}
+
+.card {
+    background-color: #fff;
+    border-radius: 5px;
+    padding: 10px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); /* Lighter shadow */
+    flex: 1 1 auto; /* Allow cards to take full width */
+    width: 100%;
+    height: 8vh; /* Height adjusted for navigation */
+    cursor: pointer;
+    transition: transform 0.3s ease, box-shadow 0.3s ease, width 0.3s ease,
+        z-index 0.3s ease, left 0.3s ease, top 0.3s ease; /* Faster animations for better responsiveness */
+    position: relative;
+    overflow: hidden; /* Hide video or other overflow */
+    z-index: 1;
+}
+
+.card.hovered {
+    transform: scale(1.02); /* Slight increase on hover */
+    height: 25vh; /* Expand enough to show part of the video */
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    z-index: 10;
+}
+
+.card.clicked {
+    position: absolute; /* Use absolute positioning for centering */
+    top: 100%; /* Center vertically */
+    left: -50%; /* Align to the left */
+    transform: scale(1.05);
+    width: 80vw; /* Full width when clicked */
+    height: 70vh; /* Expanded height when video is shown */
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2); /* Enhanced shadow when clicked */
+    z-index: 10;
+}
+
+.cards-container.clicked {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    margin-top: 0;
+}
+
+.hide {
+    display: none;
+}
+
+.card h2 {
+    font-size: 1.2em; /* Smaller font size for compact view */
+    margin-bottom: 5px;
+    color: #007bff;
+    white-space: nowrap; /* Prevent text from wrapping */
+}
+
+.card p {
+    font-size: 0.9em; /* Smaller font size for compact view */
+    color: #666;
+    margin-bottom: 10px; /* Adjusted for shorter height */
+}
+
+.card.clicked h2 {
+    font-size: 1.2em; /* Slightly larger when clicked */
+    margin-bottom: 5px;
+}
+
+.card.clicked p {
+    display: none; /* Hide description text when card is clicked */
+}
+
+.video-container {
+    position: absolute;
+    bottom: 0;
+    left: 50%; /* Start from center but adjust to the original size */
+    transform: translateX(-50%);
+    height: 0; /* Start with 0 height */
+    opacity: 0; /* Start as invisible */
+    transition: opacity 0.2s ease, height 0.5s ease, width 0.5s ease; /* Smooth transition */
+    background: rgba(0, 0, 0, 0.05); /* Light background */
+    overflow: hidden;
+    border-top: 2px solid #ccc; /* Light border at top */
+}
+
+.card.hovered .video-container {
+    opacity: 1;
+    height: 70%; /* Expand enough to show a bit of the video */
+    width: 100%; /* Keep the width same on hover */
+    transform: translateX(-50%);
+}
+
+.card.clicked .video-container {
+    opacity: 1;
+    height: 90%; /* Nearly full height when video is shown */
+    width: 100%; /* Full width on click */
+    top: 50%; /* Center vertically */
+    left: 50%; /* Center horizontally */
+    transform: translate(-50%, -50%); /* Ensure it's centered */
+}
+
+.video-container video {
+    width: 100%;
+    height: auto;
+    object-fit: cover;
+}

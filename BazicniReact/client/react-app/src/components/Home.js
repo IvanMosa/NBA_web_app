@@ -1,49 +1,51 @@
 import * as React from 'react';
 import { useEffect, useState } from 'react';
 import './css/home.css';
-import { useNavigate } from 'react-router-dom';
+import axios from 'axios';
+
 function Home() {
-    const navigate = useNavigate();
-    const [hoveredIndex, setHoveredIndex] = useState(null);
-    const [clicked, setClicked] = useState(false);
+    const [utakmica, setUtakmica] = useState([]);
+    const [igrac, setIgrac] = useState([]);
 
-    const components = [
-        {
-            name: 'Tablica',
-            path: '/tablica',
-            description: 'Prikaz poretka na tablici te prikaz pojedine momčadi',
-            videoSrc: 'tablica.mp4',
-        },
-        {
-            name: 'Trade players',
-            path: '/trade',
-            description: 'Unos trade-a igrač za igrača',
-            videoSrc: 'trade.mp4',
-        },
-        {
-            name: 'Statistika',
-            path: '/statistika',
-            description:
-                'Prikaz statističkih podataka igrača na pojedinoj utakmici',
-            videoSrc: 'statistika.mp4',
-        },
-        {
-            name: 'Delegat',
-            path: '/Delegat',
-            description:
-                'Unos statističkih podataka za vođenje evidencije NBA lige',
-            videoSrc: 'delegat.mp4',
-        },
-        {
-            name: 'Register',
-            path: '/register',
-            description: 'Registracija novog korisnika',
-        },
-    ];
+    useEffect(() => {
+        const fetchData = async () => {
+            try {
+                const homePoziv = await axios.post(
+                    'http://localhost:4000/podatciPocetna'
+                );
 
+                setUtakmica(homePoziv.data.utakmica[0]);
+                setIgrac(homePoziv.data.igrac[0]);
+            } catch (err) {
+                console.log(err);
+            }
+        };
+        fetchData();
+    }, []);
     return (
         <div className="homepage">
+            <div className="homePodatci">
+                <div className="homeUtakmica">
+                    <div class="homePodatak">
+                        <h4>{utakmica.DOMACI_NAZIV}</h4>
+                        <h5>
+                            {utakmica.POENI_DOMACI} - {utakmica.POENI_GOSTI}
+                        </h5>
+                        <h4>{utakmica.GOSTI_NAZIV}</h4>
+                    </div>
+                    <div class="homePodatak1">
+                        <h4>Domaci</h4>
+                        <h4>Gosti</h4>
+                    </div>
+                </div>
+                <div className="homeIgrac">
+                    <p>fff</p>
+                </div>
+            </div>
             <div className="pozadina">
+                <div className="naslov">
+                    <h1>Početna stranica</h1>
+                </div>
                 <img
                     src="homePozadina.webp"
                     alt="Home"
@@ -53,78 +55,6 @@ function Home() {
                         objectFit: 'cover',
                     }}
                 />
-            </div>
-            <div className="detalji">
-                <div className="naslov">
-                    <h1>Dobrodošli na početnu stranicu</h1>
-                </div>
-                <div
-                    className={
-                        clicked ? 'cards-container clicked' : 'cards-container'
-                    }
-                >
-                    {components.map((component, index) => (
-                        <div
-                            key={index}
-                            className={`card ${
-                                clicked && hoveredIndex === index
-                                    ? 'clicked'
-                                    : clicked
-                                    ? 'hide'
-                                    : !clicked &&
-                                      hoveredIndex === index &&
-                                      component.name !== 'Register'
-                                    ? 'hovered'
-                                    : ''
-                            }`}
-                            onClick={() => navigate(component.path)}
-                            onMouseEnter={() => setHoveredIndex(index)}
-                            onMouseLeave={() => {
-                                if (!clicked) setHoveredIndex(null);
-                            }}
-                        >
-                            <h2>{component.name}</h2>
-                            <p>{component.description}</p>
-                            <>
-                                {!clicked &&
-                                hoveredIndex === index &&
-                                component.name !== 'Register' ? (
-                                    <div
-                                        className="icon-container"
-                                        onClick={(e) => {
-                                            e.stopPropagation();
-                                            setClicked(true);
-                                        }}
-                                    >
-                                        <i className="fa-solid fa-chevron-down arrow-icon"></i>
-                                    </div>
-                                ) : clicked &&
-                                  hoveredIndex === index &&
-                                  component.name !== 'Register' ? (
-                                    <div
-                                        className="icon-container icon-top"
-                                        onClick={(e) => {
-                                            e.stopPropagation();
-                                            setClicked(false);
-                                        }}
-                                    >
-                                        <i className="fa-solid fa-chevron-up arrow-icon"></i>
-                                    </div>
-                                ) : null}
-                            </>
-                            <div className="video-container">
-                                {clicked && hoveredIndex === index && (
-                                    <video
-                                        src={component.videoSrc}
-                                        autoPlay
-                                        muted
-                                        loop
-                                    />
-                                )}
-                            </div>
-                        </div>
-                    ))}
-                </div>
             </div>
         </div>
     );

@@ -494,7 +494,9 @@ body {
 
 .momcadStat {
     display: flex;
+    align-self: center;
     max-height: 30vh;
+    width: 93vw;
     overflow: auto;
     padding: 2vw;
 }
