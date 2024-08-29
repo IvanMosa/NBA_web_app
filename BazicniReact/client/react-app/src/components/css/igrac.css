@@ -163,6 +163,17 @@
     padding: 5px;
     font-size: 1.2vw;
     margin-bottom: 20px;
-    width: 30vw;
-    border-bottom: 1px groove black;
+    width: 20vw;
+    border-bottom: 1px groove rgb(199, 199, 199);
+}
+
+.igracLink a {
+    font-size: 0.7vw;
+    text-decoration: none;
+    color: inherit;
+    font-weight: 650;
+    text-align: left;
+}
+.igracLink a:hover {
+    font-weight: bold;
 }

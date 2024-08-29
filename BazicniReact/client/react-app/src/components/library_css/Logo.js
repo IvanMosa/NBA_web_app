@@ -2,7 +2,15 @@ import React from 'react';
 import { useRef, useEffect } from 'react';
 import { FastAverageColor } from 'fast-average-color';
 
-const Logo = ({ imeMomcad, visina, style, setDominantColor, none }) => {
+const Logo = ({
+    imeMomcad,
+    visina,
+    style,
+    setDominantColor,
+    none,
+    klasa,
+    home,
+}) => {
     const slikaRef = useRef(null);
 
     useEffect(() => {
@@ -31,21 +39,38 @@ const Logo = ({ imeMomcad, visina, style, setDominantColor, none }) => {
 
     return (
         <div>
-            <img
-                src={`/LOGOs/${imeMomcad}.png`}
-                alt={`${imeMomcad} logo`}
-                ref={slikaRef}
-                style={{
-                    marginTop: none ? '3vh' : visina ? '500px' : '20px',
-                    marginLeft: none ? '' : style ? '' : '10px',
-                    left: style ? style.left : '',
-                    top: style ? style.top : '',
-                    position: style ? style.position : '',
-                    width: 'auto',
-                    height: none ? '3vw' : visina ? '150vh' : '4vw',
-                    objectFit: visina ? 'cover' : '',
-                }}
-            />
+            {!klasa ? (
+                <img
+                    src={`/LOGOs/${imeMomcad}.png`}
+                    alt={`${imeMomcad} logo`}
+                    ref={slikaRef}
+                    style={{
+                        marginTop: home
+                            ? ''
+                            : none
+                            ? '3vh'
+                            : visina
+                            ? '500px'
+                            : '20px',
+                        marginLeft: none ? '' : style ? '' : '10px',
+                        left: style ? style.left : '',
+                        top: style ? style.top : '',
+                        position: style ? style.position : '',
+                        width: 'auto',
+                        height: none ? '3vw' : visina ? '150vh' : '4vw',
+                        objectFit: visina ? 'cover' : '',
+                    }}
+                />
+            ) : (
+                <img
+                    src={`/LOGOs/${imeMomcad}.png`}
+                    alt={`${imeMomcad} logo`}
+                    ref={slikaRef}
+                    style={{ objectFit: 'fill' }}
+                    className={klasa}
+                    loading="lazy"
+                />
+            )}
         </div>
     );
 };

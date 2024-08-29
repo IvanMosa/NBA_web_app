@@ -54,6 +54,7 @@ const KarijeraMomcadi = ({ ugovoriIgrac, statistikaSezona }) => {
         }
     };
 
+    console.log(statistikaSezona);
     const statsForSeason = statistikaSezona;
     console.log(statsForSeason);
     console.log(currentIndex);

@@ -80,85 +80,89 @@ function Tablica() {
     }, [imeSezone, Konferencija_Divizija]);
 
     return (
-        <div className="query_container">
-            <h1 className="query_title">Poredak</h1>
-            <div className="dropdown_menu">
-                <form>
-                    <select
-                        value={imeSezone}
-                        onChange={(e) => setimeSezone(e.target.value)}
-                    >
-                        {seasons.map((season, index) => (
-                            <option key={index} value={season}>
-                                {season}
-                            </option>
-                        ))}
-                    </select>
-                    <select
-                        value={Konferencija_Divizija}
-                        onChange={(e) =>
-                            setKonferencija_Divizija(e.target.value)
-                        }
-                    >
-                        {konfdiv.map((item, index) => (
-                            <option key={index} value={item}>
-                                {item}
-                            </option>
-                        ))}
-                    </select>
-                </form>
-                {izbor.map((item, index) => (
-                    <div key={index}>
-                        <p className="izbor">{item}</p>
-                        {FilteredData.length > 0 ? (
-                            <table className="data-table1">
-                                <thead>
-                                    <tr>
-                                        {[
-                                            'NAZIV',
-                                            'BROJ POBJEDA',
-                                            'BROJ PORAZA',
-                                            'PLASMAN',
-                                        ].map((header, collumnIndex) => (
-                                            <th key={collumnIndex}>{header}</th>
-                                        ))}
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    {FilteredData.filter((rowItem) => {
-                                        const lastCell =
-                                            rowItem[rowItem.length - 1];
-                                        return lastCell.includes(item);
-                                    }).map((rowItem, rowIndex) => (
-                                        <tr key={rowIndex}>
-                                            {rowItem
-                                                .slice(0, 4)
-                                                .map((value, cellIndex) => (
-                                                    <React.Fragment
-                                                        key={cellIndex}
-                                                    >
-                                                        {cellIndex === 0 ? (
-                                                            <td className="table_link">
-                                                                <Link
-                                                                    to={`/Momcad/${value}`}
-                                                                >
-                                                                    {value}
-                                                                </Link>
-                                                            </td>
-                                                        ) : (
-                                                            <td>{value}</td>
-                                                        )}
-                                                    </React.Fragment>
-                                                ))}
+        <div className="tablicaPage">
+            <div className="query_container">
+                <h1 className="query_title">Poredak</h1>
+                <div className="dropdown_menu">
+                    <form>
+                        <select
+                            value={imeSezone}
+                            onChange={(e) => setimeSezone(e.target.value)}
+                        >
+                            {seasons.map((season, index) => (
+                                <option key={index} value={season}>
+                                    {season}
+                                </option>
+                            ))}
+                        </select>
+                        <select
+                            value={Konferencija_Divizija}
+                            onChange={(e) =>
+                                setKonferencija_Divizija(e.target.value)
+                            }
+                        >
+                            {konfdiv.map((item, index) => (
+                                <option key={index} value={item}>
+                                    {item}
+                                </option>
+                            ))}
+                        </select>
+                    </form>
+                    {izbor.map((item, index) => (
+                        <div key={index}>
+                            <p className="izbor">{item}</p>
+                            {FilteredData.length > 0 ? (
+                                <table className="data-table1">
+                                    <thead>
+                                        <tr>
+                                            {[
+                                                'NAZIV',
+                                                'BROJ POBJEDA',
+                                                'BROJ PORAZA',
+                                                'PLASMAN',
+                                            ].map((header, collumnIndex) => (
+                                                <th key={collumnIndex}>
+                                                    {header}
+                                                </th>
+                                            ))}
                                         </tr>
-                                    ))}
-                                </tbody>
-                            </table>
-                        ) : (
-                            <p>No data available</p>
-                        )}
-                    </div>
-                ))}
+                                    </thead>
+                                    <tbody>
+                                        {FilteredData.filter((rowItem) => {
+                                            const lastCell =
+                                                rowItem[rowItem.length - 1];
+                                            return lastCell.includes(item);
+                                        }).map((rowItem, rowIndex) => (
+                                            <tr key={rowIndex}>
+                                                {rowItem
+                                                    .slice(0, 4)
+                                                    .map((value, cellIndex) => (
+                                                        <React.Fragment
+                                                            key={cellIndex}
+                                                        >
+                                                            {cellIndex === 0 ? (
+                                                                <td className="table_link">
+                                                                    <Link
+                                                                        to={`/Momcad/${value}`}
+                                                                    >
+                                                                        {value}
+                                                                    </Link>
+                                                                </td>
+                                                            ) : (
+                                                                <td>{value}</td>
+                                                            )}
+                                                        </React.Fragment>
+                                                    ))}
+                                            </tr>
+                                        ))}
+                                    </tbody>
+                                </table>
+                            ) : (
+                                <p>No data available</p>
+                            )}
+                        </div>
+                    ))}
+                </div>
             </div>
         </div>
     );

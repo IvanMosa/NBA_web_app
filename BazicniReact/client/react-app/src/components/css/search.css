@@ -1,0 +1,148 @@
+.searchPage {
+    display: grid;
+    justify-content: center;
+    align-content: start;
+    margin-top: 3vh;
+    width: 100%;
+    min-height: 100vh;
+    background-color: rgb(177, 177, 177);
+    overflow-y: auto; /* Enable scrolling for the page */
+}
+
+.searchContainer {
+    display: flex;
+    flex-direction: column;
+    position: relative; /* Ensure it's not fixed to prevent multiple scrolls */
+    margin-top: 5vh;
+    margin-bottom: 5vh;
+    justify-self: center;
+    width: 60vw;
+    padding: 3vh;
+    background-color: rgb(214, 214, 214);
+    overflow: visible; /* Ensure the content can expand without scrolling */
+    box-sizing: border-box; /* Ensures padding is included in the width/height */
+    gap: 1.5vh;
+}
+
+.searchNaslov {
+    display: flex;
+    flex-direction: row;
+    justify-content: start;
+    border-bottom: 1px groove rgb(194, 194, 194);
+    padding-bottom: 1vh;
+    margin-bottom: 1.5vh;
+}
+
+.searchNaslov h1 {
+    width: 10vw;
+    font-size: 1.5vw;
+    text-wrap: nowrap;
+    color: rgb(255, 255, 255);
+}
+
+.searchNaslov input {
+    height: 4vh;
+    align-self: center;
+    padding: 0.4vw;
+    border-radius: 4px;
+    border: none;
+    border-bottom: 1px groove gray;
+    margin-left: auto;
+}
+
+.searchOdabir {
+    display: flex;
+    flex-direction: row;
+    justify-content: start;
+}
+
+.searchControls select {
+    height: 3vh;
+    width: 6vw;
+    padding-left: 0.2vw;
+    border: none;
+    border-radius: 4px;
+}
+
+.pagination {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap: 1vw;
+    margin-left: auto;
+}
+
+.pagination h3 {
+    font-weight: 600;
+}
+.pagination button {
+    width: 2vw;
+    height: 3vh;
+    border: none;
+    background-color: rgb(255, 255, 255);
+}
+
+.pagination button:hover {
+    background-color: rgb(245, 245, 245);
+    cursor: pointer;
+}
+.pagination button:first-child {
+    border-top-left-radius: 4px;
+    border-bottom-left-radius: 4px;
+}
+
+.pagination button:last-child {
+    border-top-right-radius: 4px;
+    border-bottom-right-radius: 4px;
+}
+
+.searchTablica {
+    display: flex;
+    flex-direction: column;
+    gap: 2vw;
+    width: 100%;
+    align-self: center;
+    justify-content: center;
+}
+
+.igrac-container {
+    display: inline-block;
+    min-width: 2vw; /* Adjust size as needed */
+    min-height: 4vh; /* Adjust size as needed */
+    max-height: 8vh;
+    max-width: 3.5vw;
+
+    border-radius: 50%; /* Makes the image circular */
+    background-color: rgb(218, 218, 218);
+    overflow: hidden;
+    margin-right: 0.8vw; /* Adds space between the image and the text */
+    vertical-align: middle;
+}
+
+.logo-container {
+    display: inline-block;
+    min-width: 2vw; /* Adjust size as needed */
+    min-height: 4vh; /* Adjust size as needed */
+    max-height: 6vh;
+    max-width: 3vw;
+    margin-right: 0.8vw; /* Adds space between the image and the text */
+    vertical-align: middle;
+}
+
+.player-image {
+    width: 100%;
+    height: auto;
+    object-fit: fill;
+    display: block; /* Ensures the image behaves like a block element */
+}
+
+.searchLink a {
+    font-size: 0.7vw;
+    text-decoration: none;
+    color: inherit;
+    font-weight: 650;
+    text-align: left;
+}
+.searchLink a:hover {
+    font-weight: bold;
+}

@@ -13,6 +13,7 @@ import Igrac from './components/Igrac';
 import Trade from './components/Trade';
 import Statistika from './components/Statistika';
 import Delegat from './components/Delegat';
+import Search from './components/Search';
 function App() {
     const token = useSelector((status) => localStorage.getItem('token'));
 
@@ -29,6 +30,7 @@ function App() {
                     <Route path="/Trade" element={<Trade />} />
                     <Route path="/Statistika" element={<Statistika />} />
                     <Route path="/Delegat" element={<Delegat />} />
+                    <Route path="/Search" element={<Search />} />
                     <Route path="/*" element={<Home />} />
                 </Routes>
             </BrowserRouter>

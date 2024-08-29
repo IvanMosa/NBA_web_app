@@ -13,7 +13,9 @@ function Igrac() {
     const { imeIgrac } = useParams();
     const [podatci, setPodatci] = useState(location.state?.rowItem || null);
     const [ugovoriIgrac, setUgovoriIgrac] = useState(null);
-    const imeMomcad = location.state?.imeMomcad || null;
+    const [imeMomcad, setImeMomcad] = useState(
+        location.state?.imeMomcad || null
+    );
     const [poeni, setPoeni] = useState(0.0);
     const [dominantColor, setDominantColor] = useState(null);
     const [darkDominantColor, setDarkDominantColor] = useState(null);
@@ -22,20 +24,6 @@ function Igrac() {
     const [hoverStatistika, setHoverStatistika] = useState(true);
     const [hoverKarijera, setHoverKarijera] = useState(false);
     const [statistikaSezona, setStatistikaSezona] = useState(null);
-
-    const statistikaKarijere = [];
-    const [currentIndex, setCurrentIndex] = useState(0);
-    const handleNext = () => {
-        if (currentIndex < ugovoriIgrac.length - 1) {
-            setCurrentIndex(currentIndex + 1);
-        }
-    };
-
-    const handlePrevious = () => {
-        if (currentIndex > 0) {
-            setCurrentIndex(currentIndex - 1);
-        }
-    };
 
     const prikaziPodatke = async () => {
         let podatci;
@@ -48,7 +36,11 @@ function Igrac() {
                     imeIgrac: imeIgrac,
                 }
             );
-
+            console.log(imeMomcad);
+            if (imeMomcad === null) {
+                setImeMomcad(result.data.podatci[11]);
+            }
+            console.log(result.data.podatci[11]);
             console.log(result.data.podatci);
             console.log(result.data.ugovoriIgraca);
             podatci = result.data.podatci;
@@ -66,9 +58,6 @@ function Igrac() {
                 setPodatci(data.podatci);
                 setUgovoriIgrac(data.ugovoriIgrac);
             });
-        console.log(podatci);
-        console.log(statistikaSezona);
-        console.log(ugovoriIgrac);
     }, [podatci]);
 
     const parseRgba = (rgbaString) => {
@@ -324,7 +313,7 @@ function Igrac() {
                                                                     key={`${ugovor.NAZIV}-${season}`}
                                                                 >
                                                                     <td>{`${sezonaPrikaz}`}</td>
-                                                                    <td className="table_link">
+                                                                    <td className="igracLink">
                                                                         <Link
                                                                             to={`/Momcad/${ugovor.NAZIV}`}
                                                                         >

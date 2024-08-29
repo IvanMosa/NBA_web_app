@@ -61,7 +61,6 @@ const Statistika = ({ imeIgrac, setPoeni, setStatistikaSezona }) => {
                     'http://localhost:4000/getStatistikaMomcadi'
                 );
                 setUtakmice(result1.data.utakmice);
-                console.log(result1.data.utakmice);
             } catch (err) {
                 console.log(err);
             }
@@ -242,7 +241,7 @@ const Statistika = ({ imeIgrac, setPoeni, setStatistikaSezona }) => {
                                                             key={rowInd}
                                                         >
                                                             {rowInd === 0 ? (
-                                                                <td className="table_link">
+                                                                <td className="statistikaLink">
                                                                     <Link
                                                                         to={`/Momcad/${rowItem.DOMACI_NAZIV}`}
                                                                     >
@@ -260,7 +259,7 @@ const Statistika = ({ imeIgrac, setPoeni, setStatistikaSezona }) => {
                                                                         rowItem.POENI_GOSTI}
                                                                 </td>
                                                             ) : rowInd === 2 ? (
-                                                                <td className="table_link">
+                                                                <td className="statistikaLink">
                                                                     <Link
                                                                         to={`/Momcad/${rowItem.GOSTI_NAZIV}`}
                                                                     >
@@ -293,6 +292,7 @@ const Statistika = ({ imeIgrac, setPoeni, setStatistikaSezona }) => {
                         </div>
                     ) : (
                         <div className="tablicaStat">
+                            {imeIgrac && <h2>STATISTIKA IGRAČA PO UTAKMICI</h2>}
                             <table className="data-table">
                                 <thead>
                                     <tr>
@@ -336,7 +336,7 @@ const Statistika = ({ imeIgrac, setPoeni, setStatistikaSezona }) => {
                                                         >
                                                             {rowInd === 0 ||
                                                             rowInd === 1 ? (
-                                                                <td className="table_link">
+                                                                <td className="statistikaLink">
                                                                     <Link
                                                                         to={
                                                                             rowInd ===
@@ -353,7 +353,7 @@ const Statistika = ({ imeIgrac, setPoeni, setStatistikaSezona }) => {
                                                                     </Link>
                                                                 </td>
                                                             ) : rowInd === 2 ? (
-                                                                <td className="table_link">
+                                                                <td className="statistikaLink">
                                                                     <Link
                                                                         to={`/Momcad/${rowItem.DOMACI_IME}`}
                                                                     >

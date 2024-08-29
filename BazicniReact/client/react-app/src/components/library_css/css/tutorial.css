@@ -44,7 +44,7 @@
 .card.clicked {
     position: absolute; /* Use absolute positioning for centering */
     top: 100%; /* Center vertically */
-    left: -50%; /* Align to the left */
+    left: -75%; /* Align to the left */
     transform: scale(1.05);
     width: 80vw; /* Full width when clicked */
     height: 70vh; /* Expanded height when video is shown */

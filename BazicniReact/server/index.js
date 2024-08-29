@@ -1009,7 +1009,7 @@ app.post('/getStatistikaIgraci', async (req, res) => {
 
             const sql_FROM_KARIJERA = ` FROM (select utk.utakmica_id as Utakmica_id, vml.konacni_plasman as plasman, m.NAZIV AS IgracMomcad, m.kratica AS IgracMomcadKratica, m1.kratica AS Domaci, m1.naziv as DOMACI_IME, m2.kratica AS Gosti , m2.NAZIV AS GOSTI_IME, i.igrac_id AS Igrac_id, i.naziv AS Igrac, sp.naziv || '_' ||s.naziv AS Podatak, s.naziv AS Status, UTK.DATUM_VRIJEME, l.sezona as Sezona FROM statistika stat,igraci i,utakmice utk,stat_podatak sp, momcad m, momcad m1,momcad m2,statusi s, lige l, veze_momcad_igraci vmi, veze_momcad_lige vml where vml.momcad_id = m.momcad_id and vml.liga_id = l.liga_id and vmi.IGRAC_ID = i.IGRAC_ID AND VMI.STATUS_ID = 1 AND VMI.MOMCAD_ID = M.MOMCAD_ID AND STAT.IGRAC_ID = i.igrac_id and stat.sp_id = sp.sp_id and STAT.STATUS_ID = s.status_id and stat.utakmica_id = utk.utakmica_id and UTK.DOMACI_ID = m1.momcad_id and utk.gosti_id = m2.momcad_id and s.tablica = 'STATISTIKA' and utk.liga_id = l.liga_id and i.naziv = :imeIgrac ) `;
 
-            const sql_PIVOT_KARIJERA = `PIVOT ( COUNT(Status) FOR Podatak IN('Slobodno bacanje_Pogođen' AS "Slobodna Bacanja Pogodena",'Slobodno bacanje_Promašen' AS "Slobodna Bacanja Promasena",'Šut za 3_Pogođen' AS "Šut za 3 Pogoden", 'Šut za 3_Promašen' AS "Šut za 3 Promasen",'Šut za 2_Pogođen' AS "Šut za 2 Pogoden", 'Šut za 2_Promašen' AS "Šut za 2 Promasen",'Ulaz/Izlaz_Završen' AS "Ulaz/Izlaz",'Obrambeni skok_Završen' AS "Obrambeni Skok",'Napadački skok_Završen' AS "Napadacki Skok",'Asistencija_Završen' AS "Asistencije",'Izgubljena lopta_Završen' AS "Izgubljene Lopte",'Ukradena lopta_Završen' AS "Ukradene Lopte",'Blokada_Završen' AS "Blokovi")) GROUP BY IGRAC , IGRACMOMCAD,  IGRACMOMCADKRATICA, sezona, plasman ORDER BY Poeni DESC FETCH FIRST 1 ROW ONLY`;
+            const sql_PIVOT_KARIJERA = `PIVOT ( COUNT(Status) FOR Podatak IN('Slobodno bacanje_Pogođen' AS "Slobodna Bacanja Pogodena",'Slobodno bacanje_Promašen' AS "Slobodna Bacanja Promasena",'Šut za 3_Pogođen' AS "Šut za 3 Pogoden", 'Šut za 3_Promašen' AS "Šut za 3 Promasen",'Šut za 2_Pogođen' AS "Šut za 2 Pogoden", 'Šut za 2_Promašen' AS "Šut za 2 Promasen",'Ulaz/Izlaz_Završen' AS "Ulaz/Izlaz",'Obrambeni skok_Završen' AS "Obrambeni Skok",'Napadački skok_Završen' AS "Napadacki Skok",'Asistencija_Završen' AS "Asistencije",'Izgubljena lopta_Završen' AS "Izgubljene Lopte",'Ukradena lopta_Završen' AS "Ukradene Lopte",'Blokada_Završen' AS "Blokovi")) GROUP BY IGRAC , IGRACMOMCAD,  IGRACMOMCADKRATICA, sezona, plasman ORDER BY Poeni DESC `;
 
             karijeraUpit = await connection.execute(
                 sql_SELECT_KARIJERA + sql_FROM_KARIJERA + sql_PIVOT_KARIJERA,
@@ -1936,7 +1936,7 @@ app.post('/podatciIgraca', async (req, res) => {
 
         if (imeIgraca.length > 0) {
             const podatci = await connection.execute(
-                "SELECT I.NAZIV, NVL(I.VISINA, ' '), NVL(D.NAZIV,' '), NVL(P.NAZIV,' '), SUBSTR(VMI.DATUM_OD,1, 10), I.BROJ_DRESA, M.MOMCAD_ID, I.IGRAC_ID, TO_CHAR(I.DATUM_ROD, 'FMMonth DD, YYYY') , I.DRAFT, I.TEZINA FROM VEZE_MOMCAD_IGRACI VMI, MOMCAD M, IGRACI I, POZICIJE P, DRZAVE D WHERE VMI.MOMCAD_ID = M.MOMCAD_ID AND VMI.IGRAC_ID = I.IGRAC_ID AND I.NAZIV = :imeIgraca AND I.POZICIJA_ID = P.POZICIJA_ID(+) AND I.DRZAVA_ID = D.DRZAVA_ID(+) AND VMI.STATUS_ID = 1",
+                "SELECT I.NAZIV, NVL(I.VISINA, ' '), NVL(D.NAZIV,' '), NVL(P.NAZIV,' '), SUBSTR(VMI.DATUM_OD,1, 10), I.BROJ_DRESA, M.MOMCAD_ID, I.IGRAC_ID, TO_CHAR(I.DATUM_ROD, 'FMMonth DD, YYYY') , I.DRAFT, I.TEZINA, M.NAZIV AS IGRACMOMCAD FROM VEZE_MOMCAD_IGRACI VMI, MOMCAD M, IGRACI I, POZICIJE P, DRZAVE D WHERE VMI.MOMCAD_ID = M.MOMCAD_ID AND VMI.IGRAC_ID = I.IGRAC_ID AND I.NAZIV = :imeIgraca AND I.POZICIJA_ID = P.POZICIJA_ID(+) AND I.DRZAVA_ID = D.DRZAVA_ID(+) AND VMI.STATUS_ID = 1",
                 { imeIgraca: imeIgraca }
             );
             const ugovoriIgraca = await connection.execute(
@@ -1970,7 +1970,7 @@ app.post('/podatciPocetna', async (req, res) => {
         connection = await oracledb.getConnection();
 
         const utakmica = await connection.execute(
-            'SELECT M1.KRATICA AS DOMACI_KRATICA, M2.KRATICA AS GOSTI_KRATICA, UTK.POENI_DOMACI, UTK.POENI_GOSTI, UTK.DATUM_VRIJEME, S.NAZIV, M1.NAZIV AS DOMACI_NAZIV, M2.NAZIV AS GOSTI_NAZIV FROM UTAKMICE UTK, MOMCAD M1, MOMCAD M2, SUDCI S WHERE UTK.DOMACI_ID = M1.MOMCAD_ID AND UTK.GOSTI_ID = M2.MOMCAD_ID AND UTK.SUDAC_ID = S.SUDAC_ID  ORDER BY DATUM_VRIJEME DESC FETCH FIRST 1 ROW ONLY',
+            "SELECT M1.KRATICA AS DOMACI_KRATICA, M2.KRATICA AS GOSTI_KRATICA, UTK.POENI_DOMACI, UTK.POENI_GOSTI, TO_CHAR(UTK.DATUM_VRIJEME, 'FMMonth DD, YYYY')  AS DATUM, TO_CHAR(UTK.DATUM_VRIJEME, 'HH24:MI') AS VRIJEME, S.NAZIV, M1.NAZIV AS DOMACI_NAZIV, M2.NAZIV AS GOSTI_NAZIV FROM UTAKMICE UTK, MOMCAD M1, MOMCAD M2, SUDCI S WHERE UTK.DOMACI_ID = M1.MOMCAD_ID AND UTK.GOSTI_ID = M2.MOMCAD_ID AND UTK.SUDAC_ID = S.SUDAC_ID  ORDER BY DATUM_VRIJEME DESC FETCH FIRST 1 ROW ONLY",
             [],
             { outFormat: oracledb.OBJECT }
         );
@@ -1988,6 +1988,38 @@ app.post('/podatciPocetna', async (req, res) => {
         );
 
         res.send({ utakmica: utakmica.rows, igrac: igrac.rows });
+    } catch (err) {
+        console.log(err);
+    } finally {
+        if (connection) {
+            try {
+                await connection.close();
+            } catch (err) {
+                console.log(err);
+            }
+        }
+    }
+});
+
+app.post('/podatciSearch', async (req, res) => {
+    let connection;
+
+    try {
+        connection = await oracledb.getConnection();
+
+        const igraci = await connection.execute(
+            'SELECT I.NAZIV AS IGRAC, M.NAZIV AS MOMCAD, I.BROJ_DRESA, P.NAZIV AS POZICIJA, I.VISINA, D.NAZIV AS DRZAVA, M.KRATICA AS KRATICA FROM VEZE_MOMCAD_IGRACI VMI, IGRACI I, MOMCAD M, POZICIJE P, DRZAVE D WHERE VMI.MOMCAD_ID = M.MOMCAD_ID AND VMI.IGRAC_ID = I.IGRAC_ID AND VMI.STATUS_ID = 1 AND I.POZICIJA_ID = P.POZICIJA_ID AND I.DRZAVA_ID = D.DRZAVA_ID ORDER BY IGRAC',
+            [],
+            { outFormat: oracledb.OBJECT }
+        );
+
+        const momcadi = await connection.execute(
+            "SELECT M.NAZIV AS MOMCAD, T.NAZIV AS TRENER, TO_CHAR(M.DATUM_OD, 'FMMonth DD, YYYY') AS DATUM_OSNIVANJA, G.NAZIV AS GRAD, S.NAZIV AS STADION FROM VEZE_MOMCAD_TRENER VMT, MOMCAD M, GRADOVI G, STADIONI S, TRENERI T WHERE VMT.MOMCAD_ID = M.MOMCAD_ID AND VMT.TRENER_ID = T.TRENER_ID AND VMT.STATUS_ID = 1 AND M.GRAD_ID = G.GRAD_ID AND M.STADION_ID = S.STADION_ID ORDER BY MOMCAD",
+            [],
+            { outFormat: oracledb.OBJECT }
+        );
+
+        res.send({ igraci: igraci.rows, momcadi: momcadi.rows });
     } catch (err) {
         console.log(err);
     } finally {

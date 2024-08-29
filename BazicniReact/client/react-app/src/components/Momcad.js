@@ -45,6 +45,8 @@ const Momcad = () => {
 
         setIgraci(Array.isArray(result.data.igraci) ? result.data.igraci : []);
 
+        console.log(result.data.igraci);
+
         const pozicijeTemp = Array.isArray(result.data.pozicije)
             ? result.data.pozicije
             : [];
@@ -324,7 +326,7 @@ const Momcad = () => {
                                                 return true;
                                             }
                                             const lastCell =
-                                                rowItem[rowItem.length - 2];
+                                                rowItem[rowItem.length - 8];
                                             return lastCell == poz;
                                         })
                                         .map((rowItem, rowIndex) => (
@@ -449,7 +451,7 @@ const Momcad = () => {
                                                                     )
                                                                 ) : rowInd ===
                                                                   0 ? (
-                                                                    <td className="table_link">
+                                                                    <td className="momcadLink">
                                                                         <Link
                                                                             to={`/Igrac/${row}`}
                                                                             state={{
@@ -727,7 +729,7 @@ const Momcad = () => {
                                                             key={rowInd}
                                                         >
                                                             {rowInd === 0 ? (
-                                                                <td className="table_link">
+                                                                <td className="momcadLink">
                                                                     <Link
                                                                         to={`/Momcad/${rowItem.DOMACI_NAZIV}`}
                                                                     >
@@ -745,7 +747,7 @@ const Momcad = () => {
                                                                         rowItem.POENI_GOSTI}
                                                                 </td>
                                                             ) : rowInd === 2 ? (
-                                                                <td className="table_link">
+                                                                <td className="momcadLink">
                                                                     <Link
                                                                         to={`/Momcad/${rowItem.GOSTI_NAZIV}`}
                                                                     >

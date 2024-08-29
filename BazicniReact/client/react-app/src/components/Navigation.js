@@ -13,7 +13,6 @@ function Navigation() {
     const [clicked, setClicked] = useState(null);
     const dispatch = useDispatch();
 
-    console.log(clicked);
     return (
         <div className="navigation-container">
             <div className="navigation-tabs">
@@ -31,6 +30,9 @@ function Navigation() {
                 </div>
                 <div className="navigation-tab">
                     <Link to="/Delegat">Delegat</Link>
+                </div>
+                <div className="navigation-tab">
+                    <Link to="/Search">Traži</Link>
                 </div>
                 <div
                     className="navigation-tab tutorial-tab"

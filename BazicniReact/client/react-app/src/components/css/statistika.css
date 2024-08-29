@@ -89,6 +89,8 @@
 
 .tablicaStat {
     display: flex;
+    flex-direction: column;
+    gap: 2vw;
     width: 80vw;
     align-self: center;
     justify-content: center;
@@ -99,6 +101,25 @@
     padding-bottom: 1.5vw;
 }
 
+.statistikaLink a {
+    font-size: 0.7vw;
+    text-decoration: none;
+    color: inherit;
+    font-weight: 650;
+    text-align: left;
+}
+.statistikaLink a:hover {
+    font-weight: bold;
+}
+
+.tablicaStat h2 {
+    align-self: center;
+    width: 25vw;
+    text-align: center;
+    text-wrap: nowrap;
+    padding: 1vw;
+    border-bottom: 1px groove rgb(224, 224, 224);
+}
 .tablicaStat thead th {
     position: sticky;
     top: 0;

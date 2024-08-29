@@ -1,13 +1,17 @@
+.tablicaPage {
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+    background-color: rgb(196, 196, 196);
+}
 .query_container {
-    display: grid;
-    max-width: 70vw;
+    width: 70vw;
     margin: 0 auto;
     margin-top: 7vh;
     margin-bottom: 30px;
     padding: 20px;
-    border-radius: 8px;
-    background-color: #f9f9f9;
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    border-radius: 2px;
+    background-color: rgb(221, 221, 221);
 }
 
 .query_title {
@@ -37,13 +41,13 @@
     font-size: 16px;
     border: 1px solid #ccc;
     border-radius: 4px;
-    background-color: #fff;
+    background-color: rgb(230, 230, 230);
     cursor: pointer;
 }
 
 .dropdown_menu select:focus {
     outline: none;
-    border-color: #007bff;
+    border-color: darkgreen;
 }
 
 .button_query {
@@ -78,7 +82,7 @@
 }
 
 .data-table1 th {
-    background-color: #f2f2f2;
+    background-color: rgb(230, 230, 230);
     text-align: center;
 }
 
@@ -86,15 +90,15 @@
     text-align: center;
 }
 .data-table1 tr:nth-child(even) {
-    background-color: #f9f9f9;
+    background-color: #d4d4d4;
 }
 
 .data-table1 tr:hover {
-    background-color: #ddd;
+    background-color: #ececec;
 }
 
 .table_link a {
-    font-size: 0.7vw;
+    font-size: 0.9vw;
     text-decoration: none;
     color: inherit;
     font-weight: 750;
