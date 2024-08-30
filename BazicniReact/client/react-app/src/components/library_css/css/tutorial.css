@@ -47,7 +47,7 @@
     left: -75%; /* Align to the left */
     transform: scale(1.05);
     width: 80vw; /* Full width when clicked */
-    height: 70vh; /* Expanded height when video is shown */
+    height: 88vh; /* Expanded height when video is shown */
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2); /* Enhanced shadow when clicked */
     z-index: 10;
 }
@@ -108,9 +108,9 @@
 
 .card.clicked .video-container {
     opacity: 1;
-    height: 90%; /* Nearly full height when video is shown */
+    height: 100%; /* Nearly full height when video is shown */
     width: 100%; /* Full width on click */
-    top: 50%; /* Center vertically */
+    top: 55%; /* Center vertically */
     left: 50%; /* Center horizontally */
     transform: translate(-50%, -50%); /* Ensure it's centered */
 }

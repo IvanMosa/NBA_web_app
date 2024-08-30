@@ -465,6 +465,9 @@ const Momcad = () => {
                                                                             }
                                                                         </Link>
                                                                     </td>
+                                                                ) : rowInd ===
+                                                                  1 ? (
+                                                                    <>{row}m</>
                                                                 ) : (
                                                                     promjene[
                                                                         rowItem[0]

@@ -12,6 +12,11 @@ function Search() {
     const [igraci, setIgraci] = useState([]);
     const [momcadi, setMomcadi] = useState([]);
 
+    const [hoverIgraci, setHoverIgraci] = useState(false);
+    const [clickIgraci, setClickIgraci] = useState(true);
+    const [hoverMomcadi, setHoverMomcadi] = useState(false);
+    const [clickMomcadi, setClickMomcadi] = useState(false);
+
     const igraciKolone = [
         { ime: 'NAZIV', stil: 'left' },
         { ime: 'MOMCAD' },
@@ -47,11 +52,6 @@ function Search() {
         }
     }, []);
 
-    const handleTypeChange = (e) => {
-        setSearchType(e.target.value);
-        setPage(1);
-    };
-
     useEffect(() => {
         if (searchType == 'igraci') {
             setResults(igraci);
@@ -60,10 +60,19 @@ function Search() {
         }
     }, [searchType]);
 
-    const brojPage = Math.ceil(results.length / 50);
+    const filteredResults =
+        query === ''
+            ? results
+            : results.filter((item) => {
+                  return searchType === 'igraci'
+                      ? item.IGRAC.toLowerCase().includes(query.toLowerCase())
+                      : item.MOMCAD.toLowerCase().includes(query.toLowerCase());
+              });
+
+    const brojPage = Math.ceil(filteredResults.length / 50);
     const startIndex = (page - 1) * 50;
     const endIndex = searchType === 'igraci' ? startIndex + 50 : results.length;
-    const paginatedResults = results.slice(startIndex, endIndex);
+    const paginatedResults = filteredResults.slice(startIndex, endIndex);
 
     const handlePageChange = (newPage) => {
         setPage(newPage);
@@ -84,33 +93,92 @@ function Search() {
 
                 <div className="searchOdabir">
                     <div className="searchControls">
-                        <select onChange={handleTypeChange} value={searchType}>
-                            <option value="igraci">Igrači</option>
-                            <option value="momcadi">Momčadi</option>
-                        </select>
+                        <button
+                            onClick={() => {
+                                setSearchType('igraci');
+                                setHoverIgraci(false);
+                                setHoverMomcadi(false);
+                                setClickMomcadi(false);
+                                setClickIgraci(true);
+                            }}
+                            onMouseEnter={() => setHoverIgraci(true)}
+                            onMouseLeave={() =>
+                                clickMomcadi && setHoverIgraci(false)
+                            }
+                            className={
+                                !clickMomcadi && clickIgraci ? 'oznacen' : ''
+                            }
+                            style={{
+                                borderBottom: hoverIgraci
+                                    ? '3px solid black'
+                                    : '',
+                            }}
+                        >
+                            Igrači
+                        </button>
+                        <button
+                            onClick={() => {
+                                setSearchType('momcadi');
+                                setHoverIgraci(false);
+                                setHoverMomcadi(false);
+                                setClickMomcadi(true);
+                                setClickIgraci(false);
+                            }}
+                            onMouseEnter={() => setHoverMomcadi(true)}
+                            onMouseLeave={() =>
+                                clickIgraci && setHoverMomcadi(false)
+                            }
+                            className={
+                                clickMomcadi && !clickIgraci ? 'oznacen' : ''
+                            }
+                            style={{
+                                borderBottom: hoverMomcadi
+                                    ? '3px solid black'
+                                    : '',
+                            }}
+                        >
+                            Momčadi
+                        </button>
                     </div>
 
                     {searchType === 'igraci' && results.length > 50 && (
                         <div className="pagination">
-                            <h3>{results.length} Retka</h3>•
+                            <h3>
+                                {filteredResults.length}{' '}
+                                {filteredResults.length > 1
+                                    ? 'Igrača'
+                                    : 'Igrač'}
+                            </h3>
+                            •
                             <h3>
                                 Stranica: {page} od {brojPage}
                             </h3>
-                            •
-                            <div className="paginationButtons">
-                                <button
-                                    onClick={() => handlePageChange(page - 1)}
-                                    disabled={page === 1}
-                                >
-                                    <i className="fa-solid fa-chevron-left"></i>
-                                </button>
-                                <button
-                                    onClick={() => handlePageChange(page + 1)}
-                                    disabled={endIndex >= results.length}
-                                >
-                                    <i className="fa-solid fa-chevron-right"></i>
-                                </button>
-                            </div>
+                            {filteredResults.length > 50 && (
+                                <>
+                                    •
+                                    <div className="paginationButtons">
+                                        <button
+                                            onClick={() =>
+                                                handlePageChange(page - 1)
+                                            }
+                                            disabled={page === 1}
+                                        >
+                                            <i className="fa-solid fa-chevron-left"></i>
+                                        </button>
+                                        <button
+                                            onClick={() =>
+                                                handlePageChange(page + 1)
+                                            }
+                                            disabled={
+                                                endIndex >=
+                                                filteredResults.length
+                                            }
+                                        >
+                                            <i className="fa-solid fa-chevron-right"></i>
+                                        </button>
+                                    </div>
+                                </>
+                            )}
                         </div>
                     )}
                 </div>
@@ -132,22 +200,7 @@ function Search() {
                             </tr>
                         </thead>
                         <tbody>
-                            {(query === ''
-                                ? paginatedResults
-                                : results
-                                      .filter((item) => {
-                                          return query.toLowerCase() === ''
-                                              ? item
-                                              : searchType == 'igraci'
-                                              ? item.IGRAC.toLowerCase().includes(
-                                                    query.toLowerCase()
-                                                )
-                                              : item.MOMCAD.toLowerCase().includes(
-                                                    query.toLowerCase()
-                                                );
-                                      })
-                                      .slice(startIndex, endIndex)
-                            ).map((result, index) => (
+                            {paginatedResults.map((result, index) => (
                                 <tr key={index}>
                                     <td
                                         className="searchLink"

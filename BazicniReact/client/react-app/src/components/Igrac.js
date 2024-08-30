@@ -149,7 +149,7 @@ function Igrac() {
                     </div>
                     <div className="podatak">
                         <h4>VISINA</h4>
-                        <h5>{podatci && podatci[1]}</h5>
+                        <h5>{podatci && podatci[1]}m</h5>
                     </div>
                     <div className="podatak">
                         <h4>TEŽINA</h4>

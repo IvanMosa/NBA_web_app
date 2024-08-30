@@ -56,14 +56,29 @@
     justify-content: start;
 }
 
-.searchControls select {
-    height: 3vh;
-    width: 6vw;
+.searchControls {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap: 0.5vw;
     padding-left: 0.2vw;
     border: none;
     border-radius: 4px;
 }
 
+.searchControls button {
+    border: none;
+    height: 100%;
+    padding-left: 0.7vw;
+    padding-right: 0.7vw;
+    padding-bottom: 0.2vw;
+    background-color: rgb(214, 214, 214);
+    font-size: 0.9vw;
+    cursor: pointer;
+}
+.searchControls button.oznacen {
+    border-bottom: 3px solid black;
+}
 .pagination {
     display: flex;
     flex-direction: row;
@@ -73,6 +88,7 @@
 }
 
 .pagination h3 {
+    font-size: 1.1vw;
     font-weight: 600;
 }
 .pagination button {
@@ -112,8 +128,8 @@
     max-height: 8vh;
     max-width: 3.5vw;
 
-    border-radius: 50%; /* Makes the image circular */
-    background-color: rgb(218, 218, 218);
+    border-radius: 65%; /* Makes the image circular */
+    background-color: rgb(223, 223, 223);
     overflow: hidden;
     margin-right: 0.8vw; /* Adds space between the image and the text */
     vertical-align: middle;
@@ -131,7 +147,6 @@
 
 .player-image {
     width: 100%;
-    height: auto;
     object-fit: fill;
     display: block; /* Ensures the image behaves like a block element */
 }

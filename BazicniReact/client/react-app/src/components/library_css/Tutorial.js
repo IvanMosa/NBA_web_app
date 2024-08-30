@@ -10,29 +10,31 @@ function Tutorial({ setClickedNavigation }) {
     const components = [
         {
             name: 'Tablica',
-            path: '/tablica',
             description: 'Prikaz poretka na tablici te prikaz pojedine momčadi',
-            videoSrc: 'tablica.mp4',
+            videoSrc: '/tablica.mp4',
         },
         {
             name: 'Trade players',
-            path: '/trade',
             description: 'Unos trade-a igrač za igrača',
-            videoSrc: 'trade.mp4',
+            videoSrc: '/trade.mp4',
         },
         {
             name: 'Statistika',
-            path: '/statistika',
             description:
                 'Prikaz statističkih podataka igrača na pojedinoj utakmici',
-            videoSrc: 'statistika.mp4',
+            videoSrc: '/statistika.mp4',
         },
         {
             name: 'Delegat',
-            path: '/Delegat',
             description:
                 'Unos statističkih podataka za vođenje evidencije NBA lige',
-            videoSrc: 'delegat.mp4',
+            videoSrc: '/delegat.mp4',
+        },
+        {
+            name: 'Igraci',
+            description:
+                'Pronađite igrača koji vas zanima i saznajte sve podatke o njemu',
+            videoSrc: '/igraci.mp4',
         },
     ];
 
@@ -61,9 +63,6 @@ function Tutorial({ setClickedNavigation }) {
                             setClicked(!clicked);
                         }}
                         onMouseEnter={() => setHoveredIndex(index)}
-                        onMouseLeave={() => {
-                            if (!clicked) setHoveredIndex(null);
-                        }}
                     >
                         <h2>{component.name}</h2>
                         <p>{component.description}</p>

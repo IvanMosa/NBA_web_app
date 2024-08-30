@@ -2,6 +2,7 @@ import * as React from 'react';
 import { useState, useEffect } from 'react';
 import axios from 'axios';
 import '../components/css/trade.css';
+import Logo from './library_css/Logo';
 
 function Trade() {
     const [momcad1, setMomcad1] = useState(' ');
@@ -144,7 +145,14 @@ function Trade() {
                             onChange={(e) => setMomcad1(e.target.value)}
                         >
                             {momcadi.map((item, index) => (
-                                <option key={index}>{item}</option>
+                                <option key={index}>
+                                    <Logo
+                                        imeMomcad={item}
+                                        none={true}
+                                        home={true}
+                                    />
+                                    {item}
+                                </option>
                             ))}
                         </select>
                         <select

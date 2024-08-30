@@ -6,15 +6,18 @@ import { Link } from 'react-router-dom';
 
 const Statistika = ({ imeIgrac, setPoeni, setStatistikaSezona }) => {
     const [igraci, setIgraci] = useState([]);
+    const [podatciSez, setPodatciSez] = useState([]);
     const [imeSezone, setimeSezone] = useState('23/24');
     const [sezone, setSezone] = useState([]);
     const [oznaceniIgrac, setOznaceniIgrac] = useState('Odaberi igrača');
     const [oznacenaMomcad, setOznacenaMomcad] = useState('Odaberi momčad');
+    const [odabirUtkSez, setOdabirUtkSez] = useState('Po utakmici');
     const [izbor, setIzbor] = useState('Igrači');
     const [utakmice, setUtakmice] = useState([]);
+    const [query, setQuery] = useState('');
 
     const columnsIgraci = [
-        { short: 'NAZIV' },
+        { short: 'NAZIV', stil: 'left' },
         { short: 'MOMCAD' },
         { short: 'SUSRET' },
         { short: 'DATUM' },
@@ -45,21 +48,38 @@ const Statistika = ({ imeIgrac, setPoeni, setStatistikaSezona }) => {
         { short: 'DATUM' },
     ];
 
+    const columnsSezona = [
+        { short: 'NAZIV', stil: 'left' },
+        { short: 'MOMČAD' },
+        { short: 'BROJ UTAKMICA' },
+        { short: 'MIN', full: 'MINUTE' },
+        { short: 'P', full: 'POENI' },
+        { short: 'PIP', full: 'POGODCI IZ POLJA' },
+        { short: 'POIP', full: 'POKUŠAJI IZ POLJA' },
+        { short: 'FG%', full: 'POSTOTAK POKUŠAJA IZ POLJA' },
+        { short: 'PT', full: 'POGOĐENE TRICE' },
+        { short: 'PRT', full: 'PROMAŠENE TRICE' },
+        { short: '3P%', full: 'POSTOTAK TRICE' },
+        { short: 'PSB', full: 'POGOĐENA SLOBODNA BACANJA' },
+        { short: 'PRSB', full: 'PROMAŠENA SLOBODNA BACANJA' },
+        { short: 'SB%' },
+    ];
     useEffect(() => {
         const fetchData = async () => {
             try {
                 const result = await axios.post(
                     'http://localhost:4000/getStatistikaIgraci',
-                    { imeIgrac: imeIgrac ? imeIgrac : null }
+                    { imeIgrac: imeIgrac ? imeIgrac : 'Svi' }
                 );
                 setIgraci(result.data.igraci);
                 setSezone(result.data.sezone);
-                if (result.data.karijera)
-                    setStatistikaSezona(result.data.karijera);
+                if (!imeIgrac) setPodatciSez(result.data.karijera);
+                else setStatistikaSezona(result.data.karijera);
 
                 const result1 = await axios.post(
                     'http://localhost:4000/getStatistikaMomcadi'
                 );
+                console.log(result1.data.utakmice);
                 setUtakmice(result1.data.utakmice);
             } catch (err) {
                 console.log(err);
@@ -145,26 +165,50 @@ const Statistika = ({ imeIgrac, setPoeni, setStatistikaSezona }) => {
                             </form>
                         )}
                         {!imeIgrac && izbor == 'Igrači' ? (
-                            <form>
-                                <p className="sezona_text">IGRAČ</p>
-                                <select
-                                    value={oznaceniIgrac}
-                                    onChange={(e) =>
-                                        setOznaceniIgrac(e.target.value)
-                                    }
-                                >
-                                    {[
-                                        'Odaberi igrača',
-                                        ...new Set(
-                                            igraci.map((item) => item.IGRAC)
-                                        ),
-                                    ].map((igrac, index) => (
-                                        <option key={index} value={igrac}>
-                                            {igrac}
-                                        </option>
-                                    ))}
-                                </select>
-                            </form>
+                            <>
+                                <form>
+                                    <p className="sezona_text">IGRAČ</p>
+                                    <select
+                                        value={oznaceniIgrac}
+                                        onChange={(e) =>
+                                            setOznaceniIgrac(e.target.value)
+                                        }
+                                    >
+                                        {[
+                                            'Odaberi igrača',
+                                            ...new Set(
+                                                igraci.map((item) => item.IGRAC)
+                                            ),
+                                        ].map((igrac, index) => (
+                                            <option key={index} value={igrac}>
+                                                {igrac}
+                                            </option>
+                                        ))}
+                                    </select>
+                                </form>
+                                <form>
+                                    <p className="sezona_text">
+                                        PO UTAKMICI / UKUPNO
+                                    </p>
+                                    <select
+                                        value={odabirUtkSez}
+                                        onChange={(e) =>
+                                            setOdabirUtkSez(e.target.value)
+                                        }
+                                    >
+                                        {['Po utakmici', 'Ukupno'].map(
+                                            (odabir, index) => (
+                                                <option
+                                                    key={index}
+                                                    value={odabir}
+                                                >
+                                                    {odabir}
+                                                </option>
+                                            )
+                                        )}
+                                    </select>
+                                </form>
+                            </>
                         ) : (
                             !imeIgrac &&
                             izbor == 'Utakmice' && (
@@ -193,6 +237,14 @@ const Statistika = ({ imeIgrac, setPoeni, setStatistikaSezona }) => {
                                     </select>
                                 </form>
                             )
+                        )}
+                        {!imeIgrac && (
+                            <input
+                                type="text"
+                                placeholder="Traži"
+                                value={query}
+                                onChange={(e) => setQuery(e.target.value)}
+                            />
                         )}
                     </div>
                     {!imeIgrac && izbor == 'Utakmice' ? (
@@ -229,7 +281,13 @@ const Statistika = ({ imeIgrac, setPoeni, setStatistikaSezona }) => {
                                                     rowItem.DOMACI_NAZIV ==
                                                         oznacenaMomcad ||
                                                     rowItem.GOSTI_NAZIV ==
-                                                        oznacenaMomcad)
+                                                        oznacenaMomcad) &&
+                                                (rowItem.DOMACI_NAZIV.toLowerCase().includes(
+                                                    query.toLowerCase()
+                                                ) ||
+                                                    rowItem.GOSTI_NAZIV.toLowerCase().includes(
+                                                        query.toLowerCase()
+                                                    ))
                                             );
                                         })
                                         .map((rowItem, rowIndex) => (
@@ -293,101 +351,272 @@ const Statistika = ({ imeIgrac, setPoeni, setStatistikaSezona }) => {
                     ) : (
                         <div className="tablicaStat">
                             {imeIgrac && <h2>STATISTIKA IGRAČA PO UTAKMICI</h2>}
-                            <table className="data-table">
-                                <thead>
-                                    <tr>
-                                        {columnsIgraci.map(
-                                            (column, columnIndex) => (
-                                                <th
-                                                    key={columnIndex}
-                                                    className="tooltip-container"
-                                                >
-                                                    <span className="short">
-                                                        {column.short}
-                                                    </span>
-                                                    {column.full && (
-                                                        <span className="full">
-                                                            {column.full}
+                            {odabirUtkSez == 'Po utakmici' ? (
+                                <table className="data-table">
+                                    <thead>
+                                        <tr>
+                                            {columnsIgraci.map(
+                                                (column, columnIndex) => (
+                                                    <th
+                                                        key={columnIndex}
+                                                        className="tooltip-container"
+                                                        style={{
+                                                            textAlign:
+                                                                column.stil,
+                                                        }}
+                                                    >
+                                                        <span className="short">
+                                                            {column.short}
                                                         </span>
-                                                    )}
-                                                </th>
-                                            )
-                                        )}
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    {igraci
-                                        .filter((rowItem) => {
-                                            return (
-                                                rowItem.SEZONA == imeSezone &&
-                                                (oznaceniIgrac ===
-                                                    'Odaberi igrača' ||
-                                                    rowItem.IGRAC ===
-                                                        oznaceniIgrac)
-                                            );
-                                        })
-                                        .map((rowItem, rowIndex) => (
-                                            <tr key={rowIndex}>
-                                                {Object.values(rowItem)
-                                                    .slice(0, -3)
-                                                    .map((row, rowInd) => (
-                                                        <React.Fragment
-                                                            key={rowInd}
-                                                        >
-                                                            {rowInd === 0 ||
-                                                            rowInd === 1 ? (
-                                                                <td className="statistikaLink">
-                                                                    <Link
-                                                                        to={
-                                                                            rowInd ===
-                                                                            0
-                                                                                ? `/Igrac/${row}`
-                                                                                : `/Momcad/${rowItem.IGRACMOMCAD}`
-                                                                        }
-                                                                        state={{
-                                                                            imeMomcad:
-                                                                                rowItem.IGRACMOMCAD,
+                                                        {column.full && (
+                                                            <span className="full">
+                                                                {column.full}
+                                                            </span>
+                                                        )}
+                                                    </th>
+                                                )
+                                            )}
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {igraci
+                                            .filter((rowItem) => {
+                                                return (
+                                                    rowItem.SEZONA ==
+                                                        imeSezone &&
+                                                    (oznaceniIgrac ===
+                                                        'Odaberi igrača' ||
+                                                        rowItem.IGRAC ===
+                                                            oznaceniIgrac) &&
+                                                    rowItem.IGRAC.toLowerCase().includes(
+                                                        query.toLowerCase()
+                                                    )
+                                                );
+                                            })
+                                            .map((rowItem, rowIndex) => (
+                                                <tr key={rowIndex}>
+                                                    {Object.values(rowItem)
+                                                        .slice(0, -3)
+                                                        .map((row, rowInd) => (
+                                                            <React.Fragment
+                                                                key={rowInd}
+                                                            >
+                                                                {rowInd === 0 ||
+                                                                rowInd === 1 ? (
+                                                                    <td
+                                                                        className="statistikaLink"
+                                                                        style={{
+                                                                            textAlign:
+                                                                                rowInd ===
+                                                                                    0 &&
+                                                                                'left',
                                                                         }}
                                                                     >
+                                                                        <Link
+                                                                            to={
+                                                                                rowInd ===
+                                                                                0
+                                                                                    ? `/Igrac/${row}`
+                                                                                    : `/Momcad/${rowItem.IGRACMOMCAD}`
+                                                                            }
+                                                                            state={{
+                                                                                imeMomcad:
+                                                                                    rowItem.IGRACMOMCAD,
+                                                                            }}
+                                                                        >
+                                                                            {
+                                                                                row
+                                                                            }
+                                                                        </Link>
+                                                                    </td>
+                                                                ) : rowInd ===
+                                                                  2 ? (
+                                                                    <td className="statistikaLink">
+                                                                        <Link
+                                                                            to={`/Momcad/${rowItem.DOMACI_IME}`}
+                                                                        >
+                                                                            {
+                                                                                rowItem.DOMACI
+                                                                            }
+                                                                        </Link>
+                                                                        <span>
+                                                                            {' '}
+                                                                            vs.{' '}
+                                                                        </span>
+                                                                        <Link
+                                                                            to={`/Momcad/${rowItem.GOSTI_IME}`}
+                                                                        >
+                                                                            {
+                                                                                rowItem.GOSTI
+                                                                            }
+                                                                        </Link>
+                                                                    </td>
+                                                                ) : rowInd ===
+                                                                      3 ||
+                                                                  rowInd ===
+                                                                      4 ? null : (
+                                                                    <td
+                                                                        key={
+                                                                            rowInd
+                                                                        }
+                                                                    >
                                                                         {row}
-                                                                    </Link>
-                                                                </td>
-                                                            ) : rowInd === 2 ? (
-                                                                <td className="statistikaLink">
-                                                                    <Link
-                                                                        to={`/Momcad/${rowItem.DOMACI_IME}`}
-                                                                    >
-                                                                        {
-                                                                            rowItem.DOMACI
-                                                                        }
-                                                                    </Link>
-                                                                    <span>
-                                                                        {' '}
-                                                                        vs.{' '}
-                                                                    </span>
-                                                                    <Link
-                                                                        to={`/Momcad/${rowItem.GOSTI_IME}`}
-                                                                    >
-                                                                        {
-                                                                            rowItem.GOSTI
-                                                                        }
-                                                                    </Link>
-                                                                </td>
-                                                            ) : rowInd === 3 ||
-                                                              rowInd ===
-                                                                  4 ? null : (
-                                                                <td
-                                                                    key={rowInd}
-                                                                >
-                                                                    {row}
-                                                                </td>
+                                                                    </td>
+                                                                )}
+                                                            </React.Fragment>
+                                                        ))}
+                                                </tr>
+                                            ))}
+                                    </tbody>
+                                </table>
+                            ) : (
+                                <div className="tablicaStat">
+                                    <table className="data-table">
+                                        <thead>
+                                            <tr>
+                                                {columnsSezona.map(
+                                                    (column, columnIndex) => (
+                                                        <th
+                                                            key={columnIndex}
+                                                            className="tooltip-container"
+                                                            style={{
+                                                                textAlign:
+                                                                    column.stil,
+                                                            }}
+                                                        >
+                                                            <span className="short">
+                                                                {column.short}
+                                                            </span>
+                                                            {column.full && (
+                                                                <span className="full">
+                                                                    {
+                                                                        column.full
+                                                                    }
+                                                                </span>
                                                             )}
-                                                        </React.Fragment>
-                                                    ))}
+                                                        </th>
+                                                    )
+                                                )}
                                             </tr>
-                                        ))}
-                                </tbody>
-                            </table>
+                                        </thead>
+                                        <tbody>
+                                            {podatciSez
+                                                .filter((rowItem) => {
+                                                    return (
+                                                        rowItem.SEZONA ==
+                                                            imeSezone &&
+                                                        (oznaceniIgrac ===
+                                                            'Odaberi igrača' ||
+                                                            rowItem.IGRAC ===
+                                                                oznaceniIgrac) &&
+                                                        rowItem.IGRAC.toLowerCase().includes(
+                                                            query.toLowerCase()
+                                                        )
+                                                    );
+                                                })
+                                                .map((ugovor, index) => {
+                                                    const MINUTE =
+                                                        ugovor.MINUTE /
+                                                        ugovor.BROJUTAKMICA; // Changed to use 'ugovor'
+                                                    const minutes = MINUTE / 60;
+
+                                                    // Assuming 'season', 'sezonaPrikaz', and 'ugovor' are correctly defined.
+                                                    return (
+                                                        <tr key={index}>
+                                                            <td
+                                                                className="igracLink"
+                                                                style={{
+                                                                    textAlign:
+                                                                        'left',
+                                                                }}
+                                                            >
+                                                                <Link
+                                                                    to={`/Igrac/${ugovor.IGRAC}`}
+                                                                >
+                                                                    {
+                                                                        ugovor.IGRAC
+                                                                    }
+                                                                </Link>
+                                                            </td>
+                                                            <td className="igracLink">
+                                                                <Link
+                                                                    to={`/Momcad/${ugovor.IGRACMOMCAD}`}
+                                                                >
+                                                                    {
+                                                                        ugovor.IGRACMOMCADKRATICA
+                                                                    }
+                                                                </Link>
+                                                            </td>
+                                                            <td>
+                                                                {
+                                                                    ugovor.BROJUTAKMICA
+                                                                }
+                                                            </td>
+                                                            <td>
+                                                                {minutes.toFixed(
+                                                                    1
+                                                                )}
+                                                            </td>
+                                                            <td>
+                                                                {ugovor.POENI.toFixed(
+                                                                    1
+                                                                )}
+                                                            </td>
+                                                            <td>
+                                                                {ugovor.POGODCI_IZ_POLJA.toFixed(
+                                                                    1
+                                                                )}
+                                                            </td>
+                                                            <td>
+                                                                {ugovor.POKUSAJI_IZ_POLJA.toFixed(
+                                                                    1
+                                                                )}
+                                                            </td>
+                                                            <td>
+                                                                {(
+                                                                    ugovor.PP *
+                                                                    100
+                                                                ).toFixed(1)}
+                                                            </td>
+                                                            <td>
+                                                                {ugovor.SUT_ZA_3_POGODEN.toFixed(
+                                                                    1
+                                                                )}
+                                                            </td>
+                                                            <td>
+                                                                {ugovor.SUT_ZA_3_PROMASEN.toFixed(
+                                                                    1
+                                                                )}
+                                                            </td>
+                                                            <td>
+                                                                {(
+                                                                    ugovor.TRI_P *
+                                                                    100
+                                                                ).toFixed(1)}
+                                                            </td>
+                                                            <td>
+                                                                {ugovor.SLOBODNA_BACANJA_POGODENA.toFixed(
+                                                                    1
+                                                                )}
+                                                            </td>
+                                                            <td>
+                                                                {ugovor.SLOBODNA_BACANJA_PROMASENA.toFixed(
+                                                                    1
+                                                                )}
+                                                            </td>
+                                                            <td>
+                                                                {(
+                                                                    ugovor.SB *
+                                                                    100
+                                                                ).toFixed(1)}
+                                                            </td>
+                                                        </tr>
+                                                    );
+                                                })}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            )}
                         </div>
                     )}
                 </div>
