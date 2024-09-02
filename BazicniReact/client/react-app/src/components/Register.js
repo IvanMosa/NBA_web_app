@@ -6,7 +6,13 @@ function Register() {
     const [registerPassword, setRegisterPassword] = useState('');
     const [registerUserName, setRegisterUserName] = useState('');
     const [errorMessage, setErrorMessage] = useState('');
+    const [selectedOptions, setSelectedOptions] = useState('');
 
+    const handleOptionChange = (event) => {
+        const value = event.target.value;
+
+        setSelectedOptions(value);
+    };
     useEffect(() => {}, []);
     const handleSubmitRegister = (e) => {
         console.log(registerUserName, registerPassword);
@@ -19,6 +25,7 @@ function Register() {
             body: JSON.stringify({
                 userName: registerUserName,
                 password: registerPassword,
+                roles: selectedOptions,
             }),
         })
             .then((response) => {
@@ -75,12 +82,64 @@ function Register() {
                                 }}
                             />
                         </div>
+                        <div className="registerRole">
+                            <h4>Odaberi uloge korisnika:</h4>
+                            <div>
+                                <label className="registerRoleLabel">
+                                    <input
+                                        type="radio"
+                                        value="NBA_VIEWER"
+                                        checked={
+                                            selectedOptions == 'NBA_VIEWER'
+                                        }
+                                        onChange={handleOptionChange}
+                                    />
+                                    <h5>
+                                        Default (Pregled početne stranice,
+                                        momčadi, igrača i statistike)
+                                    </h5>
+                                </label>
+                            </div>
+                            <div>
+                                <label className="registerRoleLabel">
+                                    <input
+                                        type="radio"
+                                        value="trade"
+                                        checked={selectedOptions == 'trade'}
+                                        onChange={handleOptionChange}
+                                    />
+                                    <h5>Trade</h5>
+                                </label>
+                            </div>
+                            <div>
+                                <label className="registerRoleLabel">
+                                    <input
+                                        type="radio"
+                                        value="delegat"
+                                        checked={selectedOptions == 'delegat'}
+                                        onChange={handleOptionChange}
+                                    />
+                                    <h5>Delegat</h5>
+                                </label>
+                            </div>
+                            <div>
+                                <label className="registerRoleLabel">
+                                    <input
+                                        type="radio"
+                                        value="register"
+                                        checked={selectedOptions == 'register'}
+                                        onChange={handleOptionChange}
+                                    />
+                                    <h5>Registracija novih korisnika</h5>
+                                </label>
+                            </div>
+                        </div>
                         <button
                             className="submit_register"
                             type="submit"
                             value="submit"
                         >
-                            Create Account
+                            Kreiraj Korisnika
                         </button>
                     </form>
                     {errorMessage && (

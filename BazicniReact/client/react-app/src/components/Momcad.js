@@ -10,7 +10,7 @@ import MySelect from './library_css/MySelect.js';
 import '@fortawesome/fontawesome-free/css/all.min.css';
 import Logo from './library_css/Logo.js';
 
-const Momcad = () => {
+const Momcad = ({ edit }) => {
     const { imeMomcad } = useParams();
     const [igraci, setIgraci] = useState([]);
     const [pozicije, setPozicije] = useState([]);
@@ -508,36 +508,39 @@ const Momcad = () => {
                                                                     </button>
                                                                 </div>
                                                             )}
-                                                        {isEqual(rowIndex) && (
-                                                            <div className="button_div">
-                                                                <button
-                                                                    type="button"
-                                                                    onClick={
-                                                                        handleClick
-                                                                    }
-                                                                >
-                                                                    <i
-                                                                        className={`fas fa-edit`}
-                                                                    ></i>
-                                                                </button>
-                                                            </div>
-                                                        )}
+                                                        {isEqual(rowIndex) &&
+                                                            edit && (
+                                                                <div className="button_div">
+                                                                    <button
+                                                                        type="button"
+                                                                        onClick={
+                                                                            handleClick
+                                                                        }
+                                                                    >
+                                                                        <i
+                                                                            className={`fas fa-edit`}
+                                                                        ></i>
+                                                                    </button>
+                                                                </div>
+                                                            )}
                                                     </div>
                                                 </td>
                                             </tr>
                                         ))}
                                 </tbody>
                             </table>
-                            <div className="button_divs_add">
-                                <div className="button_div">
-                                    <button
-                                        type="button"
-                                        onClick={handleAddClick}
-                                    >
-                                        <i className="fa-solid fa-plus"></i>
-                                    </button>
+                            {edit && (
+                                <div className="button_divs_add">
+                                    <div className="button_div">
+                                        <button
+                                            type="button"
+                                            onClick={handleAddClick}
+                                        >
+                                            <i className="fa-solid fa-plus"></i>
+                                        </button>
+                                    </div>
                                 </div>
-                            </div>
+                            )}
                         </div>
                     ) : (
                         <p>No data available</p>

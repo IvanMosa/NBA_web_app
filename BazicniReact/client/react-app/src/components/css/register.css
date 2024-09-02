@@ -2,11 +2,11 @@
     display: flex;
     flex-direction: column;
     align-items: center;
-    height: 100vh;
     margin-top: 5vh;
 }
 .registration_form {
-    width: 300px;
+    width: 30vw;
+    height: 43vh;
     padding: 20px;
     box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
     border-radius: 10px;
@@ -47,4 +47,28 @@
     color: red;
     margin-top: 15px;
     text-align: center;
+}
+
+.registerRole {
+    display: flex;
+    flex-direction: column;
+    background-color: rgb(230, 230, 230);
+    border-radius: 4px;
+    width: 100%;
+    padding: 0.5vw;
+    gap: 1vh;
+    margin-bottom: 4vh;
+}
+
+.registerRoleLabel {
+    display: flex;
+    flex-direction: row;
+    gap: 5px;
+    align-content: center;
+}
+
+.registerRoleLabel h5 {
+    text-align: center;
+    font-size: 0.8vw;
+    color: gray;
 }

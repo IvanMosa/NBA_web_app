@@ -8,7 +8,7 @@ import * as actions from '../redux/actionTypes';
 import Tutorial from '../components/library_css/Tutorial';
 import './css/navigation.css';
 
-function Navigation() {
+function Navigation({ roles }) {
     const [showTutorial, setShowTutorial] = useState(false);
     const [clicked, setClicked] = useState(null);
     const dispatch = useDispatch();
@@ -22,15 +22,21 @@ function Navigation() {
                 <div className="navigation-tab">
                     <Link to="/tablica">Tablica</Link>
                 </div>
-                <div className="navigation-tab">
-                    <Link to="/trade">Trade players</Link>
-                </div>
+                {roles.includes('trade') ||
+                    (roles == 'all' && (
+                        <div className="navigation-tab">
+                            <Link to="/trade">Trade players</Link>
+                        </div>
+                    ))}
                 <div className="navigation-tab">
                     <Link to="/Statistika">Statistika</Link>
                 </div>
-                <div className="navigation-tab">
-                    <Link to="/Delegat">Delegat</Link>
-                </div>
+                {roles.includes('delegat') ||
+                    (roles == 'all' && (
+                        <div className="navigation-tab">
+                            <Link to="/Delegat">Delegat</Link>
+                        </div>
+                    ))}
                 <div className="navigation-tab">
                     <Link to="/Search">Traži</Link>
                 </div>
@@ -51,9 +57,12 @@ function Navigation() {
             </div>
 
             <div className="navigation-logOut">
-                <div className="navigation-logOut1">
-                    <Link to="/register">Register User</Link>
-                </div>
+                {roles.includes('register') ||
+                    (roles == 'all' && (
+                        <div className="navigation-logOut1">
+                            <Link to="/register">Register User</Link>
+                        </div>
+                    ))}
                 <div
                     className="navigation-logOut1"
                     onClick={() => {

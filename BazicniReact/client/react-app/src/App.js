@@ -16,20 +16,40 @@ import Delegat from './components/Delegat';
 import Search from './components/Search';
 function App() {
     const token = useSelector((status) => localStorage.getItem('token'));
+    const roles = useSelector((status) => localStorage.getItem('roles'));
 
     if (token) {
         return (
             <BrowserRouter>
-                <Navigation />
+                <Navigation roles={roles} />
                 <Routes>
                     <Route path="/" element={<Home />} />
                     <Route path="/Tablica" element={<Tablica />} />
-                    <Route path="/Momcad/:imeMomcad" element={<Momcad />} />
-                    <Route path="/Register" element={<Register />} />
+                    <Route
+                        path="/Momcad/:imeMomcad"
+                        element={
+                            <Momcad
+                                edit={
+                                    roles.includes('urediMomcad') ||
+                                    roles == 'all'
+                                }
+                            />
+                        }
+                    />
+                    {roles.includes('register') ||
+                        (roles == 'all' && (
+                            <Route path="/Register" element={<Register />} />
+                        ))}
                     <Route path="/Igrac/:imeIgrac" element={<Igrac />} />
-                    <Route path="/Trade" element={<Trade />} />
+                    {roles.includes('trade') ||
+                        (roles == 'all' && (
+                            <Route path="/Trade" element={<Trade />} />
+                        ))}
                     <Route path="/Statistika" element={<Statistika />} />
-                    <Route path="/Delegat" element={<Delegat />} />
+                    {roles.includes('delegat') ||
+                        (roles == 'all' && (
+                            <Route path="/Delegat" element={<Delegat />} />
+                        ))}
                     <Route path="/Search" element={<Search />} />
                     <Route path="/*" element={<Home />} />
                 </Routes>

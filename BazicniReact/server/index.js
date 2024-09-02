@@ -23,8 +23,9 @@ app.use(function (err, req, res, next) {
 async function init() {
     try {
         await oracledb.createPool({
-            user: dbConfig.user,
-            password: dbConfig.password,
+            poolAlias: 'adminPool',
+            user: 'NBA',
+            password: dbConfig.user['NBA'].password,
             connectString: dbConfig.connectString,
         });
         console.log('Connection pool started');
@@ -34,6 +35,22 @@ async function init() {
 }
 
 init();
+
+async function initUserPool(username, user_uloga) {
+    try {
+        console.log(user_uloga);
+        console.log(dbConfig.user[user_uloga].password);
+        await oracledb.createPool({
+            user: user_uloga,
+            password: dbConfig.user[user_uloga].password,
+            connectString: dbConfig.connectString,
+        });
+
+        console.log(`Connection pool created for user: ${username}`);
+    } catch (err) {
+        console.error('Error creating user pool:', err);
+    }
+}
 
 app.listen(4000, function () {
     console.log('listening to the port 4000');
@@ -79,11 +96,11 @@ app.post('/login', async (req, res) => {
     let connection;
 
     try {
-        connection = await oracledb.getConnection();
+        connection = await oracledb.getConnection('adminPool');
         const { userName, password } = req.body;
 
         const result = await connection.execute(
-            `SELECT K.NAZIV, K.SIFRA AS SIFRA FROM KORISNICI K WHERE K.NAZIV = :userName`,
+            `SELECT K.NAZIV, K.SIFRA AS SIFRA, K.USER_ULOGA FROM NBA.KORISNICI K WHERE K.NAZIV = :userName`,
             { userName },
             {
                 resultSet: true,
@@ -123,7 +140,12 @@ app.post('/login', async (req, res) => {
                                 user: { userName: userName },
                             };
 
-                            res.status(200).json({ token: token });
+                            initUserPool(row.NAZIV, row.USER_ULOGA);
+
+                            res.status(200).json({
+                                token: token,
+                                roles: dbConfig.user[row.USER_ULOGA].roles,
+                            });
                         } else {
                             console.log(
                                 'Passwords do not match! Authentication failed.'
@@ -162,38 +184,25 @@ app.post('/login', async (req, res) => {
 app.post('/register', async (req, res) => {
     let connection;
     const saltRounds = 10;
-    const { userName, password } = req.body;
-    let hashedPass;
-
-    bcrypt.genSalt(saltRounds, (err, salt) => {
-        if (err) {
-            console.log('Failed to generate salt');
-            return;
-        }
-        bcrypt.hash(password, salt, (err, hash) => {
-            if (err) {
-                console.log('Failed to hash the password');
-                return;
-            }
-            hashedPass = hash;
-            console.log('Hashed password:', hash);
-        });
-    });
+    const { userName, password, roles } = req.body;
 
     try {
+        const salt = await bcrypt.genSalt(saltRounds);
+        const hashedPass = await bcrypt.hash(password, salt);
+        console.log(hashedPass);
+
         connection = await oracledb.getConnection();
         const result = await connection.execute(
-            `INSERT INTO KORISNICI(NAZIV, SIFRA) VALUES(:userName, :hashedPass)`,
+            `INSERT INTO NBA.KORISNICI(NAZIV, SIFRA) VALUES(:userName, :hashedPass)`,
             {
-                userName,
-                hashedPass,
+                userName: userName,
+                hashedPass: hashedPass,
             },
             {
                 autoCommit: true,
             }
         );
 
-        console.log('Result:', result);
         if (result.rowsAffected === 1) {
             res.status(201).send({ message: 'User registered successfully' });
         } else {
@@ -216,6 +225,13 @@ app.post('/register', async (req, res) => {
     }
 });
 
+app.post('/logout', async (req, res) => {
+    try {
+        await oracledb.getPool().close();
+    } catch (err) {
+        console.log(err);
+    }
+});
 //Momčadi sortirane po izboru korisnika (Konferencija / Divizija) API
 app.post('/ShowMomcadi', async (req, res) => {
     let connection;
@@ -226,7 +242,7 @@ app.post('/ShowMomcadi', async (req, res) => {
 
     let sql_SELECT =
         "SELECT M.NAZIV AS NAZIV, VML.BROJ_POBJEDA, VML.BROJ_PORAZA, VML.KONACNI_PLASMAN AS KONACNI_PLASMAN, L.NAZIV || ' ' || L.SEZONA AS SEZONA";
-    let sql_FROM = ' FROM VEZE_MOMCAD_LIGE VML, LIGE L, MOMCAD M';
+    let sql_FROM = ' FROM NBA.VEZE_MOMCAD_LIGE VML, NBA.LIGE L, NBA.MOMCAD M';
     let sql_WHERE =
         ' WHERE VML.MOMCAD_ID = M.MOMCAD_ID AND VML.LIGA_ID = L.LIGA_ID';
 
@@ -237,12 +253,12 @@ app.post('/ShowMomcadi', async (req, res) => {
 
     if (Konf_Div === 'Konferencija') {
         sql_SELECT += ', KON.NAZIV';
-        sql_FROM += ', KONFERENCIJE KON';
+        sql_FROM += ', NBA.KONFERENCIJE KON';
         sql_WHERE +=
             ' AND VML.KONFERENCIJA_ID = KON.KONFERENCIJA_ID ORDER BY KONACNI_PLASMAN';
     } else if (Konf_Div === 'Divizija') {
         sql_SELECT += ', DIV.NAZIV';
-        sql_FROM += ', DIVIZIJE DIV';
+        sql_FROM += ', NBA.DIVIZIJE DIV';
         sql_WHERE +=
             ' AND VML.DIVIZIJA_ID = DIV.DIVIZIJA_ID ORDER BY KONACNI_PLASMAN';
     }
@@ -250,7 +266,6 @@ app.post('/ShowMomcadi', async (req, res) => {
         connection = await oracledb.getConnection();
         const sql = sql_SELECT + sql_FROM + sql_WHERE;
         const result = await connection.execute(sql, params);
-        console.log('Konferencija 22/23: ', result.rows);
         res.json(result.rows);
     } catch (err) {
         console.error(err);
@@ -272,17 +287,21 @@ app.get('/getMomcadi', async (req, res) => {
 
     try {
         connection = await oracledb.getConnection();
-        const result = await connection.execute(`SELECT M.NAZIV FROM MOMCAD M`);
+        const result = await connection.execute(
+            `SELECT M.NAZIV FROM NBA.MOMCAD M`
+        );
         const result1 = await connection.execute(
-            `SELECT L.SEZONA FROM LIGE L ORDER BY SEZONA DESC`
+            `SELECT L.SEZONA FROM NBA.LIGE L ORDER BY SEZONA DESC`
         );
         const result2 = await connection.execute(
-            `SELECT K.NAZIV FROM KONFERENCIJE K`
+            `SELECT K.NAZIV FROM NBA.KONFERENCIJE K`
         );
         const result3 = await connection.execute(
-            `SELECT D.NAZIV FROM DIVIZIJE D`
+            `SELECT D.NAZIV FROM NBA.DIVIZIJE D`
         );
-        const result4 = await connection.execute('SELECT S.NAZIV FROM SUDCI S');
+        const result4 = await connection.execute(
+            'SELECT S.NAZIV FROM NBA.SUDCI S'
+        );
         res.json({
             momcad: result.rows,
             sezona: result1.rows,
@@ -312,10 +331,10 @@ app.post('/showRoster', async (req, res) => {
     const imeMomcad = req.body.imeMomcad;
     let hasImeMomcad = imeMomcad ? imeMomcad.trim().length > 0 : false;
 
-    let sql2 = 'SELECT D.NAZIV FROM DRZAVE D ORDER BY D.NAZIV';
-    let sql1 = 'SELECT P.NAZIV FROM POZICIJE P ORDER BY P.NAZIV';
+    let sql2 = 'SELECT D.NAZIV FROM NBA.DRZAVE D ORDER BY D.NAZIV';
+    let sql1 = 'SELECT P.NAZIV FROM NBA.POZICIJE P ORDER BY P.NAZIV';
     let sql =
-        "SELECT I.NAZIV, NVL(I.VISINA, ' '), NVL(D.NAZIV,' '), NVL(P.NAZIV,' '), SUBSTR(VMI.DATUM_OD,1, 10), I.BROJ_DRESA, M.MOMCAD_ID, I.IGRAC_ID, SUBSTR(I.DATUM_ROD,1, 10), I.DRAFT, I.TEZINA FROM VEZE_MOMCAD_IGRACI VMI, MOMCAD M, IGRACI I, POZICIJE P, DRZAVE D WHERE VMI.MOMCAD_ID = M.MOMCAD_ID AND VMI.IGRAC_ID = I.IGRAC_ID AND I.POZICIJA_ID = P.POZICIJA_ID(+) AND I.DRZAVA_ID = D.DRZAVA_ID(+) AND VMI.STATUS_ID = 1";
+        "SELECT I.NAZIV, NVL(I.VISINA, ' '), NVL(D.NAZIV,' '), NVL(P.NAZIV,' '), SUBSTR(VMI.DATUM_OD,1, 10), I.BROJ_DRESA, M.MOMCAD_ID, I.IGRAC_ID, SUBSTR(I.DATUM_ROD,1, 10), I.DRAFT, I.TEZINA FROM NBA.VEZE_MOMCAD_IGRACI VMI, NBA.MOMCAD M, NBA.IGRACI I, NBA.POZICIJE P, NBA.DRZAVE D WHERE VMI.MOMCAD_ID = M.MOMCAD_ID AND VMI.IGRAC_ID = I.IGRAC_ID AND I.POZICIJA_ID = P.POZICIJA_ID(+) AND I.DRZAVA_ID = D.DRZAVA_ID(+) AND VMI.STATUS_ID = 1";
     if (hasImeMomcad) {
         sql += ' AND M.NAZIV = :imeMomcad';
     }
@@ -327,7 +346,6 @@ app.post('/showRoster', async (req, res) => {
             });
             const result2 = await connection.execute(sql1);
             const result3 = await connection.execute(sql2);
-            console.log(result1.rows);
             return res.json({
                 igraci: result1.rows,
                 pozicije: result2.rows,
@@ -370,9 +388,9 @@ app.post('/showRosterTrade', async (req, res) => {
     let hasImeMomcad1 = imeMomcad1 ? imeMomcad1.trim().length > 0 : false;
 
     let sql2 =
-        'SELECT I.NAZIV FROM VEZE_MOMCAD_IGRACI VMI, IGRACI I, MOMCAD M WHERE VMI.MOMCAD_ID = M.MOMCAD_ID AND VMI.IGRAC_ID = I.IGRAC_ID AND VMI.STATUS_ID = 1';
+        'SELECT I.NAZIV FROM NBA.VEZE_MOMCAD_IGRACI VMI, NBA.IGRACI I, NBA.MOMCAD M WHERE VMI.MOMCAD_ID = M.MOMCAD_ID AND VMI.IGRAC_ID = I.IGRAC_ID AND VMI.STATUS_ID = 1';
     let sql =
-        'SELECT I.NAZIV FROM VEZE_MOMCAD_IGRACI VMI, MOMCAD M, IGRACI I WHERE VMI.MOMCAD_ID = M.MOMCAD_ID AND VMI.IGRAC_ID = I.IGRAC_ID AND VMI.STATUS_ID = 1';
+        'SELECT I.NAZIV FROM NBA.VEZE_MOMCAD_IGRACI VMI, NBA.MOMCAD M, NBA.IGRACI I WHERE VMI.MOMCAD_ID = M.MOMCAD_ID AND VMI.IGRAC_ID = I.IGRAC_ID AND VMI.STATUS_ID = 1';
 
     try {
         connection = await oracledb.getConnection();
@@ -443,27 +461,27 @@ app.post('/insertTrade', async (req, res) => {
     let hasDatum_Igrac = dDatum_Igrac.trim().length > 0;
 
     let unesenDatum_1 =
-        "UPDATE VEZE_MOMCAD_IGRACI SET DATUM_DO = TO_DATE(:dDatum_Igrac,'YYYY-MM-DD') WHERE IGRAC_ID = :nIgrac1_id AND STATUS_ID = 1";
+        "UPDATE NBA.VEZE_MOMCAD_IGRACI SET DATUM_DO = TO_DATE(:dDatum_Igrac,'YYYY-MM-DD') WHERE IGRAC_ID = :nIgrac1_id AND STATUS_ID = 1";
     let neUnesenDatum_1 =
-        'UPDATE VEZE_MOMCAD_IGRACI SET DATUM_DO = sysdate WHERE IGRAC_ID = :nIgrac1_id AND STATUS_ID = 1';
+        'UPDATE NBA.VEZE_MOMCAD_IGRACI SET DATUM_DO = sysdate WHERE IGRAC_ID = :nIgrac1_id AND STATUS_ID = 1';
     let ugasiStatus_1 =
-        'UPDATE VEZE_MOMCAD_IGRACI SET STATUS_ID = 0 WHERE IGRAC_ID = :nIgrac1_id AND STATUS_ID = 1';
+        'UPDATE NBA.VEZE_MOMCAD_IGRACI SET STATUS_ID = 0 WHERE IGRAC_ID = :nIgrac1_id AND STATUS_ID = 1';
 
     let unesenDatum_2 =
-        "UPDATE VEZE_MOMCAD_IGRACI SET DATUM_DO = TO_DATE(:dDatum_Igrac,'YYYY-MM-DD')  WHERE IGRAC_ID = :nIgrac2_id AND STATUS_ID = 1";
+        "UPDATE NBA.VEZE_MOMCAD_IGRACI SET DATUM_DO = TO_DATE(:dDatum_Igrac,'YYYY-MM-DD')  WHERE IGRAC_ID = :nIgrac2_id AND STATUS_ID = 1";
     let neUnesenDatum_2 =
-        'UPDATE VEZE_MOMCAD_IGRACI SET DATUM_DO = sysdate WHERE IGRAC_ID = :nIgrac2_id AND STATUS_ID = 1';
+        'UPDATE NBA.VEZE_MOMCAD_IGRACI SET DATUM_DO = sysdate WHERE IGRAC_ID = :nIgrac2_id AND STATUS_ID = 1';
     let ugasiStatus_2 =
-        'UPDATE VEZE_MOMCAD_IGRACI SET STATUS_ID = 0 WHERE IGRAC_ID = :nIgrac2_id AND STATUS_ID = 1';
+        'UPDATE NBA.VEZE_MOMCAD_IGRACI SET STATUS_ID = 0 WHERE IGRAC_ID = :nIgrac2_id AND STATUS_ID = 1';
 
     let insertJedan_datum =
-        "INSERT INTO VEZE_MOMCAD_IGRACI (MOMCAD_ID, IGRAC_ID, DATUM_OD, STATUS_ID) VALUES (:nMomcad2_id, :nIgrac1_id, TO_DATE(:dDatum_Igrac,'YYYY-MM-DD'), 1)";
+        "INSERT INTO NBA.VEZE_MOMCAD_IGRACI (MOMCAD_ID, IGRAC_ID, DATUM_OD, STATUS_ID) VALUES (:nMomcad2_id, :nIgrac1_id, TO_DATE(:dDatum_Igrac,'YYYY-MM-DD'), 1)";
     let insertDva_datum =
-        "INSERT INTO VEZE_MOMCAD_IGRACI (MOMCAD_ID, IGRAC_ID, DATUM_OD, STATUS_ID) VALUES (:nMomcad1_id, :nIgrac2_id, TO_DATE(:dDatum_Igrac,'YYYY-MM-DD'), 1)";
+        "INSERT INTO NBA.VEZE_MOMCAD_IGRACI (MOMCAD_ID, IGRAC_ID, DATUM_OD, STATUS_ID) VALUES (:nMomcad1_id, :nIgrac2_id, TO_DATE(:dDatum_Igrac,'YYYY-MM-DD'), 1)";
     let insertJedan =
-        'INSERT INTO VEZE_MOMCAD_IGRACI (MOMCAD_ID, IGRAC_ID, DATUM_OD, STATUS_ID) VALUES (:nMomcad2_id, :nIgrac1_id, sysdate, 1)';
+        'INSERT INTO NBA.VEZE_MOMCAD_IGRACI (MOMCAD_ID, IGRAC_ID, DATUM_OD, STATUS_ID) VALUES (:nMomcad2_id, :nIgrac1_id, sysdate, 1)';
     let insertDva =
-        'INSERT INTO VEZE_MOMCAD_IGRACI (MOMCAD_ID, IGRAC_ID, DATUM_OD, STATUS_ID) VALUES (:nMomcad1_id, :nIgrac2_id, sysdate, 1)';
+        'INSERT INTO NBA.VEZE_MOMCAD_IGRACI (MOMCAD_ID, IGRAC_ID, DATUM_OD, STATUS_ID) VALUES (:nMomcad1_id, :nIgrac2_id, sysdate, 1)';
 
     let sql = '';
     let nMomcad1_id;
@@ -475,7 +493,7 @@ app.post('/insertTrade', async (req, res) => {
         connection = await oracledb.getConnection();
         if (hasMomcad1 && hasMomcad2 && hasIgrac1) {
             let sql1 =
-                'SELECT M1.MOMCAD_ID AS MOMCAD1, M2.MOMCAD_ID AS MOMCAD2 FROM  MOMCAD M1, MOMCAD M2 WHERE M1.NAZIV = :momcad1 AND M2.NAZIV = :momcad2';
+                'SELECT M1.MOMCAD_ID AS MOMCAD1, M2.MOMCAD_ID AS MOMCAD2 FROM  NBA.MOMCAD M1, NBA.MOMCAD M2 WHERE M1.NAZIV = :momcad1 AND M2.NAZIV = :momcad2';
             const result = await connection.execute(
                 sql1,
                 {
@@ -490,7 +508,7 @@ app.post('/insertTrade', async (req, res) => {
             nMomcad2_id = result.rows[0].MOMCAD2;
 
             let sql2 =
-                'SELECT I.IGRAC_ID FROM  IGRACI I WHERE I.NAZIV = :igrac1';
+                'SELECT I.IGRAC_ID FROM NBA.IGRACI I WHERE I.NAZIV = :igrac1';
             const result1 = await connection.execute(
                 sql2,
                 {
@@ -524,7 +542,7 @@ app.post('/insertTrade', async (req, res) => {
 
             if (hasIgrac2) {
                 let sql3 =
-                    'SELECT I.IGRAC_ID FROM IGRACI I WHERE I.NAZIV = :igrac2';
+                    'SELECT I.IGRAC_ID FROM NBA.IGRACI I WHERE I.NAZIV = :igrac2';
                 const result = await connection.execute(
                     sql3,
                     { igrac2 },
@@ -582,7 +600,7 @@ app.post('/promjeneMomcad', async (req, res) => {
     }
     try {
         connection = await oracledb.getConnection();
-
+        console.log(oracledb.getPool());
         for (let i = 0; i < promjeneAPI.length; i++) {
             if (promjeneAPI[i]) {
                 console.log('Promjene za : ', promjeneAPI[i].ime);
@@ -600,7 +618,7 @@ app.post('/promjeneMomcad', async (req, res) => {
                             if (!(podatak === undefined)) {
                                 console.log(podatak);
                                 sql +=
-                                    'UPDATE IGRACI SET NAZIV = :podatak WHERE IGRACI.NAZIV = :ime';
+                                    'UPDATE NBA.IGRACI SET NAZIV = :podatak WHERE IGRACI.NAZIV = :ime';
                                 params.push(podatak, ime);
                             }
                         }
@@ -608,7 +626,7 @@ app.post('/promjeneMomcad', async (req, res) => {
                             podatak = promjeneAPI[i].promjene[j];
                             if (!(podatak === undefined)) {
                                 sql +=
-                                    'UPDATE IGRACI SET VISINA = :podatak WHERE IGRACI.NAZIV = :ime';
+                                    'UPDATE NBA.IGRACI SET VISINA = :podatak WHERE IGRACI.NAZIV = :ime';
                                 params.push(podatak, ime);
                             }
                         }
@@ -616,7 +634,7 @@ app.post('/promjeneMomcad', async (req, res) => {
                             let podatak1 = promjeneAPI[i].promjene[j];
                             if (!(podatak1 === undefined)) {
                                 sql +=
-                                    'SELECT D.DRZAVA_ID FROM DRZAVE D WHERE D.NAZIV = :podatak1';
+                                    'SELECT D.DRZAVA_ID FROM NBA.DRZAVE D WHERE D.NAZIV = :podatak1';
                                 const result = await connection.execute(
                                     sql,
                                     {
@@ -629,7 +647,7 @@ app.post('/promjeneMomcad', async (req, res) => {
                                 sql = '';
                                 podatak = result.rows[0].DRZAVA_ID;
                                 sql +=
-                                    'UPDATE IGRACI SET DRZAVA_ID = :podatak WHERE IGRACI.NAZIV = :ime';
+                                    'UPDATE NBA.IGRACI SET DRZAVA_ID = :podatak WHERE IGRACI.NAZIV = :ime';
                                 params.push(podatak, ime);
                             }
                         }
@@ -638,7 +656,7 @@ app.post('/promjeneMomcad', async (req, res) => {
                             if (!(podatak1 === undefined)) {
                                 console.log(podatak1);
                                 sql +=
-                                    'SELECT P.POZICIJA_ID FROM POZICIJE P WHERE P.NAZIV = :podatak1';
+                                    'SELECT P.POZICIJA_ID FROM NBA.POZICIJE P WHERE P.NAZIV = :podatak1';
                                 const result = await connection.execute(
                                     sql,
                                     {
@@ -651,14 +669,14 @@ app.post('/promjeneMomcad', async (req, res) => {
                                 sql = '';
                                 podatak = result.rows[0].POZICIJA_ID;
                                 sql +=
-                                    'UPDATE IGRACI SET POZICIJA_ID = :podatak WHERE IGRACI.NAZIV = :ime';
+                                    'UPDATE NBA.IGRACI SET POZICIJA_ID = :podatak WHERE IGRACI.NAZIV = :ime';
                                 params.push(podatak, ime);
                             }
                         }
                         if (j == 4) {
                             let podatak = promjeneAPI[i].promjene[j];
                             sql +=
-                                'SELECT I.IGRAC_ID FROM IGRACI I WHERE I.NAZIV = :ime';
+                                'SELECT I.IGRAC_ID FROM NBA.IGRACI I WHERE I.NAZIV = :ime';
                             const result = await connection.execute(
                                 sql,
                                 { ime: ime },
@@ -669,7 +687,7 @@ app.post('/promjeneMomcad', async (req, res) => {
                             sql = '';
                             let nIgrac = result.rows[0].IGRAC_ID;
                             sql +=
-                                "UPDATE VEZE_MOMCAD_IGRACI SET DATUM_OD = TO_DATE(:podatak, 'MM/DD/YYYY') WHERE IGRAC_ID = :nIgrac AND STATUS_ID = 1";
+                                "UPDATE NBA.VEZE_MOMCAD_IGRACI SET DATUM_OD = TO_DATE(:podatak, 'MM/DD/YYYY') WHERE IGRAC_ID = :nIgrac AND STATUS_ID = 1";
                             params.push(podatak, nIgrac);
                         }
                         const result = await connection.execute(sql, params, {
@@ -729,7 +747,7 @@ app.post('/unosIgrac', async (req, res) => {
         connection = await oracledb.getConnection();
 
         let sql_pronadi =
-            'SELECT COUNT(I.NAZIV) BROJ FROM IGRACI I WHERE I.NAZIV = :imeIgrac';
+            'SELECT COUNT(I.NAZIV) BROJ FROM NBA.IGRACI I WHERE I.NAZIV = :imeIgrac';
         const result_pronadi = await connection.execute(
             sql_pronadi,
             {
@@ -746,7 +764,7 @@ app.post('/unosIgrac', async (req, res) => {
                     "Found a player with the same name. Please enter a player that doesn't exist or make a trade for this player!",
             });
         }
-        let sql = 'INSERT INTO IGRACI(NAZIV) VALUES(:imeIgrac)';
+        let sql = 'INSERT INTO NBA.IGRACI(NAZIV) VALUES(:imeIgrac)';
         const result = await connection.execute(
             sql,
             { imeIgrac: imeIgrac },
@@ -763,7 +781,7 @@ app.post('/unosIgrac', async (req, res) => {
         }
 
         let sql_igracID =
-            'SELECT I.IGRAC_ID FROM IGRACI I WHERE I.NAZIV = :imeIgrac';
+            'SELECT I.IGRAC_ID FROM NBA.IGRACI I WHERE I.NAZIV = :imeIgrac';
         const result_igrac = await connection.execute(
             sql_igracID,
             {
@@ -776,7 +794,7 @@ app.post('/unosIgrac', async (req, res) => {
         let nIgrac_id = result_igrac.rows[0].IGRAC_ID;
 
         let sql_momcadID =
-            'SELECT M.MOMCAD_ID FROM MOMCAD M WHERE M.NAZIV = :imeMomcad';
+            'SELECT M.MOMCAD_ID FROM NBA.MOMCAD M WHERE M.NAZIV = :imeMomcad';
         const result_momcad = await connection.execute(
             sql_momcadID,
             {
@@ -790,7 +808,7 @@ app.post('/unosIgrac', async (req, res) => {
 
         if (hasVisina) {
             let sql_update =
-                'UPDATE IGRACI SET VISINA = :visina WHERE NAZIV = :imeIgrac';
+                'UPDATE NBA.IGRACI SET VISINA = :visina WHERE NAZIV = :imeIgrac';
             const update = await connection.execute(
                 sql_update,
                 { visina: visina, imeIgrac: imeIgrac },
@@ -804,7 +822,7 @@ app.post('/unosIgrac', async (req, res) => {
         if (hasDrzava) {
             console.log(drzava);
             let sql_drzava =
-                'SELECT D.DRZAVA_ID FROM DRZAVE D WHERE D.NAZIV = :drzava';
+                'SELECT D.DRZAVA_ID FROM NBA.DRZAVE D WHERE D.NAZIV = :drzava';
             const result_drzava = await connection.execute(
                 sql_drzava,
                 {
@@ -818,7 +836,7 @@ app.post('/unosIgrac', async (req, res) => {
             let drzava_id = result_drzava.rows[0].DRZAVA_ID;
 
             let sql_update_drzava =
-                'UPDATE IGRACI SET DRZAVA_ID = :drzava_id WHERE NAZIV = :imeIgrac';
+                'UPDATE NBA.IGRACI SET DRZAVA_ID = :drzava_id WHERE NAZIV = :imeIgrac';
             const update = await connection.execute(
                 sql_update_drzava,
                 { drzava_id: drzava_id, imeIgrac: imeIgrac },
@@ -831,7 +849,7 @@ app.post('/unosIgrac', async (req, res) => {
 
         if (hasPozicija) {
             let sql_pozicija =
-                'SELECT P.POZICIJA_ID FROM POZICIJE P WHERE P.NAZIV = :pozicija';
+                'SELECT P.POZICIJA_ID FROM NBA.POZICIJE P WHERE P.NAZIV = :pozicija';
             const result_pozicija = await connection.execute(
                 sql_pozicija,
                 {
@@ -844,7 +862,7 @@ app.post('/unosIgrac', async (req, res) => {
             let pozicija_id = result_pozicija.rows[0].POZICIJA_ID;
 
             let sql_update =
-                'UPDATE IGRACI SET POZICIJA_ID = :pozicija_id WHERE NAZIV = :imeIgrac';
+                'UPDATE NBA.IGRACI SET POZICIJA_ID = :pozicija_id WHERE NAZIV = :imeIgrac';
             const update = await connection.execute(
                 sql_update,
                 { pozicija_id: pozicija_id, imeIgrac: imeIgrac },
@@ -858,7 +876,7 @@ app.post('/unosIgrac', async (req, res) => {
         if (hasDatum) {
             console.log('ima datum');
             let sql_update =
-                "UPDATE VEZE_MOMCAD_IGRACI SET DATUM_DO = TO_DATE(:datum_od,'YYYY-MM-DD') WHERE IGRAC_ID = :nIgrac_id AND STATUS_ID = 1";
+                "UPDATE NBA.VEZE_MOMCAD_IGRACI SET DATUM_DO = TO_DATE(:datum_od,'YYYY-MM-DD') WHERE IGRAC_ID = :nIgrac_id AND STATUS_ID = 1";
             const update = await connection.execute(
                 sql_update,
                 { datum_od: datum_od, nIgrac_id: nIgrac_id },
@@ -868,7 +886,7 @@ app.post('/unosIgrac', async (req, res) => {
             );
 
             let sql_VMI =
-                "INSERT INTO VEZE_MOMCAD_IGRACI (MOMCAD_ID, IGRAC_ID, DATUM_OD, STATUS_ID) VALUES (:momcad_id, :nIgrac_id, TO_DATE(:datum_od,'YYYY-MM-DD'), 1)";
+                "INSERT INTO NBA.VEZE_MOMCAD_IGRACI (MOMCAD_ID, IGRAC_ID, DATUM_OD, STATUS_ID) VALUES (:momcad_id, :nIgrac_id, TO_DATE(:datum_od,'YYYY-MM-DD'), 1)";
             const insert_VMI = await connection.execute(
                 sql_VMI,
                 {
@@ -880,7 +898,7 @@ app.post('/unosIgrac', async (req, res) => {
             );
         } else {
             let sql_update =
-                'UPDATE VEZE_MOMCAD_IGRACI SET DATUM_DO = sysdate WHERE IGRAC_ID = :nIgrac_id AND STATUS_ID = 1';
+                'UPDATE NBA.VEZE_MOMCAD_IGRACI SET DATUM_DO = sysdate WHERE IGRAC_ID = :nIgrac_id AND STATUS_ID = 1';
             const update = await connection.execute(
                 sql_update,
                 { nIgrac_id: nIgrac_id },
@@ -890,7 +908,7 @@ app.post('/unosIgrac', async (req, res) => {
             );
 
             let sql_VMI =
-                'INSERT INTO VEZE_MOMCAD_IGRACI (MOMCAD_ID, IGRAC_ID, DATUM_OD, STATUS_ID) VALUES (:momcad_id, :nIgrac_id, sysdate, 1)';
+                'INSERT INTO NBA.VEZE_MOMCAD_IGRACI (MOMCAD_ID, IGRAC_ID, DATUM_OD, STATUS_ID) VALUES (:momcad_id, :nIgrac_id, sysdate, 1)';
             const insert_VMI = await connection.execute(
                 sql_VMI,
                 {
@@ -933,7 +951,7 @@ app.post('/izbrisiIgraca', async (req, res) => {
     try {
         connection = await oracledb.getConnection();
         let sql_igracID =
-            'SELECT I.IGRAC_ID FROM IGRACI I WHERE I.NAZIV = :imeIgrac';
+            'SELECT I.IGRAC_ID FROM NBA.IGRACI I WHERE I.NAZIV = :imeIgrac';
         const result = await connection.execute(
             sql_igracID,
             { imeIgrac: imeIgrac },
@@ -947,7 +965,7 @@ app.post('/izbrisiIgraca', async (req, res) => {
         }
 
         let sql_VMI =
-            'DELETE FROM VEZE_MOMCAD_IGRACI WHERE STATUS_ID = 1 AND IGRAC_ID = :nIgrac_id';
+            'DELETE FROM NBA.VEZE_MOMCAD_IGRACI WHERE STATUS_ID = 1 AND IGRAC_ID = :nIgrac_id';
         const delete_vmi = await connection.execute(
             sql_VMI,
             { nIgrac_id: nIgrac_id },
@@ -958,7 +976,7 @@ app.post('/izbrisiIgraca', async (req, res) => {
             return res.send({ message: 'Pogreška pri brisanju' });
         }
 
-        let sql_IGRACI = 'DELETE FROM IGRACI WHERE IGRAC_ID = :nIgrac_id';
+        let sql_IGRACI = 'DELETE FROM NBA.IGRACI WHERE IGRAC_ID = :nIgrac_id';
         const delete_igraci = await connection.execute(
             sql_IGRACI,
             { nIgrac_id: nIgrac_id },
@@ -992,7 +1010,7 @@ app.post('/getStatistikaIgraci', async (req, res) => {
         connection = await oracledb.getConnection();
         let sql_SELECT = `SELECT Igrac, IgracMomcadKratica, IgracMomcad, Domaci, Gosti,  TO_CHAR(DATUM_VRIJEME , 'MM/DD/YYYY') AS DATUM_UTAKMICE ,NBA.RACUNAJ_MINUTE(igrac_id, utakmica_id) as Minute,  "Slobodna Bacanja Pogodena" + "Šut za 2 Pogoden"*2 + "Šut za 3 Pogoden"*3 as Poeni, "Šut za 3 Pogoden" + "Šut za 2 Pogoden" as Pogodci_iz_Polja, "Šut za 3 Pogoden" + "Šut za 3 Promasen" + "Šut za 2 Promasen" + "Šut za 2 Pogoden"  as Pokusaji_iz_Polja, null  as PP ,"Šut za 3 Pogoden" as Sut_za_3_pogoden, "Šut za 3 Promasen" as Sut_za_3_promasen ,null  as TRI_P, "Slobodna Bacanja Pogodena" AS Slobodna_Bacanja_pogodena, "Slobodna Bacanja Promasena" as Slobodna_bacanja_promasena, NULL AS SB,"Napadacki Skok" as Napadacki_skok,"Obrambeni Skok" as Obrambeni_skok,  "Obrambeni Skok" + "Napadacki Skok" as Skokovi,"Asistencije" as Asistencije, "Ukradene Lopte" as Ukradene_lopte,"Blokovi" as Blokovi, Sezona, DOMACI_IME, GOSTI_IME `;
 
-        let sql_FROM = ` FROM (select utk.utakmica_id as Utakmica_id, m.NAZIV AS IgracMomcad, m.kratica AS IgracMomcadKratica, m1.kratica AS Domaci, m1.naziv as DOMACI_IME, m2.kratica AS Gosti , m2.NAZIV AS GOSTI_IME, i.igrac_id AS Igrac_id, i.naziv AS Igrac, sp.naziv || '_' ||s.naziv AS Podatak, s.naziv AS Status, UTK.DATUM_VRIJEME, l.sezona as Sezona FROM statistika stat,igraci i,utakmice utk,stat_podatak sp, momcad m, momcad m1,momcad m2,statusi s, lige l, veze_momcad_igraci vmi where vmi.IGRAC_ID = i.IGRAC_ID AND VMI.STATUS_ID = 1 AND VMI.MOMCAD_ID = M.MOMCAD_ID AND STAT.IGRAC_ID = i.igrac_id and stat.sp_id = sp.sp_id and STAT.STATUS_ID = s.status_id and stat.utakmica_id = utk.utakmica_id and UTK.DOMACI_ID = m1.momcad_id and utk.gosti_id = m2.momcad_id and s.tablica = 'STATISTIKA' and utk.liga_id = l.liga_id ORDER BY DATUM_VRIJEME)`;
+        let sql_FROM = ` FROM (select utk.utakmica_id as Utakmica_id, m.NAZIV AS IgracMomcad, m.kratica AS IgracMomcadKratica, m1.kratica AS Domaci, m1.naziv as DOMACI_IME, m2.kratica AS Gosti , m2.NAZIV AS GOSTI_IME, i.igrac_id AS Igrac_id, i.naziv AS Igrac, sp.naziv || '_' ||s.naziv AS Podatak, s.naziv AS Status, UTK.DATUM_VRIJEME, l.sezona as Sezona FROM NBA.statistika stat, NBA.igraci i, NBA.utakmice utk, NBA.stat_podatak sp, NBA.momcad m, NBA.momcad m1, NBA.momcad m2, NBA.statusi s, NBA.lige l, NBA.veze_momcad_igraci vmi where vmi.IGRAC_ID = i.IGRAC_ID AND VMI.STATUS_ID = 1 AND VMI.MOMCAD_ID = M.MOMCAD_ID AND STAT.IGRAC_ID = i.igrac_id and stat.sp_id = sp.sp_id and STAT.STATUS_ID = s.status_id and stat.utakmica_id = utk.utakmica_id and UTK.DOMACI_ID = m1.momcad_id and utk.gosti_id = m2.momcad_id and s.tablica = 'STATISTIKA' and utk.liga_id = l.liga_id ORDER BY DATUM_VRIJEME)`;
 
         let sql_pivot = ` PIVOT ( COUNT(Status) FOR Podatak IN('Slobodno bacanje_Pogođen' AS "Slobodna Bacanja Pogodena",'Slobodno bacanje_Promašen' AS "Slobodna Bacanja Promasena",'Šut za 3_Pogođen' AS "Šut za 3 Pogoden", 'Šut za 3_Promašen' AS "Šut za 3 Promasen",'Šut za 2_Pogođen' AS "Šut za 2 Pogoden", 'Šut za 2_Promašen' AS "Šut za 2 Promasen",'Ulaz/Izlaz_Završen' AS "Ulaz/Izlaz",'Obrambeni skok_Završen' AS "Obrambeni Skok",'Napadački skok_Završen' AS "Napadacki Skok",'Asistencija_Završen' AS "Asistencije",'Izgubljena lopta_Završen' AS "Izgubljene Lopte",'Ukradena lopta_Završen' AS "Ukradene Lopte",'Blokada_Završen' AS "Blokovi")) ORDER BY DATUM_UTAKMICE DESC`;
 
@@ -1007,7 +1025,7 @@ app.post('/getStatistikaIgraci', async (req, res) => {
         if (imeIgrac !== null || imeIgrac == 'Svi') {
             const sql_SELECT_KARIJERA = `SELECT Igrac, count(*) as BrojUtakmica, SUM(TO_NUMBER(SUBSTR(NBA.RACUNAJ_MINUTE(igrac_id, utakmica_id), 1, 2))*60 + TO_NUMBER(SUBSTR(NBA.RACUNAJ_MINUTE(igrac_id, utakmica_id), 4, 2))) as minute, SUM("Slobodna Bacanja Pogodena" + "Šut za 2 Pogoden"*2 + "Šut za 3 Pogoden"*3)/COUNT(*) as Poeni, SUM("Šut za 3 Pogoden" + "Šut za 2 Pogoden")/COUNT(*) as Pogodci_iz_Polja, SUM("Šut za 3 Pogoden" + "Šut za 3 Promasen" + "Šut za 2 Promasen" + "Šut za 2 Pogoden")/COUNT(*)  as Pokusaji_iz_Polja, CASE WHEN SUM("Šut za 3 Pogoden" + "Šut za 3 Promasen" + "Šut za 2 Promasen" + "Šut za 2 Pogoden") = 0 THEN 0 ELSE SUM("Šut za 3 Pogoden" + "Šut za 2 Pogoden") / SUM("Šut za 3 Pogoden" + "Šut za 3 Promasen" + "Šut za 2 Promasen" + "Šut za 2 Pogoden") END as PP ,SUM("Šut za 3 Pogoden")/COUNT(*) as Sut_za_3_pogoden, SUM("Šut za 3 Promasen")/COUNT(*) as Sut_za_3_promasen ,  CASE WHEN SUM("Šut za 3 Pogoden" + "Šut za 3 Promasen") = 0 THEN 0 ELSE SUM("Šut za 3 Pogoden")/SUM("Šut za 3 Pogoden" + "Šut za 3 Promasen") END   as TRI_P, SUM("Slobodna Bacanja Pogodena")/COUNT(*) AS Slobodna_Bacanja_pogodena, SUM("Slobodna Bacanja Promasena")/COUNT(*) as Slobodna_bacanja_promasena,  CASE WHEN SUM("Slobodna Bacanja Pogodena"+"Slobodna Bacanja Promasena") = 0 THEN 0 ELSE SUM("Slobodna Bacanja Pogodena")/SUM("Slobodna Bacanja Pogodena"+"Slobodna Bacanja Promasena")  END  AS SB,SUM("Napadacki Skok")/COUNT(*) as Napadacki_skok,SUM("Obrambeni Skok")/COUNT(*) as Obrambeni_skok,  SUM("Obrambeni Skok" + "Napadacki Skok")/COUNT(*) as Skokovi, SUM("Asistencije")/COUNT(*) as Asistencije, SUM("Ukradene Lopte")/COUNT(*) as Ukradene_lopte,SUM("Blokovi")/COUNT(*) as Blokovi, IgracMomcad, IgracMomcadKratica, Sezona, plasman`;
 
-            let sql_FROM_KARIJERA = ` FROM (select utk.utakmica_id as Utakmica_id, vml.konacni_plasman as plasman, m.NAZIV AS IgracMomcad, m.kratica AS IgracMomcadKratica, m1.kratica AS Domaci, m1.naziv as DOMACI_IME, m2.kratica AS Gosti , m2.NAZIV AS GOSTI_IME, i.igrac_id AS Igrac_id, i.naziv AS Igrac, sp.naziv || '_' ||s.naziv AS Podatak, s.naziv AS Status, UTK.DATUM_VRIJEME, l.sezona as Sezona FROM statistika stat,igraci i,utakmice utk,stat_podatak sp, momcad m, momcad m1,momcad m2,statusi s, lige l, veze_momcad_igraci vmi, veze_momcad_lige vml where vml.momcad_id = m.momcad_id and vml.liga_id = l.liga_id and vmi.IGRAC_ID = i.IGRAC_ID AND VMI.STATUS_ID = 1 AND VMI.MOMCAD_ID = M.MOMCAD_ID AND STAT.IGRAC_ID = i.igrac_id and stat.sp_id = sp.sp_id and STAT.STATUS_ID = s.status_id and stat.utakmica_id = utk.utakmica_id and UTK.DOMACI_ID = m1.momcad_id and utk.gosti_id = m2.momcad_id and s.tablica = 'STATISTIKA' and utk.liga_id = l.liga_id `;
+            let sql_FROM_KARIJERA = ` FROM (select utk.utakmica_id as Utakmica_id, vml.konacni_plasman as plasman, m.NAZIV AS IgracMomcad, m.kratica AS IgracMomcadKratica, m1.kratica AS Domaci, m1.naziv as DOMACI_IME, m2.kratica AS Gosti , m2.NAZIV AS GOSTI_IME, i.igrac_id AS Igrac_id, i.naziv AS Igrac, sp.naziv || '_' ||s.naziv AS Podatak, s.naziv AS Status, UTK.DATUM_VRIJEME, l.sezona as Sezona FROM NBA.statistika stat, NBA.igraci i, NBA.utakmice utk, NBA.stat_podatak sp, NBA.momcad m, NBA.momcad m1, NBA.momcad m2, NBA.statusi s, NBA.lige l, NBA.veze_momcad_igraci vmi, NBA.veze_momcad_lige vml where vml.momcad_id = m.momcad_id and vml.liga_id = l.liga_id and vmi.IGRAC_ID = i.IGRAC_ID AND VMI.STATUS_ID = 1 AND VMI.MOMCAD_ID = M.MOMCAD_ID AND STAT.IGRAC_ID = i.igrac_id and stat.sp_id = sp.sp_id and STAT.STATUS_ID = s.status_id and stat.utakmica_id = utk.utakmica_id and UTK.DOMACI_ID = m1.momcad_id and utk.gosti_id = m2.momcad_id and s.tablica = 'STATISTIKA' and utk.liga_id = l.liga_id `;
 
             const sql_PIVOT_KARIJERA = `PIVOT ( COUNT(Status) FOR Podatak IN('Slobodno bacanje_Pogođen' AS "Slobodna Bacanja Pogodena",'Slobodno bacanje_Promašen' AS "Slobodna Bacanja Promasena",'Šut za 3_Pogođen' AS "Šut za 3 Pogoden", 'Šut za 3_Promašen' AS "Šut za 3 Promasen",'Šut za 2_Pogođen' AS "Šut za 2 Pogoden", 'Šut za 2_Promašen' AS "Šut za 2 Promasen",'Ulaz/Izlaz_Završen' AS "Ulaz/Izlaz",'Obrambeni skok_Završen' AS "Obrambeni Skok",'Napadački skok_Završen' AS "Napadacki Skok",'Asistencija_Završen' AS "Asistencije",'Izgubljena lopta_Završen' AS "Izgubljene Lopte",'Ukradena lopta_Završen' AS "Ukradene Lopte",'Blokada_Završen' AS "Blokovi")) GROUP BY IGRAC , IGRACMOMCAD,  IGRACMOMCADKRATICA, sezona, plasman ORDER BY Poeni DESC `;
 
@@ -1078,7 +1096,7 @@ app.post('/getStatistikaIgraci', async (req, res) => {
         }
 
         const result1 = await connection.execute(
-            `SELECT L.SEZONA FROM LIGE L ORDER BY SEZONA DESC`
+            `SELECT L.SEZONA FROM NBA.LIGE L ORDER BY SEZONA DESC`
         );
 
         res.send({
@@ -1114,7 +1132,7 @@ app.post('/getStatistikaMomcadi', async (req, res) => {
     let sql_SELECT =
         "SELECT m1.kratica AS DOMACI, UTK.POENI_DOMACI as POENI_DOMACI, M2.kratica AS GOSTI, SUD.NAZIV AS SUDAC, L.SEZONA, TO_CHAR(DATUM_VRIJEME , 'MM/DD/YYYY') AS DATUM_UTAKMICE, null as W_L, m1.naziv AS DOMACI_NAZIV, m2.naziv AS GOSTI_NAZIV,  UTK.POENI_GOSTI AS POENI_GOSTI, STATUS_ID, UTK.UTAKMICA_ID AS UTAKMICA_ID";
     let sql_FROM =
-        ' FROM MOMCAD m1, MOMCAD m2, UTAKMICE utk, SUDCI sud, LIGE l';
+        ' FROM NBA.MOMCAD m1, NBA.MOMCAD m2, NBA.UTAKMICE utk, NBA.SUDCI sud, NBA.LIGE l';
     let sql_WHERE =
         ' where m1.momcad_id = UTK.DOMACI_ID and m2.momcad_id = UTK.GOSTI_ID and utk.sudac_id = sud.sudac_id and utk.liga_id = l.liga_id and (m1.naziv = :imeMomcad OR m2.naziv = :imeMomcad)';
     try {
@@ -1171,7 +1189,7 @@ app.post('/getStatistikaMomcadi', async (req, res) => {
                 }
             }
             const result1 = await connection.execute(
-                `SELECT L.SEZONA FROM LIGE L ORDER BY SEZONA DESC`
+                `SELECT L.SEZONA FROM NBA.LIGE L ORDER BY SEZONA DESC`
             );
             res.send({ utakmice: result.rows, sezone: result1.rows });
         } else {
@@ -1223,10 +1241,10 @@ app.post('/kreirajUtakmicu', async (req, res) => {
     try {
         connection = await oracledb.getConnection();
         let sql_INSERT =
-            "INSERT INTO UTAKMICE (DOMACI_ID, POENI_DOMACI, GOSTI_ID, POENI_GOSTI, SUDAC_ID, STATUS_ID, DATUM_VRIJEME, LIGA_ID) VALUES (:domaci_id, 0, :gosti_id, 0, :sudac_id, 0, TO_DATE(:datum, 'YYYY-MM-DD HH24:MI:SS'), :liga_id)";
+            "INSERT INTO NBA.UTAKMICE (DOMACI_ID, POENI_DOMACI, GOSTI_ID, POENI_GOSTI, SUDAC_ID, STATUS_ID, DATUM_VRIJEME, LIGA_ID) VALUES (:domaci_id, 0, :gosti_id, 0, :sudac_id, 0, TO_DATE(:datum, 'YYYY-MM-DD HH24:MI:SS'), :liga_id)";
         if (hasDomaci && hasGosti && hasDatum && hasSezona && hasSudac) {
             const res1 = await connection.execute(
-                'SELECT M.MOMCAD_ID FROM MOMCAD M WHERE M.NAZIV = :domaci',
+                'SELECT M.MOMCAD_ID FROM NBA.MOMCAD M WHERE M.NAZIV = :domaci',
                 {
                     domaci: domaci,
                 },
@@ -1235,7 +1253,7 @@ app.post('/kreirajUtakmicu', async (req, res) => {
             let domaci_id = res1.rows[0].MOMCAD_ID;
 
             const res2 = await connection.execute(
-                'SELECT M.MOMCAD_ID FROM MOMCAD M WHERE M.NAZIV = :gosti',
+                'SELECT M.MOMCAD_ID FROM NBA.MOMCAD M WHERE M.NAZIV = :gosti',
                 {
                     gosti: gosti,
                 },
@@ -1244,7 +1262,7 @@ app.post('/kreirajUtakmicu', async (req, res) => {
             let gosti_id = res2.rows[0].MOMCAD_ID;
 
             const res3 = await connection.execute(
-                'SELECT L.LIGA_ID FROM LIGE L WHERE L.SEZONA = :sezona',
+                'SELECT L.LIGA_ID FROM NBA.LIGE L WHERE L.SEZONA = :sezona',
                 {
                     sezona: sezona,
                 },
@@ -1253,7 +1271,7 @@ app.post('/kreirajUtakmicu', async (req, res) => {
             let liga_id = res3.rows[0].LIGA_ID;
 
             const res4 = await connection.execute(
-                'SELECT S.SUDAC_ID FROM SUDCI S WHERE S.NAZIV = :sudac',
+                'SELECT S.SUDAC_ID FROM NBA.SUDCI S WHERE S.NAZIV = :sudac',
                 {
                     sudac: sudac,
                 },
@@ -1262,7 +1280,7 @@ app.post('/kreirajUtakmicu', async (req, res) => {
             let sudac_id = res4.rows[0].SUDAC_ID;
 
             const check = await connection.execute(
-                "SELECT U.UTAKMICA_ID AS UTAKMICA_ID FROM UTAKMICE U WHERE U.DOMACI_ID = :domaci_id AND U.GOSTI_ID = :gosti_id AND DATUM_VRIJEME = TO_DATE(:datum, 'YYYY-MM-DD HH24:MI:SS')",
+                "SELECT U.UTAKMICA_ID AS UTAKMICA_ID FROM NBA.UTAKMICE U WHERE U.DOMACI_ID = :domaci_id AND U.GOSTI_ID = :gosti_id AND DATUM_VRIJEME = TO_DATE(:datum, 'YYYY-MM-DD HH24:MI:SS')",
                 {
                     domaci_id: domaci_id,
                     gosti_id: gosti_id,
@@ -1292,7 +1310,7 @@ app.post('/kreirajUtakmicu', async (req, res) => {
             );
 
             const res5 = await connection.execute(
-                "SELECT U.UTAKMICA_ID FROM UTAKMICE U WHERE U.DOMACI_ID = :domaci_id AND U.GOSTI_ID = :gosti_id AND DATUM_VRIJEME = TO_DATE(:datum, 'YYYY-MM-DD HH24:MI:SS')",
+                "SELECT U.UTAKMICA_ID FROM NBA.UTAKMICE U WHERE U.DOMACI_ID = :domaci_id AND U.GOSTI_ID = :gosti_id AND DATUM_VRIJEME = TO_DATE(:datum, 'YYYY-MM-DD HH24:MI:SS')",
                 {
                     domaci_id: domaci_id,
                     gosti_id: gosti_id,
@@ -1326,21 +1344,21 @@ app.post('/prikaziStatistikuUtakmice', async (req, res) => {
     const sql_SELECT =
         'SELECT I.NAZIV, SP.NAZIV, STAT.VRIJEME_POCETAK as VRIJEME, S.NAZIV, STAT.UTAKMICA_ID AS UTAKMICA_ID, STAT.STAT_ID ';
     const sql_FROM =
-        'FROM STATISTIKA STAT, STAT_PODATAK SP, IGRACI I,  STATUSI S ';
+        'FROM NBA.STATISTIKA STAT, NBA.STAT_PODATAK SP, NBA.IGRACI I,  NBA.STATUSI S ';
     const sql_WHERE =
         "WHERE STAT.IGRAC_ID = I.IGRAC_ID AND STAT.SP_ID = SP.SP_ID AND SP.SP_ID != 11 AND STAT.STATUS_ID = S.STATUS_ID AND S.TABLICA = 'STATISTIKA' AND STAT.UTAKMICA_ID = :utakmica_id ";
 
     const sql_SELECT_ulaz =
         "SELECT I.NAZIV, 'Ulaz' as NAZIV, STAT.VRIJEME_POCETAK as VRIJEME, S.NAZIV, STAT.UTAKMICA_ID AS UTAKMICA_ID, STAT.STAT_ID ";
     const sql_FROM_ulaz =
-        'FROM STATISTIKA STAT, STAT_PODATAK SP, IGRACI I,  STATUSI S ';
+        'FROM NBA.STATISTIKA STAT, NBA.STAT_PODATAK SP, NBA.IGRACI I,  NBA.STATUSI S ';
     const sql_WHERE_ulaz =
         "WHERE STAT.IGRAC_ID = I.IGRAC_ID AND STAT.SP_ID = SP.SP_ID AND SP.SP_ID = 11 AND STAT.STATUS_ID = S.STATUS_ID AND S.TABLICA = 'STATISTIKA' AND STAT.UTAKMICA_ID = :utakmica_id ";
 
     const sql_SELECT_izlaz =
         "SELECT I.NAZIV, 'Izlaz' as NAZIV, STAT.VRIJEME_KRAJ as VRIJEME, S.NAZIV, STAT.UTAKMICA_ID AS UTAKMICA_ID, STAT.STAT_ID ";
     const sql_FROM_izlaz =
-        'FROM STATISTIKA STAT, STAT_PODATAK SP, IGRACI I,  STATUSI S ';
+        'FROM NBA.STATISTIKA STAT, NBA.STAT_PODATAK SP, NBA.IGRACI I,  NBA.STATUSI S ';
     const sql_WHERE_ORDER_izlaz =
         "WHERE STAT.IGRAC_ID = I.IGRAC_ID AND STAT.SP_ID = SP.SP_ID AND SP.SP_ID = 11 AND STAT.STATUS_ID = S.STATUS_ID AND S.TABLICA = 'STATISTIKA' AND STAT.UTAKMICA_ID = :utakmica_id AND STAT.VRIJEME_KRAJ IS NOT NULL ORDER BY VRIJEME DESC";
     const utakmica_id = req.body.utakmica_id;
@@ -1366,7 +1384,7 @@ app.post('/prikaziStatistikuUtakmice', async (req, res) => {
         );
 
         const pronadiDomaci = await connection.execute(
-            'SELECT M.MOMCAD_ID FROM MOMCAD M WHERE M.NAZIV = :domaci_naziv',
+            'SELECT M.MOMCAD_ID FROM NBA.MOMCAD M WHERE M.NAZIV = :domaci_naziv',
             { domaci_naziv: domaci_naziv },
             { outFormat: oracledb.OBJECT }
         );
@@ -1374,7 +1392,7 @@ app.post('/prikaziStatistikuUtakmice', async (req, res) => {
         const domaci_id = pronadiDomaci.rows[0].MOMCAD_ID;
 
         const pronadiGosti = await connection.execute(
-            'SELECT M.MOMCAD_ID FROM MOMCAD M WHERE M.NAZIV = :gosti_naziv',
+            'SELECT M.MOMCAD_ID FROM NBA.MOMCAD M WHERE M.NAZIV = :gosti_naziv',
             { gosti_naziv: gosti_naziv },
             { outFormat: oracledb.OBJECT }
         );
@@ -1382,13 +1400,13 @@ app.post('/prikaziStatistikuUtakmice', async (req, res) => {
         const gosti_id = pronadiGosti.rows[0].MOMCAD_ID;
 
         const aktivni_domaci = await connection.execute(
-            'SELECT I.NAZIV, I.BROJ_DRESA, VMI.MOMCAD_ID, I.IGRAC_ID FROM STATISTIKA STAT, IGRACI I, VEZE_MOMCAD_IGRACI VMI WHERE STAT.STATUS_ID = 2 AND STAT.IGRAC_ID = I.IGRAC_ID AND UTAKMICA_ID = :utakmica_id AND VMI.IGRAC_ID = I.IGRAC_ID AND VMI.MOMCAD_ID = :domaci_id AND VMI.STATUS_ID = 1',
+            'SELECT I.NAZIV, I.BROJ_DRESA, VMI.MOMCAD_ID, I.IGRAC_ID FROM NBA.STATISTIKA STAT, NBA.IGRACI I, NBA.VEZE_MOMCAD_IGRACI VMI WHERE STAT.STATUS_ID = 2 AND STAT.IGRAC_ID = I.IGRAC_ID AND UTAKMICA_ID = :utakmica_id AND VMI.IGRAC_ID = I.IGRAC_ID AND VMI.MOMCAD_ID = :domaci_id AND VMI.STATUS_ID = 1',
             { utakmica_id: utakmica_id, domaci_id: domaci_id },
             { outFormat: oracledb.OBJECT }
         );
 
         const aktivni_gosti = await connection.execute(
-            'SELECT I.NAZIV, I.BROJ_DRESA, VMI.MOMCAD_ID, I.IGRAC_ID FROM STATISTIKA STAT, IGRACI I, VEZE_MOMCAD_IGRACI VMI WHERE STAT.STATUS_ID = 2 AND STAT.IGRAC_ID = I.IGRAC_ID AND UTAKMICA_ID = :utakmica_id AND VMI.IGRAC_ID = I.IGRAC_ID AND VMI.MOMCAD_ID = :gosti_id AND VMI.STATUS_ID = 1',
+            'SELECT I.NAZIV, I.BROJ_DRESA, VMI.MOMCAD_ID, I.IGRAC_ID FROM NBA.STATISTIKA STAT, NBA.IGRACI I, NBA.VEZE_MOMCAD_IGRACI VMI WHERE STAT.STATUS_ID = 2 AND STAT.IGRAC_ID = I.IGRAC_ID AND UTAKMICA_ID = :utakmica_id AND VMI.IGRAC_ID = I.IGRAC_ID AND VMI.MOMCAD_ID = :gosti_id AND VMI.STATUS_ID = 1',
             { utakmica_id: utakmica_id, gosti_id: gosti_id },
             { outFormat: oracledb.OBJECT }
         );
@@ -1452,14 +1470,14 @@ app.post('/unesiStatistiku', async (req, res) => {
     try {
         connection = await oracledb.getConnection();
         const podatak_id = await connection.execute(
-            'SELECT SP.SP_ID FROM STAT_PODATAK SP WHERE SP.NAZIV = :podatak',
+            'SELECT SP.SP_ID FROM NBA.STAT_PODATAK SP WHERE SP.NAZIV = :podatak',
             { podatak: podatak },
             { outFormat: oracledb.OBJECT }
         );
         podatakID = podatak_id.rows[0].SP_ID;
 
         const status_id = await connection.execute(
-            "SELECT S.STATUS_ID FROM STATUSI S WHERE S.NAZIV = :status AND S.TABLICA = 'STATISTIKA'",
+            "SELECT S.STATUS_ID FROM NBA.STATUSI S WHERE S.NAZIV = :status AND S.TABLICA = 'STATISTIKA'",
             { status: status },
             { outFormat: oracledb.OBJECT }
         );
@@ -1467,7 +1485,7 @@ app.post('/unesiStatistiku', async (req, res) => {
 
         const unosPocetnogPodatka = async (igrac) => {
             const SQL_upit =
-                "INSERT INTO STATISTIKA(IGRAC_ID, SP_ID, STATUS_ID, UTAKMICA_ID, VRIJEME_POCETAK) VALUES (:igrac_id, :podatak_id, :status, :utakmica_id, '00:00')";
+                "INSERT INTO NBA.STATISTIKA(IGRAC_ID, SP_ID, STATUS_ID, UTAKMICA_ID, VRIJEME_POCETAK) VALUES (:igrac_id, :podatak_id, :status, :utakmica_id, '00:00')";
             try {
                 const unesi = await connection.execute(
                     SQL_upit,
@@ -1497,7 +1515,7 @@ app.post('/unesiStatistiku', async (req, res) => {
             return res.send({ message: 'Success' });
         } else if (igracID && igracUlazID !== null) {
             const pronadiOtvoreniUlaz_SQL =
-                'SELECT STAT.STAT_ID, STAT.VRIJEME_POCETAK FROM STATISTIKA STAT WHERE STAT.IGRAC_ID = :igrac_id AND STAT.SP_ID = 11 AND STAT.VRIJEME_KRAJ IS NULL AND STAT.UTAKMICA_ID = :utakmica_id';
+                'SELECT STAT.STAT_ID, STAT.VRIJEME_POCETAK FROM NBA.STATISTIKA STAT WHERE STAT.IGRAC_ID = :igrac_id AND STAT.SP_ID = 11 AND STAT.VRIJEME_KRAJ IS NULL AND STAT.UTAKMICA_ID = :utakmica_id';
 
             const pronadiOtvoreniUlaz = await connection.execute(
                 pronadiOtvoreniUlaz_SQL,
@@ -1516,19 +1534,19 @@ app.post('/unesiStatistiku', async (req, res) => {
                 });
             }
             const unesiVrijemeKraj = await connection.execute(
-                "UPDATE STATISTIKA SET VRIJEME_KRAJ = trim(TO_CHAR(:minute, '00')) || ':'  ||  trim(TO_CHAR(:sekunde,'00')) WHERE STAT_ID = :stat_id",
+                "UPDATE NBA.STATISTIKA SET VRIJEME_KRAJ = trim(TO_CHAR(:minute, '00')) || ':'  ||  trim(TO_CHAR(:sekunde,'00')) WHERE STAT_ID = :stat_id",
                 { minute: minute, sekunde: sekunde, stat_id: stat_id },
                 { autoCommit: true }
             );
 
             const ugasiUlaz = await connection.execute(
-                'UPDATE STATISTIKA SET STATUS_ID = 3 WHERE STAT_ID = :stat_id',
+                'UPDATE NBA.STATISTIKA SET STATUS_ID = 3 WHERE STAT_ID = :stat_id',
                 { stat_id: stat_id },
                 { autoCommit: true }
             );
 
             const unesiNoviUlaz_SQL =
-                "INSERT INTO STATISTIKA(IGRAC_ID, SP_ID, STATUS_ID, UTAKMICA_ID, VRIJEME_POCETAK) VALUES (:igrac_ulaz_id, :podatak_id, :status_id, :utakmica_id, trim(TO_CHAR(:minute, '00')) || ':'  ||  trim(TO_CHAR(:sekunde,'00')))";
+                "INSERT INTO NBA.STATISTIKA(IGRAC_ID, SP_ID, STATUS_ID, UTAKMICA_ID, VRIJEME_POCETAK) VALUES (:igrac_ulaz_id, :podatak_id, :status_id, :utakmica_id, trim(TO_CHAR(:minute, '00')) || ':'  ||  trim(TO_CHAR(:sekunde,'00')))";
 
             const unesiNoviUlaz = await connection.execute(
                 unesiNoviUlaz_SQL,
@@ -1544,7 +1562,7 @@ app.post('/unesiStatistiku', async (req, res) => {
             );
 
             const pronadiDomaciID = await connection.execute(
-                'SELECT M.MOMCAD_ID FROM MOMCAD M WHERE M.NAZIV = :domaci_naziv',
+                'SELECT M.MOMCAD_ID FROM NBA.MOMCAD M WHERE M.NAZIV = :domaci_naziv',
                 { domaci_naziv: domaci_naziv },
                 { outFormat: oracledb.OBJECT }
             );
@@ -1552,7 +1570,7 @@ app.post('/unesiStatistiku', async (req, res) => {
             const domaci_id = pronadiDomaciID.rows[0].MOMCAD_ID;
 
             const pronadiGosteID = await connection.execute(
-                'SELECT M.MOMCAD_ID FROM MOMCAD M WHERE M.NAZIV = :gosti_naziv',
+                'SELECT M.MOMCAD_ID FROM NBA.MOMCAD M WHERE M.NAZIV = :gosti_naziv',
                 { gosti_naziv: gosti_naziv },
                 { outFormat: oracledb.OBJECT }
             );
@@ -1560,19 +1578,19 @@ app.post('/unesiStatistiku', async (req, res) => {
             const gosti_id = pronadiGosteID.rows[0].MOMCAD_ID;
 
             const pronadiAktivneDomace = await connection.execute(
-                'SELECT I.NAZIV, I.BROJ_DRESA, VMI.MOMCAD_ID, I.IGRAC_ID FROM STATISTIKA STAT, IGRACI I, VEZE_MOMCAD_IGRACI VMI WHERE STAT.STATUS_ID = 2 AND STAT.IGRAC_ID = I.IGRAC_ID AND UTAKMICA_ID = :utakmica_id AND VMI.IGRAC_ID = I.IGRAC_ID AND VMI.MOMCAD_ID = :domaci_id AND VMI.STATUS_ID = 1',
+                'SELECT I.NAZIV, I.BROJ_DRESA, VMI.MOMCAD_ID, I.IGRAC_ID FROM NBA.STATISTIKA STAT, NBA.IGRACI I, NBA.VEZE_MOMCAD_IGRACI VMI WHERE STAT.STATUS_ID = 2 AND STAT.IGRAC_ID = I.IGRAC_ID AND UTAKMICA_ID = :utakmica_id AND VMI.IGRAC_ID = I.IGRAC_ID AND VMI.MOMCAD_ID = :domaci_id AND VMI.STATUS_ID = 1',
                 { utakmica_id: utakmica_id, domaci_id: domaci_id },
                 { outFormat: oracledb.OBJECT }
             );
 
             const pronadiAktivneGoste = await connection.execute(
-                'SELECT I.NAZIV, I.BROJ_DRESA, VMI.MOMCAD_ID, I.IGRAC_ID FROM STATISTIKA STAT, IGRACI I, VEZE_MOMCAD_IGRACI VMI WHERE STAT.STATUS_ID = 2 AND STAT.IGRAC_ID = I.IGRAC_ID AND UTAKMICA_ID = :utakmica_id AND VMI.IGRAC_ID = I.IGRAC_ID AND VMI.MOMCAD_ID = :gosti_id AND VMI.STATUS_ID = 1',
+                'SELECT I.NAZIV, I.BROJ_DRESA, VMI.MOMCAD_ID, I.IGRAC_ID FROM NBA.STATISTIKA STAT, NBA.IGRACI I, NBA.VEZE_MOMCAD_IGRACI VMI WHERE STAT.STATUS_ID = 2 AND STAT.IGRAC_ID = I.IGRAC_ID AND UTAKMICA_ID = :utakmica_id AND VMI.IGRAC_ID = I.IGRAC_ID AND VMI.MOMCAD_ID = :gosti_id AND VMI.STATUS_ID = 1',
                 { utakmica_id: utakmica_id, gosti_id: gosti_id },
                 { outFormat: oracledb.OBJECT }
             );
 
             const pronadiNoviIzlaz_SQL =
-                "SELECT I.NAZIV, 'Izlaz' as NAZIV, STAT.VRIJEME_KRAJ as VRIJEME, S.NAZIV, STAT.UTAKMICA_ID AS UTAKMICA_ID, STAT.STAT_ID FROM STATISTIKA STAT, STAT_PODATAK SP, IGRACI I,  STATUSI S WHERE STAT.IGRAC_ID = I.IGRAC_ID AND STAT.SP_ID = SP.SP_ID AND SP.SP_ID = 11 AND STAT.STATUS_ID = S.STATUS_ID AND S.TABLICA = 'STATISTIKA' AND STAT.STAT_ID = :stat_id  AND STAT.VRIJEME_KRAJ IS NOT NULL ";
+                "SELECT I.NAZIV, 'Izlaz' as NAZIV, STAT.VRIJEME_KRAJ as VRIJEME, S.NAZIV, STAT.UTAKMICA_ID AS UTAKMICA_ID, STAT.STAT_ID FROM NBA.STATISTIKA STAT, NBA.STAT_PODATAK SP, NBA.IGRACI I,  NBA.STATUSI S WHERE STAT.IGRAC_ID = I.IGRAC_ID AND STAT.SP_ID = SP.SP_ID AND SP.SP_ID = 11 AND STAT.STATUS_ID = S.STATUS_ID AND S.TABLICA = 'STATISTIKA' AND STAT.STAT_ID = :stat_id  AND STAT.VRIJEME_KRAJ IS NOT NULL ";
             const pronadiNoviIzlaz = await connection.execute(
                 pronadiNoviIzlaz_SQL,
                 {
@@ -1590,7 +1608,7 @@ app.post('/unesiStatistiku', async (req, res) => {
             const stat_ulaz_id = pronadiStatID.rows[0].STAT_ID;
 
             const pronadiNoviUlaz_SQL =
-                "SELECT I.NAZIV, 'Ulaz' as NAZIV, STAT.VRIJEME_POCETAK as VRIJEME, S.NAZIV, STAT.UTAKMICA_ID AS UTAKMICA_ID, STAT.STAT_ID FROM STATISTIKA STAT, STAT_PODATAK SP, IGRACI I,  STATUSI S WHERE STAT.IGRAC_ID = I.IGRAC_ID AND STAT.SP_ID = SP.SP_ID AND SP.SP_ID = 11 AND STAT.STATUS_ID = S.STATUS_ID AND S.TABLICA = 'STATISTIKA' AND STAT.STAT_ID = :stat_id ";
+                "SELECT I.NAZIV, 'Ulaz' as NAZIV, STAT.VRIJEME_POCETAK as VRIJEME, S.NAZIV, STAT.UTAKMICA_ID AS UTAKMICA_ID, STAT.STAT_ID FROM NBA.STATISTIKA STAT, NBA.STAT_PODATAK SP, NBA.IGRACI I,  NBA.STATUSI S WHERE STAT.IGRAC_ID = I.IGRAC_ID AND STAT.SP_ID = SP.SP_ID AND SP.SP_ID = 11 AND STAT.STATUS_ID = S.STATUS_ID AND S.TABLICA = 'STATISTIKA' AND STAT.STAT_ID = :stat_id ";
             const pronadiNoviUlaz = await connection.execute(
                 pronadiNoviUlaz_SQL,
                 {
@@ -1605,7 +1623,7 @@ app.post('/unesiStatistiku', async (req, res) => {
             });
         } else {
             const unesiNoviPodatak_SQL =
-                "INSERT INTO STATISTIKA(IGRAC_ID, SP_ID, STATUS_ID, UTAKMICA_ID, VRIJEME_POCETAK) VALUES (:igrac_id, :podatak_id, :status_id, :utakmica_id, trim(TO_CHAR(:minute, '00')) || ':'  ||  trim(TO_CHAR(:sekunde,'00')))";
+                "INSERT INTO NBA.STATISTIKA(IGRAC_ID, SP_ID, STATUS_ID, UTAKMICA_ID, VRIJEME_POCETAK) VALUES (:igrac_id, :podatak_id, :status_id, :utakmica_id, trim(TO_CHAR(:minute, '00')) || ':'  ||  trim(TO_CHAR(:sekunde,'00')))";
 
             let igrac_id = igracID ? igracID : igracUlazID ? igracUlazID : null;
             const unesi = await connection.execute(
@@ -1622,7 +1640,7 @@ app.post('/unesiStatistiku', async (req, res) => {
             );
 
             const pronadiStatID_SQL =
-                "SELECT STAT.STAT_ID FROM STATISTIKA STAT WHERE STAT.IGRAC_ID = :igrac_id AND STAT.VRIJEME_POCETAK = trim(TO_CHAR(:minute, '00')) || ':'  ||  trim(TO_CHAR(:sekunde,'00')) AND STAT.UTAKMICA_ID = :utakmica_id ";
+                "SELECT STAT.STAT_ID FROM NBA.STATISTIKA STAT WHERE STAT.IGRAC_ID = :igrac_id AND STAT.VRIJEME_POCETAK = trim(TO_CHAR(:minute, '00')) || ':'  ||  trim(TO_CHAR(:sekunde,'00')) AND STAT.UTAKMICA_ID = :utakmica_id ";
             const pronadiStatID = await connection.execute(
                 pronadiStatID_SQL,
                 {
@@ -1643,14 +1661,14 @@ app.post('/unesiStatistiku', async (req, res) => {
                 pronadiNoviPodatak_SELECT =
                     'SELECT I.NAZIV, SP.NAZIV, STAT.VRIJEME_POCETAK as VRIJEME, S.NAZIV, STAT.UTAKMICA_ID AS UTAKMICA_ID, STAT.STAT_ID ';
                 pronadiNoviPodatak_FROM =
-                    'FROM STATISTIKA STAT, STAT_PODATAK SP, IGRACI I,  STATUSI S ';
+                    'FROM NBA.STATISTIKA STAT, NBA.STAT_PODATAK SP, NBA.IGRACI I,  NBA.STATUSI S ';
                 pronadiNoviPodatak_WHERE =
                     "WHERE STAT.IGRAC_ID = I.IGRAC_ID AND STAT.SP_ID = SP.SP_ID AND SP.SP_ID != 11 AND STAT.STATUS_ID = S.STATUS_ID AND S.TABLICA = 'STATISTIKA' AND STAT.UTAKMICA_ID = :utakmica_id AND STAT.STAT_ID = :stat_id";
             } else {
                 pronadiNoviPodatak_SELECT =
                     "SELECT I.NAZIV, 'Ulaz' as NAZIV, STAT.VRIJEME_POCETAK as VRIJEME, S.NAZIV, STAT.UTAKMICA_ID AS UTAKMICA_ID, STAT.STAT_ID ";
                 pronadiNoviPodatak_FROM =
-                    'FROM STATISTIKA STAT, STAT_PODATAK SP, IGRACI I,  STATUSI S ';
+                    'FROM NBA.STATISTIKA STAT, NBA.STAT_PODATAK SP, NBA.IGRACI I,  NBA.STATUSI S ';
                 pronadiNoviPodatak_WHERE =
                     "WHERE STAT.IGRAC_ID = I.IGRAC_ID AND STAT.SP_ID = SP.SP_ID AND SP.SP_ID = 11 AND STAT.STATUS_ID = S.STATUS_ID AND S.TABLICA = 'STATISTIKA' AND STAT.UTAKMICA_ID = :utakmica_id AND STAT.STAT_ID = :stat_id";
             }
@@ -1665,7 +1683,7 @@ app.post('/unesiStatistiku', async (req, res) => {
             let poeni;
             if ([1, 2, 3].includes(podatakID) && statusID === 1 && uzivo) {
                 const pronadiMomcadID = await connection.execute(
-                    'SELECT U.DOMACI_ID, U.GOSTI_ID FROM UTAKMICE U WHERE U.UTAKMICA_ID = :utakmica_id',
+                    'SELECT U.DOMACI_ID, U.GOSTI_ID FROM NBA.UTAKMICE U WHERE U.UTAKMICA_ID = :utakmica_id',
                     {
                         utakmica_id: utakmica_id,
                     },
@@ -1682,7 +1700,7 @@ app.post('/unesiStatistiku', async (req, res) => {
                 poeniMomcad = 'POENI_' + momcad;
 
                 const unesiPoene = await connection.execute(
-                    'UPDATE UTAKMICE SET ' +
+                    'UPDATE NBA.UTAKMICE SET ' +
                         poeniMomcad +
                         '=' +
                         poeniMomcad +
@@ -1693,7 +1711,7 @@ app.post('/unesiStatistiku', async (req, res) => {
                 );
             } else if (igracUlazID) {
                 const pronadiDomaciID = await connection.execute(
-                    'SELECT M.MOMCAD_ID FROM MOMCAD M WHERE M.NAZIV = :domaci_naziv',
+                    'SELECT M.MOMCAD_ID FROM NBA.MOMCAD M WHERE M.NAZIV = :domaci_naziv',
                     { domaci_naziv: domaci_naziv },
                     { outFormat: oracledb.OBJECT }
                 );
@@ -1701,7 +1719,7 @@ app.post('/unesiStatistiku', async (req, res) => {
                 const domaci_id = pronadiDomaciID.rows[0].MOMCAD_ID;
 
                 const pronadiGosteID = await connection.execute(
-                    'SELECT M.MOMCAD_ID FROM MOMCAD M WHERE M.NAZIV = :gosti_naziv',
+                    'SELECT M.MOMCAD_ID FROM NBA.MOMCAD M WHERE M.NAZIV = :gosti_naziv',
                     { gosti_naziv: gosti_naziv },
                     { outFormat: oracledb.OBJECT }
                 );
@@ -1709,13 +1727,13 @@ app.post('/unesiStatistiku', async (req, res) => {
                 const gosti_id = pronadiGosteID.rows[0].MOMCAD_ID;
 
                 const pronadiAktivneDomace = await connection.execute(
-                    'SELECT I.NAZIV, I.BROJ_DRESA, VMI.MOMCAD_ID, I.IGRAC_ID FROM STATISTIKA STAT, IGRACI I, VEZE_MOMCAD_IGRACI VMI WHERE STAT.STATUS_ID = 2 AND STAT.IGRAC_ID = I.IGRAC_ID AND UTAKMICA_ID = :utakmica_id AND VMI.IGRAC_ID = I.IGRAC_ID AND VMI.MOMCAD_ID = :domaci_id AND VMI.STATUS_ID = 1',
+                    'SELECT I.NAZIV, I.BROJ_DRESA, VMI.MOMCAD_ID, I.IGRAC_ID FROM NBA.STATISTIKA STAT, NBA.IGRACI I, NBA.VEZE_MOMCAD_IGRACI VMI WHERE STAT.STATUS_ID = 2 AND STAT.IGRAC_ID = I.IGRAC_ID AND UTAKMICA_ID = :utakmica_id AND VMI.IGRAC_ID = I.IGRAC_ID AND VMI.MOMCAD_ID = :domaci_id AND VMI.STATUS_ID = 1',
                     { utakmica_id: utakmica_id, domaci_id: domaci_id },
                     { outFormat: oracledb.OBJECT }
                 );
 
                 const pronadiAktivneGoste = await connection.execute(
-                    'SELECT I.NAZIV, I.BROJ_DRESA, VMI.MOMCAD_ID, I.IGRAC_ID FROM STATISTIKA STAT, IGRACI I, VEZE_MOMCAD_IGRACI VMI WHERE STAT.STATUS_ID = 2 AND STAT.IGRAC_ID = I.IGRAC_ID AND UTAKMICA_ID = :utakmica_id AND VMI.IGRAC_ID = I.IGRAC_ID AND VMI.MOMCAD_ID = :gosti_id AND VMI.STATUS_ID = 1',
+                    'SELECT I.NAZIV, I.BROJ_DRESA, VMI.MOMCAD_ID, I.IGRAC_ID FROM NBA.STATISTIKA STAT, NBA.IGRACI I, NBA.VEZE_MOMCAD_IGRACI VMI WHERE STAT.STATUS_ID = 2 AND STAT.IGRAC_ID = I.IGRAC_ID AND UTAKMICA_ID = :utakmica_id AND VMI.IGRAC_ID = I.IGRAC_ID AND VMI.MOMCAD_ID = :gosti_id AND VMI.STATUS_ID = 1',
                     { utakmica_id: utakmica_id, gosti_id: gosti_id },
                     { outFormat: oracledb.OBJECT }
                 );
@@ -1769,25 +1787,25 @@ app.post('/izbrisiPodatak', async (req, res) => {
         connection = await oracledb.getConnection();
 
         const pronadiPodatakStatus = await connection.execute(
-            'SELECT S.SP_ID, S.STATUS_ID FROM STATISTIKA S WHERE S.STAT_ID = :izbrisiPodatak',
+            'SELECT S.SP_ID, S.STATUS_ID FROM NBA.STATISTIKA S WHERE S.STAT_ID = :izbrisiPodatak',
             { izbrisiPodatak: izbrisiPodatak },
             { outFormat: oracledb.OBJECT }
         );
 
         if (podatak[1] == 'Izlaz' && podatakUlaz[1] == 'Ulaz') {
             const azurirajVrijemeIzlaz = await connection.execute(
-                'UPDATE STATISTIKA S SET VRIJEME_KRAJ = null WHERE S.STAT_ID = :izbrisiPodatak',
+                'UPDATE NBA.STATISTIKA S SET VRIJEME_KRAJ = null WHERE S.STAT_ID = :izbrisiPodatak',
                 { izbrisiPodatak: izbrisiPodatak },
                 { autoCommit: true }
             );
             const azurirajStatusIzlaz = await connection.execute(
-                'UPDATE STATISTIKA S SET STATUS_ID = 2 WHERE S.STAT_ID = :izbrisiPodatak',
+                'UPDATE NBA.STATISTIKA S SET STATUS_ID = 2 WHERE S.STAT_ID = :izbrisiPodatak',
                 { izbrisiPodatak: izbrisiPodatak },
                 { autoCommit: true }
             );
 
             const izbrisiUlaz = await connection.execute(
-                'DELETE STATISTIKA WHERE STAT_ID = :izbrisiPodatakUlaz',
+                'DELETE NBA.STATISTIKA WHERE STAT_ID = :izbrisiPodatakUlaz',
                 { izbrisiPodatakUlaz: izbrisiPodatakUlaz },
                 { autoCommit: true }
             );
@@ -1802,20 +1820,20 @@ app.post('/izbrisiPodatak', async (req, res) => {
                 uzivo
             ) {
                 const pronadiIgracID = await connection.execute(
-                    'SELECT I.IGRAC_ID FROM IGRACI I WHERE I.NAZIV = :imeIgrac',
+                    'SELECT I.IGRAC_ID FROM NBA.IGRACI I WHERE I.NAZIV = :imeIgrac',
                     { imeIgrac: imeIgrac },
                     { outFormat: oracledb.OBJECT }
                 );
                 const igracID = pronadiIgracID.rows[0].IGRAC_ID;
 
                 const pronadiMomcadID = await connection.execute(
-                    'SELECT VMI.MOMCAD_ID FROM VEZE_MOMCAD_IGRACI VMI WHERE VMI.IGRAC_ID = :igrac_id AND VMI.STATUS_ID = 1',
+                    'SELECT VMI.MOMCAD_ID FROM NBA.VEZE_MOMCAD_IGRACI VMI WHERE VMI.IGRAC_ID = :igrac_id AND VMI.STATUS_ID = 1',
                     { igrac_id: igracID },
                     { outFormat: oracledb.OBJECT }
                 );
 
                 const pronadiMomcadiUtakmiceID = await connection.execute(
-                    'SELECT U.DOMACI_ID, U.GOSTI_ID FROM UTAKMICE U WHERE U.UTAKMICA_ID = :utakmica_id',
+                    'SELECT U.DOMACI_ID, U.GOSTI_ID FROM NBA.UTAKMICE U WHERE U.UTAKMICA_ID = :utakmica_id',
                     {
                         utakmica_id: utakmica_id,
                     },
@@ -1839,7 +1857,7 @@ app.post('/izbrisiPodatak', async (req, res) => {
                 poeniMomcad = 'POENI_' + momcad;
 
                 const unesiPoene = await connection.execute(
-                    'UPDATE UTAKMICE SET ' +
+                    'UPDATE NBA.UTAKMICE SET ' +
                         poeniMomcad +
                         '=' +
                         poeniMomcad +
@@ -1850,7 +1868,7 @@ app.post('/izbrisiPodatak', async (req, res) => {
                 );
             }
             const izbrisi = await connection.execute(
-                'DELETE FROM STATISTIKA S WHERE S.STAT_ID = :izbrisiPodatak',
+                'DELETE FROM NBA.STATISTIKA S WHERE S.STAT_ID = :izbrisiPodatak',
                 { izbrisiPodatak: izbrisiPodatak },
                 { autoCommit: true }
             );
@@ -1877,9 +1895,9 @@ app.post('/getStatistickiPodatci', async (req, res) => {
     let connection;
 
     const sql_statistickiPodatci =
-        'SELECT SP.NAZIV FROM STAT_PODATAK SP ORDER BY SP.SP_ID';
+        'SELECT SP.NAZIV FROM NBA.STAT_PODATAK SP ORDER BY SP.SP_ID';
     const sql_statusi =
-        "SELECT S.NAZIV FROM STATUSI S WHERE S.TABLICA = 'STATISTIKA' ORDER BY S.STATUS_ID";
+        "SELECT S.NAZIV FROM NBA.STATUSI S WHERE S.TABLICA = 'STATISTIKA' ORDER BY S.STATUS_ID";
     try {
         connection = await oracledb.getConnection();
 
@@ -1916,14 +1934,14 @@ app.post('/unesiPoene', async (req, res) => {
         connection = await oracledb.getConnection();
         if (poeniDomaci) {
             const result = await connection.execute(
-                'UPDATE UTAKMICE SET POENI_DOMACI = :poeniDomaci WHERE UTAKMICA_ID = :utakmica_id',
+                'UPDATE NBA.UTAKMICE SET POENI_DOMACI = :poeniDomaci WHERE UTAKMICA_ID = :utakmica_id',
                 { poeniDomaci: poeniDomaci, utakmica_id: utakmica_id },
                 { autoCommit: true }
             );
         }
         if (poeniGosti) {
             const result = await connection.execute(
-                'UPDATE UTAKMICE SET POENI_GOSTI = :poeniGosti WHERE UTAKMICA_ID = :utakmica_id',
+                'UPDATE NBA.UTAKMICE SET POENI_GOSTI = :poeniGosti WHERE UTAKMICA_ID = :utakmica_id',
                 { poeniGosti: poeniGosti, utakmica_id: utakmica_id },
                 { autoCommit: true }
             );
@@ -1950,11 +1968,11 @@ app.post('/podatciIgraca', async (req, res) => {
 
         if (imeIgraca.length > 0) {
             const podatci = await connection.execute(
-                "SELECT I.NAZIV, NVL(I.VISINA, ' '), NVL(D.NAZIV,' '), NVL(P.NAZIV,' '), SUBSTR(VMI.DATUM_OD,1, 10), I.BROJ_DRESA, M.MOMCAD_ID, I.IGRAC_ID, TO_CHAR(I.DATUM_ROD, 'FMMonth DD, YYYY') , I.DRAFT, I.TEZINA, M.NAZIV AS IGRACMOMCAD FROM VEZE_MOMCAD_IGRACI VMI, MOMCAD M, IGRACI I, POZICIJE P, DRZAVE D WHERE VMI.MOMCAD_ID = M.MOMCAD_ID AND VMI.IGRAC_ID = I.IGRAC_ID AND I.NAZIV = :imeIgraca AND I.POZICIJA_ID = P.POZICIJA_ID(+) AND I.DRZAVA_ID = D.DRZAVA_ID(+) AND VMI.STATUS_ID = 1",
+                "SELECT I.NAZIV, NVL(I.VISINA, ' '), NVL(D.NAZIV,' '), NVL(P.NAZIV,' '), SUBSTR(VMI.DATUM_OD,1, 10), I.BROJ_DRESA, M.MOMCAD_ID, I.IGRAC_ID, TO_CHAR(I.DATUM_ROD, 'FMMonth DD, YYYY') , I.DRAFT, I.TEZINA, M.NAZIV AS IGRACMOMCAD FROM NBA.VEZE_MOMCAD_IGRACI VMI, NBA.MOMCAD M, NBA.IGRACI I, NBA.POZICIJE P, NBA.DRZAVE D WHERE VMI.MOMCAD_ID = M.MOMCAD_ID AND VMI.IGRAC_ID = I.IGRAC_ID AND I.NAZIV = :imeIgraca AND I.POZICIJA_ID = P.POZICIJA_ID(+) AND I.DRZAVA_ID = D.DRZAVA_ID(+) AND VMI.STATUS_ID = 1",
                 { imeIgraca: imeIgraca }
             );
             const ugovoriIgraca = await connection.execute(
-                "SELECT TO_CHAR(VMI.DATUM_OD, 'YYYY') AS DATUM_OD, TO_CHAR(VMI.DATUM_DO, 'YY') AS DATUM_DO, M.KRATICA, M.NAZIV, TO_CHAR(VMI.DATUM_OD, 'YY') || '/' || SUBSTR(NVL(VMI.DATUM_DO, SYSDATE), 9, 2) AS SEZONA FROM VEZE_MOMCAD_IGRACI VMI, MOMCAD M, IGRACI I WHERE VMI.IGRAC_ID = I.IGRAC_ID AND I.NAZIV = :imeIgraca AND VMI.MOMCAD_ID = M.MOMCAD_ID",
+                "SELECT TO_CHAR(VMI.DATUM_OD, 'YYYY') AS DATUM_OD, TO_CHAR(VMI.DATUM_DO, 'YY') AS DATUM_DO, M.KRATICA, M.NAZIV, TO_CHAR(VMI.DATUM_OD, 'YY') || '/' || SUBSTR(NVL(VMI.DATUM_DO, SYSDATE), 9, 2) AS SEZONA FROM NBA.VEZE_MOMCAD_IGRACI VMI, NBA.MOMCAD M, NBA.IGRACI I WHERE VMI.IGRAC_ID = I.IGRAC_ID AND I.NAZIV = :imeIgraca AND VMI.MOMCAD_ID = M.MOMCAD_ID",
                 { imeIgraca: imeIgraca },
                 { outFormat: oracledb.OBJECT }
             );
@@ -1984,20 +2002,20 @@ app.post('/podatciPocetna', async (req, res) => {
         connection = await oracledb.getConnection();
 
         const utakmica = await connection.execute(
-            "SELECT M1.KRATICA AS DOMACI_KRATICA, M2.KRATICA AS GOSTI_KRATICA, UTK.POENI_DOMACI, UTK.POENI_GOSTI, TO_CHAR(UTK.DATUM_VRIJEME, 'FMMonth DD, YYYY')  AS DATUM, TO_CHAR(UTK.DATUM_VRIJEME, 'HH24:MI') AS VRIJEME, S.NAZIV, M1.NAZIV AS DOMACI_NAZIV, M2.NAZIV AS GOSTI_NAZIV FROM UTAKMICE UTK, MOMCAD M1, MOMCAD M2, SUDCI S WHERE UTK.DOMACI_ID = M1.MOMCAD_ID AND UTK.GOSTI_ID = M2.MOMCAD_ID AND UTK.SUDAC_ID = S.SUDAC_ID  ORDER BY DATUM_VRIJEME DESC FETCH FIRST 1 ROW ONLY",
+            "SELECT M1.KRATICA AS DOMACI_KRATICA, M2.KRATICA AS GOSTI_KRATICA, UTK.POENI_DOMACI, UTK.POENI_GOSTI, TO_CHAR(UTK.DATUM_VRIJEME, 'FMMonth DD, YYYY')  AS DATUM, TO_CHAR(UTK.DATUM_VRIJEME, 'HH24:MI') AS VRIJEME, S.NAZIV, M1.NAZIV AS DOMACI_NAZIV, M2.NAZIV AS GOSTI_NAZIV FROM NBA.UTAKMICE UTK, NBA.MOMCAD M1, NBA.MOMCAD M2, NBA.SUDCI S WHERE UTK.DOMACI_ID = M1.MOMCAD_ID AND UTK.GOSTI_ID = M2.MOMCAD_ID AND UTK.SUDAC_ID = S.SUDAC_ID  ORDER BY DATUM_VRIJEME DESC FETCH FIRST 1 ROW ONLY",
             [],
             { outFormat: oracledb.OBJECT }
         );
 
         const prvihDesetUtakmica = await connection.execute(
-            "SELECT M1.KRATICA AS DOMACI_KRATICA, M2.KRATICA AS GOSTI_KRATICA, UTK.POENI_DOMACI, UTK.POENI_GOSTI, TO_CHAR(UTK.DATUM_VRIJEME, 'FMMonth DD, YYYY')  AS DATUM, TO_CHAR(UTK.DATUM_VRIJEME, 'HH24:MI') AS VRIJEME, S.NAZIV, M1.NAZIV AS DOMACI_NAZIV, M2.NAZIV AS GOSTI_NAZIV FROM UTAKMICE UTK, MOMCAD M1, MOMCAD M2, SUDCI S WHERE UTK.DOMACI_ID = M1.MOMCAD_ID AND UTK.GOSTI_ID = M2.MOMCAD_ID AND UTK.SUDAC_ID = S.SUDAC_ID  ORDER BY DATUM_VRIJEME DESC OFFSET 1 ROW FETCH NEXT 10 ROW ONLY",
+            "SELECT M1.KRATICA AS DOMACI_KRATICA, M2.KRATICA AS GOSTI_KRATICA, UTK.POENI_DOMACI, UTK.POENI_GOSTI, TO_CHAR(UTK.DATUM_VRIJEME, 'FMMonth DD, YYYY')  AS DATUM, TO_CHAR(UTK.DATUM_VRIJEME, 'HH24:MI') AS VRIJEME, S.NAZIV, M1.NAZIV AS DOMACI_NAZIV, M2.NAZIV AS GOSTI_NAZIV FROM NBA.UTAKMICE UTK, NBA.MOMCAD M1, NBA.MOMCAD M2, NBA.SUDCI S WHERE UTK.DOMACI_ID = M1.MOMCAD_ID AND UTK.GOSTI_ID = M2.MOMCAD_ID AND UTK.SUDAC_ID = S.SUDAC_ID  ORDER BY DATUM_VRIJEME DESC OFFSET 1 ROW FETCH NEXT 10 ROW ONLY",
             [],
             { outFormat: oracledb.OBJECT }
         );
 
         const sql_SELECT_IGRAC = `SELECT Igrac, count(*) as BrojUtakmica, SUM(TO_NUMBER(SUBSTR(NBA.RACUNAJ_MINUTE(igrac_id, utakmica_id), 1, 2))*60 + TO_NUMBER(SUBSTR(NBA.RACUNAJ_MINUTE(igrac_id, utakmica_id), 4, 2))) as minute, SUM("Slobodna Bacanja Pogodena" + "Šut za 2 Pogoden"*2 + "Šut za 3 Pogoden"*3)/COUNT(*) as Poeni, SUM("Šut za 3 Pogoden" + "Šut za 2 Pogoden")/COUNT(*) as Pogodci_iz_Polja, SUM("Šut za 3 Pogoden" + "Šut za 3 Promasen" + "Šut za 2 Promasen" + "Šut za 2 Pogoden")/COUNT(*)  as Pokusaji_iz_Polja, CASE WHEN SUM("Šut za 3 Pogoden" + "Šut za 3 Promasen" + "Šut za 2 Promasen" + "Šut za 2 Pogoden") = 0 THEN 0 ELSE SUM("Šut za 3 Pogoden" + "Šut za 2 Pogoden") / SUM("Šut za 3 Pogoden" + "Šut za 3 Promasen" + "Šut za 2 Promasen" + "Šut za 2 Pogoden") END as PP ,SUM("Šut za 3 Pogoden")/COUNT(*) as Sut_za_3_pogoden, SUM("Šut za 3 Promasen")/COUNT(*) as Sut_za_3_promasen ,  CASE WHEN SUM("Šut za 3 Pogoden" + "Šut za 3 Promasen") = 0 THEN 0 ELSE SUM("Šut za 3 Pogoden")/SUM("Šut za 3 Pogoden" + "Šut za 3 Promasen") END   as TRI_P, SUM("Slobodna Bacanja Pogodena")/COUNT(*) AS Slobodna_Bacanja_pogodena, SUM("Slobodna Bacanja Promasena")/COUNT(*) as Slobodna_bacanja_promasena,  CASE WHEN SUM("Slobodna Bacanja Pogodena"+"Slobodna Bacanja Promasena") = 0 THEN 0 ELSE SUM("Slobodna Bacanja Pogodena")/SUM("Slobodna Bacanja Pogodena"+"Slobodna Bacanja Promasena")  END  AS SB,SUM("Napadacki Skok")/COUNT(*) as Napadacki_skok,SUM("Obrambeni Skok")/COUNT(*) as Obrambeni_skok,  SUM("Obrambeni Skok" + "Napadacki Skok")/COUNT(*) as Skokovi, SUM("Asistencije")/COUNT(*) as Asistencije, SUM("Ukradene Lopte")/COUNT(*) as Ukradene_lopte,SUM("Blokovi")/COUNT(*) as Blokovi, IgracMomcad, IgracMomcadKratica, Sezona, plasman, BROJ_DRESA, GODINE`;
 
-        const sql_FROM_IGRAC = ` FROM (select utk.utakmica_id as Utakmica_id, vml.konacni_plasman as plasman, m.NAZIV AS IgracMomcad, m.kratica AS IgracMomcadKratica, m1.kratica AS Domaci, m1.naziv as DOMACI_IME, m2.kratica AS Gosti , m2.NAZIV AS GOSTI_IME, i.igrac_id AS Igrac_id, i.naziv AS Igrac, sp.naziv || '_' ||s.naziv AS Podatak, s.naziv AS Status, UTK.DATUM_VRIJEME, l.sezona as Sezona, i.BROJ_DRESA, FLOOR(MONTHS_BETWEEN(SYSDATE, I.DATUM_ROD) / 12) AS GODINE FROM statistika stat,igraci i,utakmice utk,stat_podatak sp, momcad m, momcad m1,momcad m2,statusi s, lige l, veze_momcad_igraci vmi, veze_momcad_lige vml where vml.momcad_id = m.momcad_id and vml.liga_id = l.liga_id and vmi.IGRAC_ID = i.IGRAC_ID AND VMI.STATUS_ID = 1 AND VMI.MOMCAD_ID = M.MOMCAD_ID AND STAT.IGRAC_ID = i.igrac_id and stat.sp_id = sp.sp_id and STAT.STATUS_ID = s.status_id and stat.utakmica_id = utk.utakmica_id and UTK.DOMACI_ID = m1.momcad_id and utk.gosti_id = m2.momcad_id and s.tablica = 'STATISTIKA' and utk.liga_id = l.liga_id and l.sezona = '23/24' ) `;
+        const sql_FROM_IGRAC = ` FROM (select utk.utakmica_id as Utakmica_id, vml.konacni_plasman as plasman, m.NAZIV AS IgracMomcad, m.kratica AS IgracMomcadKratica, m1.kratica AS Domaci, m1.naziv as DOMACI_IME, m2.kratica AS Gosti , m2.NAZIV AS GOSTI_IME, i.igrac_id AS Igrac_id, i.naziv AS Igrac, sp.naziv || '_' ||s.naziv AS Podatak, s.naziv AS Status, UTK.DATUM_VRIJEME, l.sezona as Sezona, i.BROJ_DRESA, FLOOR(MONTHS_BETWEEN(SYSDATE, I.DATUM_ROD) / 12) AS GODINE FROM NBA.statistika stat, NBA.igraci i, NBA.utakmice utk, NBA.stat_podatak sp, NBA.momcad m, NBA.momcad m1, NBA.momcad m2, NBA.statusi s, NBA.lige l, NBA.veze_momcad_igraci vmi, NBA.veze_momcad_lige vml where vml.momcad_id = m.momcad_id and vml.liga_id = l.liga_id and vmi.IGRAC_ID = i.IGRAC_ID AND VMI.STATUS_ID = 1 AND VMI.MOMCAD_ID = M.MOMCAD_ID AND STAT.IGRAC_ID = i.igrac_id and stat.sp_id = sp.sp_id and STAT.STATUS_ID = s.status_id and stat.utakmica_id = utk.utakmica_id and UTK.DOMACI_ID = m1.momcad_id and utk.gosti_id = m2.momcad_id and s.tablica = 'STATISTIKA' and utk.liga_id = l.liga_id and l.sezona = '23/24' ) `;
 
         const sql_PIVOT_IGRAC = ` PIVOT ( COUNT(Status) FOR Podatak IN('Slobodno bacanje_Pogođen' AS "Slobodna Bacanja Pogodena",'Slobodno bacanje_Promašen' AS "Slobodna Bacanja Promasena",'Šut za 3_Pogođen' AS "Šut za 3 Pogoden", 'Šut za 3_Promašen' AS "Šut za 3 Promasen",'Šut za 2_Pogođen' AS "Šut za 2 Pogoden", 'Šut za 2_Promašen' AS "Šut za 2 Promasen",'Ulaz/Izlaz_Završen' AS "Ulaz/Izlaz",'Obrambeni skok_Završen' AS "Obrambeni Skok",'Napadački skok_Završen' AS "Napadacki Skok",'Asistencija_Završen' AS "Asistencije",'Izgubljena lopta_Završen' AS "Izgubljene Lopte",'Ukradena lopta_Završen' AS "Ukradene Lopte",'Blokada_Završen' AS "Blokovi")) GROUP BY IGRAC , IGRACMOMCAD,  IGRACMOMCADKRATICA, sezona, plasman, BROJ_DRESA, GODINE ORDER BY Poeni DESC FETCH FIRST 1 ROW ONLY`;
 
@@ -2032,13 +2050,13 @@ app.post('/podatciSearch', async (req, res) => {
         connection = await oracledb.getConnection();
 
         const igraci = await connection.execute(
-            'SELECT I.NAZIV AS IGRAC, M.NAZIV AS MOMCAD, I.BROJ_DRESA, P.NAZIV AS POZICIJA, I.VISINA, D.NAZIV AS DRZAVA, M.KRATICA AS KRATICA FROM VEZE_MOMCAD_IGRACI VMI, IGRACI I, MOMCAD M, POZICIJE P, DRZAVE D WHERE VMI.MOMCAD_ID = M.MOMCAD_ID AND VMI.IGRAC_ID = I.IGRAC_ID AND VMI.STATUS_ID = 1 AND I.POZICIJA_ID = P.POZICIJA_ID AND I.DRZAVA_ID = D.DRZAVA_ID ORDER BY IGRAC',
+            'SELECT I.NAZIV AS IGRAC, M.NAZIV AS MOMCAD, I.BROJ_DRESA, P.NAZIV AS POZICIJA, I.VISINA, D.NAZIV AS DRZAVA, M.KRATICA AS KRATICA FROM NBA.VEZE_MOMCAD_IGRACI VMI, NBA.IGRACI I, NBA.MOMCAD M, NBA.POZICIJE P, NBA.DRZAVE D WHERE VMI.MOMCAD_ID = M.MOMCAD_ID AND VMI.IGRAC_ID = I.IGRAC_ID AND VMI.STATUS_ID = 1 AND I.POZICIJA_ID = P.POZICIJA_ID AND I.DRZAVA_ID = D.DRZAVA_ID ORDER BY IGRAC',
             [],
             { outFormat: oracledb.OBJECT }
         );
 
         const momcadi = await connection.execute(
-            "SELECT M.NAZIV AS MOMCAD, T.NAZIV AS TRENER, TO_CHAR(M.DATUM_OD, 'FMMonth DD, YYYY') AS DATUM_OSNIVANJA, G.NAZIV AS GRAD, S.NAZIV AS STADION FROM VEZE_MOMCAD_TRENER VMT, MOMCAD M, GRADOVI G, STADIONI S, TRENERI T WHERE VMT.MOMCAD_ID = M.MOMCAD_ID AND VMT.TRENER_ID = T.TRENER_ID AND VMT.STATUS_ID = 1 AND M.GRAD_ID = G.GRAD_ID AND M.STADION_ID = S.STADION_ID ORDER BY MOMCAD",
+            "SELECT M.NAZIV AS MOMCAD, T.NAZIV AS TRENER, TO_CHAR(M.DATUM_OD, 'FMMonth DD, YYYY') AS DATUM_OSNIVANJA, G.NAZIV AS GRAD, S.NAZIV AS STADION FROM NBA.VEZE_MOMCAD_TRENER VMT, NBA.MOMCAD M, NBA.GRADOVI G, NBA.STADIONI S, NBA.TRENERI T WHERE VMT.MOMCAD_ID = M.MOMCAD_ID AND VMT.TRENER_ID = T.TRENER_ID AND VMT.STATUS_ID = 1 AND M.GRAD_ID = G.GRAD_ID AND M.STADION_ID = S.STADION_ID ORDER BY MOMCAD",
             [],
             { outFormat: oracledb.OBJECT }
         );
