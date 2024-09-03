@@ -22,21 +22,19 @@ function Navigation({ roles }) {
                 <div className="navigation-tab">
                     <Link to="/tablica">Tablica</Link>
                 </div>
-                {roles.includes('trade') ||
-                    (roles == 'all' && (
-                        <div className="navigation-tab">
-                            <Link to="/trade">Trade players</Link>
-                        </div>
-                    ))}
+                {(roles.includes('TRADE') || roles == 'ADMIN') && (
+                    <div className="navigation-tab">
+                        <Link to="/trade">Trade players</Link>
+                    </div>
+                )}
                 <div className="navigation-tab">
                     <Link to="/Statistika">Statistika</Link>
                 </div>
-                {roles.includes('delegat') ||
-                    (roles == 'all' && (
-                        <div className="navigation-tab">
-                            <Link to="/Delegat">Delegat</Link>
-                        </div>
-                    ))}
+                {(roles.includes('DELEGAT') || roles == 'ADMIN') && (
+                    <div className="navigation-tab">
+                        <Link to="/Delegat">Delegat</Link>
+                    </div>
+                )}
                 <div className="navigation-tab">
                     <Link to="/Search">Traži</Link>
                 </div>
@@ -57,12 +55,11 @@ function Navigation({ roles }) {
             </div>
 
             <div className="navigation-logOut">
-                {roles.includes('register') ||
-                    (roles == 'all' && (
-                        <div className="navigation-logOut1">
-                            <Link to="/register">Register User</Link>
-                        </div>
-                    ))}
+                {roles == 'ADMIN' && (
+                    <div className="navigation-logOut1">
+                        <Link to="/admin">Postavke</Link>
+                    </div>
+                )}
                 <div
                     className="navigation-logOut1"
                     onClick={() => {

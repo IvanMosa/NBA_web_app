@@ -9,7 +9,7 @@ import OdabirPodatka from './library_css/OdabirPodatka';
 import DelegatIgraci from './library_css/Delegat_Igraci';
 import '@fortawesome/fontawesome-free/css/all.min.css';
 
-const Delegat = () => {
+const Delegat = ({ token }) => {
     const [momcadi, setMomcadi] = useState([]);
     const [sudci, setSudci] = useState([]);
     const [lige, setLige] = useState([]);
@@ -61,8 +61,14 @@ const Delegat = () => {
 
     const fetchData = async () => {
         try {
-            const pocetniPodatci = await axios.get(
-                'http://localhost:4000/getMomcadi'
+            const pocetniPodatci = await axios.post(
+                'http://localhost:4000/getMomcadi',
+                {},
+                {
+                    headers: {
+                        authorization: `Bearer ${token}`,
+                    },
+                }
             );
             setMomcadi(
                 Array.isArray(pocetniPodatci.data.momcad)
@@ -81,12 +87,24 @@ const Delegat = () => {
             );
 
             const statistikaMomcadi = await axios.post(
-                'http://localhost:4000/getStatistikaMomcadi'
+                'http://localhost:4000/getStatistikaMomcadi',
+                {},
+                {
+                    headers: {
+                        authorization: `Bearer ${token}`,
+                    },
+                }
             );
             setSveUtakmice(statistikaMomcadi.data.utakmice);
 
             const statPodatci_statusi = await axios.post(
-                'http://localhost:4000/getStatistickiPodatci'
+                'http://localhost:4000/getStatistickiPodatci',
+                {},
+                {
+                    headers: {
+                        authorization: `Bearer ${token}`,
+                    },
+                }
             );
 
             console.log(statPodatci_statusi.data.statistickiPodatci);
@@ -150,6 +168,11 @@ const Delegat = () => {
                         datum: datum + ' ' + vrijeme,
                         sezona: sezona.toString(),
                         sudac: sudac.toString(),
+                    },
+                    {
+                        headers: {
+                            authorization: `Bearer ${token}`,
+                        },
                     }
                 );
 
@@ -162,6 +185,11 @@ const Delegat = () => {
                             imeMomcad: domaci.toString(),
                             imeMomcad1: gosti.toString(),
                             datum: datum + ' ' + vrijeme,
+                        },
+                        {
+                            headers: {
+                                authorization: `Bearer ${token}`,
+                            },
                         }
                     );
                     setOznacenaUtakmica(result1.data.utakmica);
@@ -243,6 +271,11 @@ const Delegat = () => {
                     status: 'U tijeku',
                     podatak: 'Ulaz/Izlaz',
                     setStarteri: true,
+                },
+                {
+                    headers: {
+                        authorization: `Bearer ${token}`,
+                    },
                 }
             );
             setPozivStarteriOznaceni(true);
@@ -254,20 +287,44 @@ const Delegat = () => {
     const prikaziStatistiku = async () => {
         try {
             const [statistikaResponse, igraciResponses] = await Promise.all([
-                axios.post('http://localhost:4000/prikaziStatistikuUtakmice', {
-                    utakmica_id: utakmica_id,
-                    domaci_naziv: oznacenaUtakmica.DOMACI_NAZIV.toString(),
-                    gosti_naziv: oznacenaUtakmica.GOSTI_NAZIV.toString(),
-                }),
+                axios.post(
+                    'http://localhost:4000/prikaziStatistikuUtakmice',
+                    {
+                        utakmica_id: utakmica_id,
+                        domaci_naziv: oznacenaUtakmica.DOMACI_NAZIV.toString(),
+                        gosti_naziv: oznacenaUtakmica.GOSTI_NAZIV.toString(),
+                    },
+                    {
+                        headers: {
+                            authorization: `Bearer ${token}`,
+                        },
+                    }
+                ),
                 Promise.all([
-                    axios.post('http://localhost:4000/showRoster', {
-                        imeMomcad: oznacenaUtakmica.DOMACI_NAZIV.toString(),
-                        status: 0,
-                    }),
-                    axios.post('http://localhost:4000/showRoster', {
-                        imeMomcad: oznacenaUtakmica.GOSTI_NAZIV.toString(),
-                        status: 0,
-                    }),
+                    axios.post(
+                        'http://localhost:4000/showRoster',
+                        {
+                            imeMomcad: oznacenaUtakmica.DOMACI_NAZIV.toString(),
+                            status: 0,
+                        },
+                        {
+                            headers: {
+                                authorization: `Bearer ${token}`,
+                            },
+                        }
+                    ),
+                    axios.post(
+                        'http://localhost:4000/showRoster',
+                        {
+                            imeMomcad: oznacenaUtakmica.GOSTI_NAZIV.toString(),
+                            status: 0,
+                        },
+                        {
+                            headers: {
+                                authorization: `Bearer ${token}`,
+                            },
+                        }
+                    ),
                 ]),
             ]);
 
@@ -388,6 +445,11 @@ const Delegat = () => {
                                 sekunde: sekunde,
                                 podatak: oznaceni_podatak,
                                 utakmica_id: utakmica_id,
+                            },
+                            {
+                                headers: {
+                                    authorization: `Bearer ${token}`,
+                                },
                             }
                         );
 
@@ -431,6 +493,11 @@ const Delegat = () => {
                                 sekunde: sekunde,
                                 podatak: oznaceni_podatak,
                                 utakmica_id: utakmica_id,
+                            },
+                            {
+                                headers: {
+                                    authorization: `Bearer ${token}`,
+                                },
                             }
                         );
 
@@ -470,6 +537,11 @@ const Delegat = () => {
                             podatak: oznaceni_podatak,
                             utakmica_id: utakmica_id,
                             uzivo: uzivoUnos,
+                        },
+                        {
+                            headers: {
+                                authorization: `Bearer ${token}`,
+                            },
                         }
                     );
                     setStatistika((prev) => [result.data.noviPodatak, ...prev]);
@@ -654,6 +726,11 @@ const Delegat = () => {
                         izbrisiPodatakUlaz: izbrisiPodatakUlaz,
                         utakmica_id: utakmica_id,
                         uzivo: uzivoUnos,
+                    },
+                    {
+                        headers: {
+                            authorization: `Bearer ${token}`,
+                        },
                     }
                 );
 
@@ -768,6 +845,7 @@ const Delegat = () => {
                                     oznacenaUtakmica={oznacenaUtakmica}
                                     uzivoUnos={uzivoUnos}
                                     setUzivoUnos={setUzivoUnos}
+                                    token={token}
                                 />
                             )}
                         </div>

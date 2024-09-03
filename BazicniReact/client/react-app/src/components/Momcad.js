@@ -10,7 +10,7 @@ import MySelect from './library_css/MySelect.js';
 import '@fortawesome/fontawesome-free/css/all.min.css';
 import Logo from './library_css/Logo.js';
 
-const Momcad = ({ edit }) => {
+const Momcad = ({ edit, token }) => {
     const { imeMomcad } = useParams();
     const [igraci, setIgraci] = useState([]);
     const [pozicije, setPozicije] = useState([]);
@@ -39,9 +39,17 @@ const Momcad = ({ edit }) => {
     const location = useLocation();
 
     const fetchData = async () => {
-        const result = await axios.post('http://localhost:4000/showRoster', {
-            imeMomcad: imeMomcad,
-        });
+        const result = await axios.post(
+            'http://localhost:4000/showRoster',
+            {
+                imeMomcad: imeMomcad,
+            },
+            {
+                headers: {
+                    authorization: `Bearer ${token}`,
+                },
+            }
+        );
 
         setIgraci(Array.isArray(result.data.igraci) ? result.data.igraci : []);
 
@@ -70,7 +78,12 @@ const Momcad = ({ edit }) => {
 
         const result1 = await axios.post(
             'http://localhost:4000/getStatistikaMomcadi',
-            { imeMomcad: imeMomcad }
+            { imeMomcad: imeMomcad },
+            {
+                headers: {
+                    authorization: `Bearer ${token}`,
+                },
+            }
         );
         setUtakmice(result1.data.utakmice);
         setSezone(result1.data.sezone);
@@ -163,14 +176,22 @@ const Momcad = ({ edit }) => {
     //SAVE
     const handleAddSaveClick = async () => {
         try {
-            const result = await axios.post('http://localhost:4000/unosIgrac', {
-                imeIgrac: noviIgrac.imeIgrac,
-                imeMomcad: imeMomcad,
-                visina: noviIgrac.visina,
-                drzava: noviIgrac.drzava.toString(),
-                pozicija: noviIgrac.pozicija.toString(),
-                datum_od: noviIgrac.datum_od,
-            });
+            const result = await axios.post(
+                'http://localhost:4000/unosIgrac',
+                {
+                    imeIgrac: noviIgrac.imeIgrac,
+                    imeMomcad: imeMomcad,
+                    visina: noviIgrac.visina,
+                    drzava: noviIgrac.drzava.toString(),
+                    pozicija: noviIgrac.pozicija.toString(),
+                    datum_od: noviIgrac.datum_od,
+                },
+                {
+                    headers: {
+                        authorization: `Bearer ${token}`,
+                    },
+                }
+            );
             let temp = result.data.message;
             setInsertMessage(temp);
             console.log(temp);
@@ -210,7 +231,12 @@ const Momcad = ({ edit }) => {
             console.log('usaao');
             const result = await axios.post(
                 'http://localhost:4000/promjeneMomcad',
-                promjeneZaAPI
+                promjeneZaAPI,
+                {
+                    headers: {
+                        authorization: `Bearer ${token}`,
+                    },
+                }
             );
 
             console.log(result.data.message);
@@ -263,7 +289,12 @@ const Momcad = ({ edit }) => {
             if (confirm) {
                 const result = await axios.post(
                     'http://localhost:4000/izbrisiIgraca',
-                    { imeIgrac: imeIgrac }
+                    { imeIgrac: imeIgrac },
+                    {
+                        headers: {
+                            authorization: `Bearer ${token}`,
+                        },
+                    }
                 );
                 setOnError(true);
                 setErrorMessage('Deleting...');

@@ -8,7 +8,7 @@ import Statistika from './Statistika';
 import { Link } from 'react-router-dom';
 import KarijeraMomcadi from './library_css/karijeraMomcadi';
 
-function Igrac() {
+function Igrac({ token }) {
     const location = useLocation();
     const { imeIgrac } = useParams();
     const [podatci, setPodatci] = useState(location.state?.rowItem || null);
@@ -34,6 +34,11 @@ function Igrac() {
                 'http://localhost:4000/podatciIgraca',
                 {
                     imeIgrac: imeIgrac,
+                },
+                {
+                    headers: {
+                        authorization: `Bearer ${token}`,
+                    },
                 }
             );
             console.log(imeMomcad);

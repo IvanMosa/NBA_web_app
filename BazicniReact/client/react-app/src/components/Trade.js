@@ -4,7 +4,7 @@ import axios from 'axios';
 import '../components/css/trade.css';
 import Logo from './library_css/Logo';
 
-function Trade() {
+const Trade = ({ token }) => {
     const [momcad1, setMomcad1] = useState(' ');
     const [momcad2, setMomcad2] = useState(' ');
     const [igrac1, setIgrac1] = useState(' ');
@@ -18,7 +18,15 @@ function Trade() {
     const [datum_igrac, setDatumIgrac] = useState('');
     useEffect(() => {
         const fetchData = async () => {
-            const result = await axios.get('http://localhost:4000/getMomcadi');
+            const result = await axios.post(
+                'http://localhost:4000/getMomcadi',
+                {},
+                {
+                    headers: {
+                        authorization: `Bearer ${token}`,
+                    },
+                }
+            );
             const momcadTemp = Array.isArray(result.data.momcad)
                 ? result.data.momcad
                 : [];
@@ -48,6 +56,11 @@ function Trade() {
                     {
                         imeMomcad: momcad1,
                         imeMomcad1: momcad2,
+                    },
+                    {
+                        headers: {
+                            authorization: `Bearer ${token}`,
+                        },
                     }
                 );
                 const igraci1_temp = Array.isArray(result1.data.igraci_1)
@@ -67,6 +80,11 @@ function Trade() {
                     'http://localhost:4000/showRosterTrade',
                     {
                         imeMomcad: momcad1,
+                    },
+                    {
+                        headers: {
+                            authorization: `Bearer ${token}`,
+                        },
                     }
                 );
                 const igraci1_temp = Array.isArray(result1.data.igraci_1)
@@ -78,6 +96,11 @@ function Trade() {
                     'http://localhost:4000/showRosterTrade',
                     {
                         imeMomcad1: momcad2,
+                    },
+                    {
+                        headers: {
+                            authorization: `Bearer ${token}`,
+                        },
                     }
                 );
                 const igraci2_temp = Array.isArray(result1.data.igraci_2)
@@ -129,6 +152,11 @@ function Trade() {
                     momcad1: momcad1,
                     momcad2: momcad2,
                     datum_igrac: datum_igrac,
+                },
+                {
+                    headers: {
+                        authorization: `Bearer ${token}`,
+                    },
                 }
             );
             setErrorMessage(result.data.message);
@@ -214,6 +242,6 @@ function Trade() {
             </div>
         </div>
     );
-}
+};
 
 export default Trade;

@@ -7,7 +7,7 @@ import Tablica from './components/Tablica';
 import Login from './components/Login';
 import Home from './components/Home';
 import Navigation from './components/Navigation';
-import Register from './components/Register';
+import Admin from './components/Admin';
 import Momcad from './components/Momcad';
 import Igrac from './components/Igrac';
 import Trade from './components/Trade';
@@ -23,35 +23,51 @@ function App() {
             <BrowserRouter>
                 <Navigation roles={roles} />
                 <Routes>
-                    <Route path="/" element={<Home />} />
-                    <Route path="/Tablica" element={<Tablica />} />
+                    <Route path="/" element={<Home token={token} />} />
+                    <Route
+                        path="/Tablica"
+                        element={<Tablica token={token} />}
+                    />
                     <Route
                         path="/Momcad/:imeMomcad"
                         element={
                             <Momcad
                                 edit={
-                                    roles.includes('urediMomcad') ||
-                                    roles == 'all'
+                                    roles.includes('UREDI_MOMCAD') ||
+                                    roles == 'ADMIN'
                                 }
+                                token={token}
                             />
                         }
                     />
-                    {roles.includes('register') ||
-                        (roles == 'all' && (
-                            <Route path="/Register" element={<Register />} />
-                        ))}
-                    <Route path="/Igrac/:imeIgrac" element={<Igrac />} />
-                    {roles.includes('trade') ||
-                        (roles == 'all' && (
-                            <Route path="/Trade" element={<Trade />} />
-                        ))}
-                    <Route path="/Statistika" element={<Statistika />} />
-                    {roles.includes('delegat') ||
-                        (roles == 'all' && (
-                            <Route path="/Delegat" element={<Delegat />} />
-                        ))}
-                    <Route path="/Search" element={<Search />} />
-                    <Route path="/*" element={<Home />} />
+                    {roles == 'ADMIN' && (
+                        <Route
+                            path="/Admin"
+                            element={<Admin roles={roles} token={token} />}
+                        />
+                    )}
+                    <Route
+                        path="/Igrac/:imeIgrac"
+                        element={<Igrac token={token} />}
+                    />
+                    {(roles.includes('TRADE') || roles == 'ADMIN') && (
+                        <Route
+                            path="/Trade"
+                            element={<Trade token={token} />}
+                        />
+                    )}
+                    <Route
+                        path="/Statistika"
+                        element={<Statistika token={token} />}
+                    />
+                    {(roles.includes('DELEGAT') || roles == 'ADMIN') && (
+                        <Route
+                            path="/Delegat"
+                            element={<Delegat token={token} />}
+                        />
+                    )}
+                    <Route path="/Search" element={<Search token={token} />} />
+                    <Route path="/*" element={<Home token={token} />} />
                 </Routes>
             </BrowserRouter>
         );

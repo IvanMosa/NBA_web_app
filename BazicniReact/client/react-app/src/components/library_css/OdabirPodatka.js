@@ -18,6 +18,7 @@ const OdabirPodatka = ({
     oznacenaUtakmica,
     uzivoUnos,
     setUzivoUnos,
+    token,
 }) => {
     const [temp_index, setTempIndex] = useState([]);
     const [temp_podatak, setTempPodatak] = useState('');
@@ -73,6 +74,11 @@ const OdabirPodatka = ({
                     poeniDomaci: poeniDomaci,
                     poeniGosti: poeniGosti,
                     utakmica_id: oznacenaUtakmica.UTAKMICA_ID,
+                },
+                {
+                    headers: {
+                        authorization: `Bearer ${token}`,
+                    },
                 }
             );
         } catch (err) {

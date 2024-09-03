@@ -4,7 +4,7 @@ import '../components/css/statistika.css';
 import axios from 'axios';
 import { Link } from 'react-router-dom';
 
-const Statistika = ({ imeIgrac, setPoeni, setStatistikaSezona }) => {
+const Statistika = ({ imeIgrac, setPoeni, setStatistikaSezona, token }) => {
     const [igraci, setIgraci] = useState([]);
     const [podatciSez, setPodatciSez] = useState([]);
     const [imeSezone, setimeSezone] = useState('23/24');
@@ -69,7 +69,12 @@ const Statistika = ({ imeIgrac, setPoeni, setStatistikaSezona }) => {
             try {
                 const result = await axios.post(
                     'http://localhost:4000/getStatistikaIgraci',
-                    { imeIgrac: imeIgrac ? imeIgrac : 'Svi' }
+                    { imeIgrac: imeIgrac ? imeIgrac : 'Svi' },
+                    {
+                        headers: {
+                            authorization: `Bearer ${token}`,
+                        },
+                    }
                 );
                 setIgraci(result.data.igraci);
                 setSezone(result.data.sezone);
@@ -77,7 +82,13 @@ const Statistika = ({ imeIgrac, setPoeni, setStatistikaSezona }) => {
                 else setStatistikaSezona(result.data.karijera);
 
                 const result1 = await axios.post(
-                    'http://localhost:4000/getStatistikaMomcadi'
+                    'http://localhost:4000/getStatistikaMomcadi',
+                    {},
+                    {
+                        headers: {
+                            authorization: `Bearer ${token}`,
+                        },
+                    }
                 );
                 console.log(result1.data.utakmice);
                 setUtakmice(result1.data.utakmice);

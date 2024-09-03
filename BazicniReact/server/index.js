@@ -22,10 +22,9 @@ app.use(function (err, req, res, next) {
 
 async function init() {
     try {
-        await oracledb.createPool({
-            poolAlias: 'adminPool',
-            user: 'NBA',
-            password: dbConfig.user['NBA'].password,
+        oracledb.createPool({
+            user: dbConfig.user,
+            password: dbConfig.password,
             connectString: dbConfig.connectString,
         });
         console.log('Connection pool started');
@@ -36,22 +35,6 @@ async function init() {
 
 init();
 
-async function initUserPool(username, user_uloga) {
-    try {
-        console.log(user_uloga);
-        console.log(dbConfig.user[user_uloga].password);
-        await oracledb.createPool({
-            user: user_uloga,
-            password: dbConfig.user[user_uloga].password,
-            connectString: dbConfig.connectString,
-        });
-
-        console.log(`Connection pool created for user: ${username}`);
-    } catch (err) {
-        console.error('Error creating user pool:', err);
-    }
-}
-
 app.listen(4000, function () {
     console.log('listening to the port 4000');
 });
@@ -61,22 +44,12 @@ const authenticateJWT = (req, res, next) => {
 
     if (authHeader) {
         const token = authHeader.split(' ')[1];
-
         jwt.verify(token, dbConfig.jwtSecretKey, (err, result) => {
             if (err) {
                 console.log(err);
-                //return res.sendStatus(401);
 
-                let msg =
-                    'Istekla je korisnička sesija, molimo ponovite prijavu na uslugu';
-                let error = 403;
-
-                res.status(403).send({
-                    message: msg,
-                });
+                res.status(403);
             } else {
-                //console.log("Users seems ok - " + result);
-                //console.log(result)
                 req.user = result;
                 next();
             }
@@ -96,11 +69,11 @@ app.post('/login', async (req, res) => {
     let connection;
 
     try {
-        connection = await oracledb.getConnection('adminPool');
+        connection = await oracledb.getConnection();
         const { userName, password } = req.body;
 
         const result = await connection.execute(
-            `SELECT K.NAZIV, K.SIFRA AS SIFRA, K.USER_ULOGA FROM NBA.KORISNICI K WHERE K.NAZIV = :userName`,
+            `SELECT KORISNIK, SIFRA, LISTAGG(ULOGA, ', ') WITHIN GROUP (ORDER BY ULOGA) AS ULOGE FROM( SELECT KR.NAZIV AS Korisnik, KR.SIFRA AS SIFRA,  KR1.NAZIV as ULOGA FROM NBA.VEZE_KORISNICI_ROLE VKR, NBA.KORISNICI_ROLE KR, NBA.KORISNICI_ROLE KR1 WHERE VKR.KORISNIK_ID = KR.KORISNIK_ID AND VKR.KORISNIK_ID1 = KR1.KORISNIK_ID AND KR.NAZIV = :userName AND KR.STATUS_ID = 1) GROUP BY KORISNIK, SIFRA`,
             { userName },
             {
                 resultSet: true,
@@ -128,23 +101,15 @@ app.post('/login', async (req, res) => {
                             console.log('Passwords match! User authenticated.');
 
                             let payload = { name: userName };
-                            let token = jwt.sign(
+                            let AccessToken = jwt.sign(
                                 payload,
                                 dbConfig.jwtSecretKey,
                                 { expiresIn: dbConfig.jwtExpirationWeb }
                             );
 
-                            let resultMsg = {
-                                message: 'Login!!',
-                                token: token,
-                                user: { userName: userName },
-                            };
-
-                            initUserPool(row.NAZIV, row.USER_ULOGA);
-
                             res.status(200).json({
-                                token: token,
-                                roles: dbConfig.user[row.USER_ULOGA].roles,
+                                token: AccessToken,
+                                roles: row.ULOGE,
                             });
                         } else {
                             console.log(
@@ -181,7 +146,7 @@ app.post('/login', async (req, res) => {
 });
 
 //Register API
-app.post('/register', async (req, res) => {
+app.post('/register', authenticateJWT, async (req, res) => {
     let connection;
     const saltRounds = 10;
     const { userName, password, roles } = req.body;
@@ -193,7 +158,7 @@ app.post('/register', async (req, res) => {
 
         connection = await oracledb.getConnection();
         const result = await connection.execute(
-            `INSERT INTO NBA.KORISNICI(NAZIV, SIFRA) VALUES(:userName, :hashedPass)`,
+            `INSERT INTO NBA.KORISNICI_ROLE(NAZIV, SIFRA, STATUS_ID) VALUES(:userName, :hashedPass, 1)`,
             {
                 userName: userName,
                 hashedPass: hashedPass,
@@ -203,6 +168,31 @@ app.post('/register', async (req, res) => {
             }
         );
 
+        const pronadiKorisnikID = await connection.execute(
+            'SELECT K.KORISNIK_ID FROM KORISNICI_ROLE K WHERE K.NAZIV = :userName AND K.SIFRA = :hashedPass AND K.STATUS_ID = 1',
+            { userName: userName, hashedPass: hashedPass },
+            { outFormat: oracledb.OBJECT }
+        );
+
+        const korisnik_id = pronadiKorisnikID.rows[0].KORISNIK_ID;
+
+        for (const uloga of roles) {
+            const pronadiUloguID = await connection.execute(
+                'SELECT K.KORISNIK_ID FROM KORISNICI_ROLE K WHERE K.NAZIV = :uloga AND K.STATUS_ID = 2',
+                { uloga: uloga },
+                { outFormat: oracledb.OBJECT }
+            );
+
+            if (pronadiUloguID.rows.length > 0) {
+                const uloga_id = pronadiUloguID.rows[0].KORISNIK_ID;
+
+                await connection.execute(
+                    'INSERT INTO VEZE_KORISNICI_ROLE(KORISNIK_ID, KORISNIK_ID1) VALUES (:korisnik_id, :uloga_id)',
+                    { korisnik_id: korisnik_id, uloga_id: uloga_id },
+                    { outFormat: oracledb.OBJECT, autoCommit: true }
+                );
+            }
+        }
         if (result.rowsAffected === 1) {
             res.status(201).send({ message: 'User registered successfully' });
         } else {
@@ -225,15 +215,34 @@ app.post('/register', async (req, res) => {
     }
 });
 
-app.post('/logout', async (req, res) => {
+app.post('/adminSviKorisnici', authenticateJWT, async (req, res) => {
+    let connection;
+
     try {
-        await oracledb.getPool().close();
+        connection = await oracledb.getConnection();
+
+        const korisnici = await connection.execute(
+            "SELECT KORISNIK, LISTAGG(ULOGA, ',') WITHIN GROUP (ORDER BY ULOGA) AS ULOGE FROM( SELECT KR.NAZIV AS Korisnik,  KR1.NAZIV as ULOGA FROM NBA.VEZE_KORISNICI_ROLE VKR, NBA.KORISNICI_ROLE KR, NBA.KORISNICI_ROLE KR1 WHERE VKR.KORISNIK_ID = KR.KORISNIK_ID AND VKR.KORISNIK_ID1 = KR1.KORISNIK_ID AND KR.NAZIV != 'admin') GROUP BY KORISNIK",
+            [],
+            { outFormat: oracledb.OBJECT }
+        );
+
+        res.send({ korisnici: korisnici.rows });
     } catch (err) {
         console.log(err);
+    } finally {
+        if (connection) {
+            try {
+                await connection.close();
+            } catch (err) {
+                console.log(err);
+            }
+        }
     }
 });
+
 //Momčadi sortirane po izboru korisnika (Konferencija / Divizija) API
-app.post('/ShowMomcadi', async (req, res) => {
+app.post('/ShowMomcadi', authenticateJWT, async (req, res) => {
     let connection;
     let imeSezone = req.body.imeSezone.trim();
     let Konf_Div = req.body.konf_div.trim();
@@ -282,7 +291,7 @@ app.post('/ShowMomcadi', async (req, res) => {
 });
 
 //Nazivi svih momčadi, liga, konferencija, divizija API
-app.get('/getMomcadi', async (req, res) => {
+app.post('/getMomcadi', authenticateJWT, async (req, res) => {
     let connection;
 
     try {
@@ -324,7 +333,7 @@ app.get('/getMomcadi', async (req, res) => {
 });
 
 //Naziv, visina, državljanstvo, pozicija, datum potpisa igrača odabrane momčadi API
-app.post('/showRoster', async (req, res) => {
+app.post('/showRoster', authenticateJWT, async (req, res) => {
     let connection;
 
     const status = req.body.status;
@@ -378,7 +387,7 @@ app.post('/showRoster', async (req, res) => {
 });
 
 //Nazivi svih igrača za odabranu momčad jedne i druge momčadi označene u komponenti /trade API
-app.post('/showRosterTrade', async (req, res) => {
+app.post('/showRosterTrade', authenticateJWT, async (req, res) => {
     let connection;
 
     let imeMomcad = req.body.imeMomcad;
@@ -441,7 +450,7 @@ app.post('/showRosterTrade', async (req, res) => {
 });
 
 //Unos trade-a u bazu podataka API
-app.post('/insertTrade', async (req, res) => {
+app.post('/insertTrade', authenticateJWT, async (req, res) => {
     let connection;
     let params = [];
 
@@ -590,7 +599,7 @@ app.post('/insertTrade', async (req, res) => {
 });
 
 //Unos promjena za igrače određene momčadi API
-app.post('/promjeneMomcad', async (req, res) => {
+app.post('/promjeneMomcad', authenticateJWT, async (req, res) => {
     let connection;
     let promjeneAPI = req.body;
     let message = 'Successfuly updated info!';
@@ -715,7 +724,7 @@ app.post('/promjeneMomcad', async (req, res) => {
 });
 
 //Unos igrača i spoj na određenu momčad API
-app.post('/unosIgrac', async (req, res) => {
+app.post('/unosIgrac', authenticateJWT, async (req, res) => {
     let connection;
     let params = [];
     let message = 'Successfuly added a player! Edit team to update info!';
@@ -934,7 +943,7 @@ app.post('/unosIgrac', async (req, res) => {
     }
 });
 
-app.post('/izbrisiIgraca', async (req, res) => {
+app.post('/izbrisiIgraca', authenticateJWT, async (req, res) => {
     let connection;
     let message = 'Successfuly deleted player: ';
 
@@ -1001,7 +1010,7 @@ app.post('/izbrisiIgraca', async (req, res) => {
     }
 });
 
-app.post('/getStatistikaIgraci', async (req, res) => {
+app.post('/getStatistikaIgraci', authenticateJWT, async (req, res) => {
     let connection;
 
     const imeIgrac = req.body.imeIgrac ? req.body.imeIgrac : null;
@@ -1117,7 +1126,7 @@ app.post('/getStatistikaIgraci', async (req, res) => {
     }
 });
 
-app.post('/getStatistikaMomcadi', async (req, res) => {
+app.post('/getStatistikaMomcadi', authenticateJWT, async (req, res) => {
     let connection;
 
     let imeMomcad = req.body.imeMomcad;
@@ -1216,7 +1225,7 @@ app.post('/getStatistikaMomcadi', async (req, res) => {
     }
 });
 
-app.post('/kreirajUtakmicu', async (req, res) => {
+app.post('/kreirajUtakmicu', authenticateJWT, async (req, res) => {
     let connection;
 
     let domaci = req.body.domaci;
@@ -1338,7 +1347,7 @@ app.post('/kreirajUtakmicu', async (req, res) => {
     }
 });
 
-app.post('/prikaziStatistikuUtakmice', async (req, res) => {
+app.post('/prikaziStatistikuUtakmice', authenticateJWT, async (req, res) => {
     let connection;
 
     const sql_SELECT =
@@ -1434,7 +1443,7 @@ app.post('/prikaziStatistikuUtakmice', async (req, res) => {
     }
 });
 
-app.post('/unesiStatistiku', async (req, res) => {
+app.post('/unesiStatistiku', authenticateJWT, async (req, res) => {
     let connection;
 
     const utakmica_id = req.body.utakmica_id;
@@ -1763,7 +1772,7 @@ app.post('/unesiStatistiku', async (req, res) => {
     }
 });
 
-app.post('/izbrisiPodatak', async (req, res) => {
+app.post('/izbrisiPodatak', authenticateJWT, async (req, res) => {
     let connection;
 
     const izbrisiPodatak = req.body.izbrisiPodatak[5];
@@ -1891,7 +1900,7 @@ app.post('/izbrisiPodatak', async (req, res) => {
     }
 });
 
-app.post('/getStatistickiPodatci', async (req, res) => {
+app.post('/getStatistickiPodatci', authenticateJWT, async (req, res) => {
     let connection;
 
     const sql_statistickiPodatci =
@@ -1923,7 +1932,7 @@ app.post('/getStatistickiPodatci', async (req, res) => {
     }
 });
 
-app.post('/unesiPoene', async (req, res) => {
+app.post('/unesiPoene', authenticateJWT, async (req, res) => {
     let connection;
 
     const poeniDomaci = req.body.poeniDomaci ? req.body.poeniDomaci : null;
@@ -1959,7 +1968,7 @@ app.post('/unesiPoene', async (req, res) => {
     }
 });
 
-app.post('/podatciIgraca', async (req, res) => {
+app.post('/podatciIgraca', authenticateJWT, async (req, res) => {
     let connection;
 
     const imeIgraca = req.body.imeIgrac || '';
@@ -1995,7 +2004,7 @@ app.post('/podatciIgraca', async (req, res) => {
     }
 });
 
-app.post('/podatciPocetna', async (req, res) => {
+app.post('/podatciPocetna', authenticateJWT, async (req, res) => {
     let connection;
 
     try {

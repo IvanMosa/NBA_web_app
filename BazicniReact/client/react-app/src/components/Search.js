@@ -4,7 +4,7 @@ import axios from 'axios';
 import { Link } from 'react-router-dom';
 import Logo from './library_css/Logo';
 
-function Search() {
+function Search({ token }) {
     const [searchType, setSearchType] = useState('igraci');
     const [query, setQuery] = useState('');
     const [results, setResults] = useState([]);
@@ -36,7 +36,13 @@ function Search() {
         const fetchData = async () => {
             try {
                 const result = await axios.post(
-                    'http://localhost:4000/podatciSearch'
+                    'http://localhost:4000/podatciSearch',
+                    {},
+                    {
+                        headers: {
+                            authorization: `Bearer ${token}`,
+                        },
+                    }
                 );
                 setIgraci(result.data.igraci);
                 setMomcadi(result.data.momcadi);

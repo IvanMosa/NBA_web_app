@@ -4,7 +4,7 @@ import '../components/css/tablica.css';
 import axios from 'axios';
 import { Link } from 'react-router-dom';
 
-function Tablica() {
+const Tablica = ({ token }) => {
     const [FilteredData, setFilteredData] = useState([]);
     const [imeSezone, setimeSezone] = useState(' ');
     const [Konferencija_Divizija, setKonferencija_Divizija] = useState(' ');
@@ -17,8 +17,14 @@ function Tablica() {
     useEffect(() => {
         const fetchData = async () => {
             try {
-                const response = await axios.get(
-                    'http://localhost:4000/getMomcadi'
+                const response = await axios.post(
+                    'http://localhost:4000/getMomcadi',
+                    {},
+                    {
+                        headers: {
+                            authorization: `Bearer ${token}`,
+                        },
+                    }
                 );
                 setSeasons(
                     Array.isArray(response.data.sezona)
@@ -42,6 +48,11 @@ function Tablica() {
                     {
                         imeSezone: '23/24',
                         konf_div: 'Konferencija',
+                    },
+                    {
+                        headers: {
+                            authorization: `Bearer ${token}`,
+                        },
                     }
                 );
                 setFilteredData(
@@ -68,6 +79,11 @@ function Tablica() {
                         //imeMomcad: imeMomcad,
                         imeSezone: imeSezone,
                         konf_div: Konferencija_Divizija,
+                    },
+                    {
+                        headers: {
+                            authorization: `Bearer ${token}`,
+                        },
                     }
                 );
                 console.log(response.data);
@@ -166,6 +182,6 @@ function Tablica() {
             </div>
         </div>
     );
-}
+};
 
 export default Tablica;

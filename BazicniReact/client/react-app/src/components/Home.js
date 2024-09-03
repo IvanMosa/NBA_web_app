@@ -13,8 +13,15 @@ function Home() {
     useEffect(() => {
         const fetchData = async () => {
             try {
+                const token = localStorage.getItem('token');
                 const homePoziv = await axios.post(
-                    'http://localhost:4000/podatciPocetna'
+                    'http://localhost:4000/podatciPocetna',
+                    {},
+                    {
+                        headers: {
+                            authorization: `Bearer ${token}`,
+                        },
+                    }
                 );
 
                 setUtakmica(homePoziv.data.utakmica[0]);
