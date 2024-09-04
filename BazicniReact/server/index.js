@@ -150,13 +150,26 @@ app.post('/register', authenticateJWT, async (req, res) => {
     let connection;
     const saltRounds = 10;
     const { userName, password, roles } = req.body;
-
     try {
         const salt = await bcrypt.genSalt(saltRounds);
         const hashedPass = await bcrypt.hash(password, salt);
-        console.log(hashedPass);
 
+        if (userName.length === 0) {
+            return res.status(202).send({ message: 'Unesite korisničko ime!' });
+        }
+        if (password.length === 0) {
+            return res.status(203).send({ message: 'Unesite šifru!' });
+        }
         connection = await oracledb.getConnection();
+        const pronadiPostojece = await connection.execute(
+            'SELECT K.NAZIV FROM KORISNICI_ROLE K WHERE K.NAZIV = :userName AND K.STATUS_ID = 1',
+            { userName: userName }
+        );
+        if (pronadiPostojece.rows.length > 0) {
+            return res
+                .status(201)
+                .send({ message: 'Korisničko ime već postoji!' });
+        }
         const result = await connection.execute(
             `INSERT INTO NBA.KORISNICI_ROLE(NAZIV, SIFRA, STATUS_ID) VALUES(:userName, :hashedPass, 1)`,
             {
@@ -194,9 +207,13 @@ app.post('/register', authenticateJWT, async (req, res) => {
             }
         }
         if (result.rowsAffected === 1) {
-            res.status(201).send({ message: 'User registered successfully' });
+            res.status(200).send({
+                message: 'Uspješna registracija korisnika!',
+            });
         } else {
-            res.status(500).send({ message: 'User registration failed' });
+            res.status(500).send({
+                message: 'Pogreška u registraciji korisnika!',
+            });
         }
     } catch (err) {
         console.error('Error during registration:', err);
@@ -241,6 +258,100 @@ app.post('/adminSviKorisnici', authenticateJWT, async (req, res) => {
     }
 });
 
+app.post('/adminDodajRole', authenticateJWT, async (req, res) => {
+    let connection;
+    const promjene = req.body.promjene;
+    try {
+        connection = await oracledb.getConnection();
+
+        for (const promjena of promjene) {
+            const pronadiKorisnikID = await connection.execute(
+                'SELECT K.KORISNIK_ID FROM KORISNICI_ROLE K WHERE K.NAZIV = :korisnik',
+                { korisnik: promjena.KORISNIK },
+                { outFormat: oracledb.OBJECT }
+            );
+
+            const korisnik_id = pronadiKorisnikID.rows[0].KORISNIK_ID;
+
+            const pronadiUlogaID = await connection.execute(
+                'SELECT K.KORISNIK_ID FROM KORISNICI_ROLE K WHERE K.NAZIV = :uloga',
+                { uloga: promjena.ULOGA },
+                { outFormat: oracledb.OBJECT }
+            );
+
+            const uloga_id = pronadiUlogaID.rows[0].KORISNIK_ID;
+
+            const pronadiUlogu = await connection.execute(
+                'SELECT K1.NAZIV, k2.NAZIV FROM KORISNICI_ROLE K1,  KORISNICI_ROLE K2, veze_korisnici_role vkr where vkr.korisnik_id = k1.korisnik_id and vkr.korisnik_id1 = k2.korisnik_id AND K1.KORISNIK_ID = :korisnik_id AND K2.KORISNIK_ID = :uloga_id',
+                { korisnik_id: korisnik_id, uloga_id: uloga_id },
+                { outFormat: oracledb.OBJECT }
+            );
+            if (pronadiUlogu.rows.length === 0) {
+                await connection.execute(
+                    'INSERT INTO NBA.VEZE_KORISNICI_ROLE(KORISNIK_ID, KORISNIK_ID1) VALUES(:korisnik_id, :uloga_id)',
+                    { korisnik_id: korisnik_id, uloga_id: uloga_id },
+                    { autoCommit: true }
+                );
+            } else {
+                await connection.execute(
+                    'DELETE FROM NBA.VEZE_KORISNICI_ROLE WHERE KORISNIK_ID = :korisnik_id AND KORISNIK_ID1 = :uloga_id',
+                    { korisnik_id: korisnik_id, uloga_id: uloga_id },
+                    { autoCommit: true }
+                );
+            }
+        }
+        res.send({ message: 'Uspješno unesene promjene' });
+    } catch (err) {
+        console.log(err);
+    } finally {
+        if (connection) {
+            try {
+                await connection.close();
+            } catch (err) {
+                console.log(err);
+            }
+        }
+    }
+});
+
+app.post('/adminIzbrisiKorisnika', authenticateJWT, async (req, res) => {
+    let connection;
+
+    const userName = req.body.korisnik.KORISNIK;
+    try {
+        connection = await oracledb.getConnection();
+
+        const pronadiKorisnikID = await connection.execute(
+            'SELECT K.KORISNIK_ID FROM KORISNICI_ROLE K WHERE K.NAZIV = :userName',
+            { userName: userName },
+            { outFormat: oracledb.OBJECT }
+        );
+
+        const korisnik_id = pronadiKorisnikID.rows[0].KORISNIK_ID;
+        await connection.execute(
+            'DELETE FROM VEZE_KORISNICI_ROLE WHERE KORISNIK_ID = :korisnik_id',
+            { korisnik_id: korisnik_id },
+            { autoCommit: true }
+        );
+
+        await connection.execute(
+            'DELETE FROM KORISNICI_ROLE WHERE KORISNIK_ID = :korisnik_id',
+            { korisnik_id: korisnik_id },
+            { autoCommit: true }
+        );
+        res.send({ message: 'Uspješno obrisan korisnik!' });
+    } catch (err) {
+        console.log(err);
+    } finally {
+        if (connection) {
+            try {
+                await connection.close();
+            } catch (err) {
+                console.log(err);
+            }
+        }
+    }
+});
 //Momčadi sortirane po izboru korisnika (Konferencija / Divizija) API
 app.post('/ShowMomcadi', authenticateJWT, async (req, res) => {
     let connection;

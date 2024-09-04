@@ -216,6 +216,7 @@ function Igrac({ token }) {
                             imeIgrac={imeIgrac}
                             setPoeni={setPoeni}
                             setStatistikaSezona={setStatistikaSezona}
+                            token={token}
                         />
                     </div>
                 )}

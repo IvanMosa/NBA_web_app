@@ -8,36 +8,59 @@
 .registerBlock {
     display: flex;
     flex-direction: column;
-    align-items: center;
+    width: 50vw;
+    height: 80vh;
+}
+
+.registerNaslov {
+    display: flex;
+    flex-direction: row;
+    width: 100%;
+    align-items: start;
 }
 .korisnik_form {
-    width: 40vw;
+    width: 50vw;
     height: 43vh;
     padding: 20px;
     box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-    border-radius: 10px;
+    border-bottom-left-radius: 10px;
+    border-bottom-right-radius: 10px;
     background-color: #fff;
-    margin-top: 20px;
 }
 
 .registration_form {
-    width: 30vw;
-    height: 43vh;
+    width: 50vw;
+    min-height: 40vh;
     padding: 20px;
     box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-    border-radius: 10px;
+    border-bottom-left-radius: 10px;
+    border-bottom-right-radius: 10px;
     background-color: #fff;
-    margin-top: 20px;
 }
 .registration_title {
-    text-align: center;
-    width: 20vw;
-    border-radius: 4px;
-    border-bottom: 1px solid black;
-    padding: 1vw;
+    justify-self: left;
+    width: 24.9vw;
+    border-top-left-radius: 4px;
+    border-top-right-radius: 4px;
+    padding-left: 1vw;
+    padding-right: 1vw;
+    padding-top: 1vh;
+    padding-bottom: 1vh;
     margin-top: 10vh;
     font-weight: bold;
-    background-color: white;
+    background-color: #adadad;
+    cursor: pointer;
+}
+
+.registration_title:hover {
+    background-color: #d6d6d6;
+    transition: background-color 0.15s ease;
+}
+.registration_title.clicked {
+    background-color: #fff;
+}
+.registration_title:last-child {
+    margin-left: auto;
 }
 .registration_input {
     margin-bottom: 15px;
@@ -65,11 +88,19 @@
 }
 
 .error_message {
-    color: red;
     margin-top: 15px;
     text-align: center;
+    height: 0vh;
+    transition: height 0.2s ease;
 }
 
+.error_message.message {
+    height: 2vh;
+}
+
+.error_message p {
+    transition: display 0.5s ease;
+}
 .registerRole {
     display: flex;
     flex-direction: column;
@@ -78,7 +109,7 @@
     width: 100%;
     padding: 0.5vw;
     gap: 1vh;
-    margin-bottom: 4vh;
+    margin-bottom: 2vh;
 }
 
 .registerRoleLabel {
@@ -109,16 +140,21 @@
 
 .zaglavljeNaziv {
     align-self: center;
-    width: 40%;
+    width: 27%;
     text-align: left;
     border-right: 1px groove gray;
     font-size: 1vw;
 }
 
 .zaglavljePodatak {
-    width: 20%;
+    display: flex;
+    width: 14.5%;
+    height: 2vh;
     font-size: 0.65vw;
     text-align: center;
+    gap: 1vw;
+    justify-content: center;
+    align-content: center;
 }
 
 .zaglavljePodatak:not(:last-child) {
@@ -133,8 +169,11 @@
     border-bottom: 1px groove rgb(182, 182, 182);
 }
 
+.registerKorisnik:hover {
+    background-color: rgb(223, 223, 223);
+}
 .korisnikNaziv {
-    width: 40%;
+    width: 27%;
     height: 100%;
     text-align: left;
     color: gray;
@@ -148,7 +187,7 @@
 
 .korisnikUloga {
     display: flex;
-    width: 20%;
+    width: 14.5%;
     height: 100%;
     justify-content: center;
     align-content: center;
@@ -156,4 +195,23 @@
 
 .korisnikUloga input {
     width: 1vw;
+}
+
+.korisnikUloga.ikona {
+    width: 15%;
+    gap: 1vw;
+}
+.korisnikUloga.ikona .fa-edit,
+.korisnikUloga.ikona .fa-save,
+.korisnikUloga.ikona .fa-delete-left {
+    align-self: center;
+    font-size: 1.2vw;
+    color: black; /* Adjust color as needed */
+    cursor: pointer;
+}
+
+.korisnikUloga.ikona .fa-edit:hover,
+.korisnikUloga.ikona .fa-save:hover,
+.korisnikUloga .fa-delete-left:hover {
+    font-size: 1.4vw;
 }
