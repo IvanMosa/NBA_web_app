@@ -90,7 +90,6 @@ const Statistika = ({ imeIgrac, setPoeni, setStatistikaSezona, token }) => {
                         },
                     }
                 );
-                console.log(result1.data.utakmice);
                 setUtakmice(result1.data.utakmice);
             } catch (err) {
                 console.log(err);

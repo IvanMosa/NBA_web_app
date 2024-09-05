@@ -23,23 +23,35 @@ function App() {
             <BrowserRouter>
                 <Navigation roles={roles} />
                 <Routes>
-                    <Route path="/" element={<Home token={token} />} />
-                    <Route
-                        path="/Tablica"
-                        element={<Tablica token={token} />}
-                    />
-                    <Route
-                        path="/Momcad/:imeMomcad"
-                        element={
-                            <Momcad
-                                edit={
-                                    roles.includes('UREDI_MOMCAD') ||
-                                    roles == 'ADMIN'
-                                }
-                                token={token}
-                            />
-                        }
-                    />
+                    {(roles.includes('PREGLED') || roles == 'ADMIN') && (
+                        <Route
+                            path="/"
+                            element={<Home token={token} roles={roles} />}
+                        />
+                    )}
+                    {(roles.includes('PREGLED') || roles == 'ADMIN') && (
+                        <Route
+                            path="/Tablica"
+                            element={<Tablica token={token} roles={roles} />}
+                        />
+                    )}
+                    {(roles.includes('PREGLED') ||
+                        roles.includes('UREDI_MOMCAD') ||
+                        roles.includes('ADMIN')) && (
+                        <Route
+                            path="/Momcad/:imeMomcad"
+                            element={
+                                <Momcad
+                                    edit={
+                                        roles.includes('UREDI_MOMCAD') ||
+                                        roles == 'ADMIN'
+                                    }
+                                    token={token}
+                                    roles={roles}
+                                />
+                            }
+                        />
+                    )}
                     {roles == 'ADMIN' && (
                         <Route
                             path="/Admin"
@@ -56,17 +68,22 @@ function App() {
                             element={<Trade token={token} />}
                         />
                     )}
-                    <Route
-                        path="/Statistika"
-                        element={<Statistika token={token} />}
-                    />
+                    {(roles.includes('PREGLED') || roles == 'ADMIN') && (
+                        <Route
+                            path="/Statistika"
+                            element={<Statistika token={token} />}
+                        />
+                    )}
                     {(roles.includes('DELEGAT') || roles == 'ADMIN') && (
                         <Route
                             path="/Delegat"
                             element={<Delegat token={token} />}
                         />
                     )}
-                    <Route path="/Search" element={<Search token={token} />} />
+                    <Route
+                        path="/Search"
+                        element={<Search token={token} roles={roles} />}
+                    />
                     <Route path="/*" element={<Home token={token} />} />
                 </Routes>
             </BrowserRouter>

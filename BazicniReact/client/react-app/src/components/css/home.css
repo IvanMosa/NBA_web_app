@@ -167,6 +167,10 @@
     color: rgb(61, 61, 61);
     border-bottom: 1px groove rgb(211, 211, 211);
 }
+
+.homeIgracDetalji h4:hover {
+    scale: 1.02;
+}
 .homeIgracDetalji h5 {
     width: 100%;
     text-align: left;

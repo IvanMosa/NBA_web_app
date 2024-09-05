@@ -86,7 +86,6 @@ const Tablica = ({ token }) => {
                         },
                     }
                 );
-                console.log(response.data);
                 setFilteredData(response.data);
             } catch (error) {
                 console.error(error);

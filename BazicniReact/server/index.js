@@ -46,8 +46,6 @@ const authenticateJWT = (req, res, next) => {
         const token = authHeader.split(' ')[1];
         jwt.verify(token, dbConfig.jwtSecretKey, (err, result) => {
             if (err) {
-                console.log(err);
-
                 res.status(403);
             } else {
                 req.user = result;
@@ -73,7 +71,7 @@ app.post('/login', async (req, res) => {
         const { userName, password } = req.body;
 
         const result = await connection.execute(
-            `SELECT KORISNIK, SIFRA, LISTAGG(ULOGA, ', ') WITHIN GROUP (ORDER BY ULOGA) AS ULOGE FROM( SELECT KR.NAZIV AS Korisnik, KR.SIFRA AS SIFRA,  KR1.NAZIV as ULOGA FROM NBA.VEZE_KORISNICI_ROLE VKR, NBA.KORISNICI_ROLE KR, NBA.KORISNICI_ROLE KR1 WHERE VKR.KORISNIK_ID = KR.KORISNIK_ID AND VKR.KORISNIK_ID1 = KR1.KORISNIK_ID AND KR.NAZIV = :userName AND KR.STATUS_ID = 1) GROUP BY KORISNIK, SIFRA`,
+            `SELECT KORISNIK, SIFRA, LISTAGG(ULOGA, ', ') WITHIN GROUP (ORDER BY ULOGA) AS ULOGE FROM( SELECT KR.NAZIV AS Korisnik, KR.SIFRA AS SIFRA,  KR1.NAZIV as ULOGA FROM NBA.VEZE_KORISNICI_ROLE VKR, NBA.KORISNICI_ROLE KR, NBA.KORISNICI_ROLE KR1 WHERE VKR.KORISNIK_ID = KR.KORISNIK_ID AND VKR.KORISNIK_ID1 = KR1.KORISNIK_ID AND KR.NAZIV = :userName AND KR.STATUS_ID = 1 AND KR.TKORISNIKA = 'Korisnik') GROUP BY KORISNIK, SIFRA`,
             { userName },
             {
                 resultSet: true,
@@ -98,8 +96,6 @@ app.post('/login', async (req, res) => {
                             return;
                         }
                         if (result1) {
-                            console.log('Passwords match! User authenticated.');
-
                             let payload = { name: userName };
                             let AccessToken = jwt.sign(
                                 payload,
@@ -112,9 +108,6 @@ app.post('/login', async (req, res) => {
                                 roles: row.ULOGE,
                             });
                         } else {
-                            console.log(
-                                'Passwords do not match! Authentication failed.'
-                            );
                             res.status(204).send({
                                 message: 'password not found',
                             });
@@ -122,13 +115,11 @@ app.post('/login', async (req, res) => {
                     }
                 );
             } else {
-                console.log('Username doesnt exist');
                 res.status(404).send({ message: 'username not found' });
             }
 
             await rs.close();
         } else {
-            console.log('Query execution failed or no result set returned');
             res.status(500).send({ message: 'Query execution failed' });
         }
     } catch (err) {
@@ -162,7 +153,7 @@ app.post('/register', authenticateJWT, async (req, res) => {
         }
         connection = await oracledb.getConnection();
         const pronadiPostojece = await connection.execute(
-            'SELECT K.NAZIV FROM KORISNICI_ROLE K WHERE K.NAZIV = :userName AND K.STATUS_ID = 1',
+            "SELECT K.NAZIV FROM KORISNICI_ROLE K WHERE K.NAZIV = :userName AND K.STATUS_ID = 1 AND K.TKORISNIKA = 'Korisnik'",
             { userName: userName }
         );
         if (pronadiPostojece.rows.length > 0) {
@@ -171,10 +162,11 @@ app.post('/register', authenticateJWT, async (req, res) => {
                 .send({ message: 'Korisničko ime već postoji!' });
         }
         const result = await connection.execute(
-            `INSERT INTO NBA.KORISNICI_ROLE(NAZIV, SIFRA, STATUS_ID) VALUES(:userName, :hashedPass, 1)`,
+            `INSERT INTO NBA.KORISNICI_ROLE(NAZIV, SIFRA, STATUS_ID, APP_CREATED_BY, TKORISNIKA) VALUES(:userName, :hashedPass, 1, :creator, 'Korisnik')`,
             {
                 userName: userName,
                 hashedPass: hashedPass,
+                creator: req.user.name,
             },
             {
                 autoCommit: true,
@@ -182,7 +174,7 @@ app.post('/register', authenticateJWT, async (req, res) => {
         );
 
         const pronadiKorisnikID = await connection.execute(
-            'SELECT K.KORISNIK_ID FROM KORISNICI_ROLE K WHERE K.NAZIV = :userName AND K.SIFRA = :hashedPass AND K.STATUS_ID = 1',
+            "SELECT K.KORISNIK_ID FROM KORISNICI_ROLE K WHERE K.NAZIV = :userName AND K.SIFRA = :hashedPass AND K.STATUS_ID = 1 AND K.TKORISNIKA = 'Korisnik'",
             { userName: userName, hashedPass: hashedPass },
             { outFormat: oracledb.OBJECT }
         );
@@ -191,7 +183,7 @@ app.post('/register', authenticateJWT, async (req, res) => {
 
         for (const uloga of roles) {
             const pronadiUloguID = await connection.execute(
-                'SELECT K.KORISNIK_ID FROM KORISNICI_ROLE K WHERE K.NAZIV = :uloga AND K.STATUS_ID = 2',
+                "SELECT K.KORISNIK_ID FROM KORISNICI_ROLE K WHERE K.NAZIV = :uloga AND K.STATUS_ID = 1 AND K.TKORISNIKA = 'Rola'",
                 { uloga: uloga },
                 { outFormat: oracledb.OBJECT }
             );
@@ -200,8 +192,12 @@ app.post('/register', authenticateJWT, async (req, res) => {
                 const uloga_id = pronadiUloguID.rows[0].KORISNIK_ID;
 
                 await connection.execute(
-                    'INSERT INTO VEZE_KORISNICI_ROLE(KORISNIK_ID, KORISNIK_ID1) VALUES (:korisnik_id, :uloga_id)',
-                    { korisnik_id: korisnik_id, uloga_id: uloga_id },
+                    'INSERT INTO VEZE_KORISNICI_ROLE(KORISNIK_ID, KORISNIK_ID1, APP_CREATED_BY) VALUES (:korisnik_id, :uloga_id, :creator)',
+                    {
+                        korisnik_id: korisnik_id,
+                        uloga_id: uloga_id,
+                        creator: req.user.name,
+                    },
                     { outFormat: oracledb.OBJECT, autoCommit: true }
                 );
             }
@@ -239,7 +235,7 @@ app.post('/adminSviKorisnici', authenticateJWT, async (req, res) => {
         connection = await oracledb.getConnection();
 
         const korisnici = await connection.execute(
-            "SELECT KORISNIK, LISTAGG(ULOGA, ',') WITHIN GROUP (ORDER BY ULOGA) AS ULOGE FROM( SELECT KR.NAZIV AS Korisnik,  KR1.NAZIV as ULOGA FROM NBA.VEZE_KORISNICI_ROLE VKR, NBA.KORISNICI_ROLE KR, NBA.KORISNICI_ROLE KR1 WHERE VKR.KORISNIK_ID = KR.KORISNIK_ID AND VKR.KORISNIK_ID1 = KR1.KORISNIK_ID AND KR.NAZIV != 'admin') GROUP BY KORISNIK",
+            "SELECT KORISNIK, LISTAGG(ULOGA, ',') WITHIN GROUP (ORDER BY ULOGA) AS ULOGE FROM( SELECT KR.NAZIV AS Korisnik,  KR1.NAZIV AS Uloga FROM NBA.KORISNICI_ROLE KR, NBA.VEZE_KORISNICI_ROLE VKR, NBA.KORISNICI_ROLE KR1 WHERE VKR.KORISNIK_ID(+) = KR.KORISNIK_ID AND VKR.KORISNIK_ID1 = KR1.KORISNIK_ID(+) AND KR.STATUS_ID = 1 AND KR.NAZIV != 'admin' AND KR.TKORISNIKA = 'Korisnik') GROUP BY KORISNIK",
             [],
             { outFormat: oracledb.OBJECT }
         );
@@ -266,7 +262,7 @@ app.post('/adminDodajRole', authenticateJWT, async (req, res) => {
 
         for (const promjena of promjene) {
             const pronadiKorisnikID = await connection.execute(
-                'SELECT K.KORISNIK_ID FROM KORISNICI_ROLE K WHERE K.NAZIV = :korisnik',
+                "SELECT K.KORISNIK_ID FROM KORISNICI_ROLE K WHERE K.NAZIV = :korisnik AND K.TKORISNIKA = 'Korisnik'",
                 { korisnik: promjena.KORISNIK },
                 { outFormat: oracledb.OBJECT }
             );
@@ -274,7 +270,7 @@ app.post('/adminDodajRole', authenticateJWT, async (req, res) => {
             const korisnik_id = pronadiKorisnikID.rows[0].KORISNIK_ID;
 
             const pronadiUlogaID = await connection.execute(
-                'SELECT K.KORISNIK_ID FROM KORISNICI_ROLE K WHERE K.NAZIV = :uloga',
+                "SELECT K.KORISNIK_ID FROM KORISNICI_ROLE K WHERE K.NAZIV = :uloga AND K.TKORISNIKA = 'Rola'",
                 { uloga: promjena.ULOGA },
                 { outFormat: oracledb.OBJECT }
             );
@@ -288,8 +284,12 @@ app.post('/adminDodajRole', authenticateJWT, async (req, res) => {
             );
             if (pronadiUlogu.rows.length === 0) {
                 await connection.execute(
-                    'INSERT INTO NBA.VEZE_KORISNICI_ROLE(KORISNIK_ID, KORISNIK_ID1) VALUES(:korisnik_id, :uloga_id)',
-                    { korisnik_id: korisnik_id, uloga_id: uloga_id },
+                    'INSERT INTO NBA.VEZE_KORISNICI_ROLE(KORISNIK_ID, KORISNIK_ID1, APP_CREATED_BY) VALUES(:korisnik_id, :uloga_id, :creator)',
+                    {
+                        korisnik_id: korisnik_id,
+                        uloga_id: uloga_id,
+                        creator: req.user.name,
+                    },
                     { autoCommit: true }
                 );
             } else {
@@ -322,7 +322,7 @@ app.post('/adminIzbrisiKorisnika', authenticateJWT, async (req, res) => {
         connection = await oracledb.getConnection();
 
         const pronadiKorisnikID = await connection.execute(
-            'SELECT K.KORISNIK_ID FROM KORISNICI_ROLE K WHERE K.NAZIV = :userName',
+            "SELECT K.KORISNIK_ID FROM KORISNICI_ROLE K WHERE K.NAZIV = :userName AND K.TKORISNIKA = 'Korisnik'",
             { userName: userName },
             { outFormat: oracledb.OBJECT }
         );
@@ -585,23 +585,23 @@ app.post('/insertTrade', authenticateJWT, async (req, res) => {
     let neUnesenDatum_1 =
         'UPDATE NBA.VEZE_MOMCAD_IGRACI SET DATUM_DO = sysdate WHERE IGRAC_ID = :nIgrac1_id AND STATUS_ID = 1';
     let ugasiStatus_1 =
-        'UPDATE NBA.VEZE_MOMCAD_IGRACI SET STATUS_ID = 0 WHERE IGRAC_ID = :nIgrac1_id AND STATUS_ID = 1';
+        'UPDATE NBA.VEZE_MOMCAD_IGRACI SET STATUS_ID = 0, APP_MODIFIED_BY = :creator WHERE IGRAC_ID = :nIgrac1_id AND STATUS_ID = 1';
 
     let unesenDatum_2 =
         "UPDATE NBA.VEZE_MOMCAD_IGRACI SET DATUM_DO = TO_DATE(:dDatum_Igrac,'YYYY-MM-DD')  WHERE IGRAC_ID = :nIgrac2_id AND STATUS_ID = 1";
     let neUnesenDatum_2 =
         'UPDATE NBA.VEZE_MOMCAD_IGRACI SET DATUM_DO = sysdate WHERE IGRAC_ID = :nIgrac2_id AND STATUS_ID = 1';
     let ugasiStatus_2 =
-        'UPDATE NBA.VEZE_MOMCAD_IGRACI SET STATUS_ID = 0 WHERE IGRAC_ID = :nIgrac2_id AND STATUS_ID = 1';
+        'UPDATE NBA.VEZE_MOMCAD_IGRACI SET STATUS_ID = 0, APP_MODIFIED_BY = :creator WHERE IGRAC_ID = :nIgrac2_id AND STATUS_ID = 1';
 
     let insertJedan_datum =
-        "INSERT INTO NBA.VEZE_MOMCAD_IGRACI (MOMCAD_ID, IGRAC_ID, DATUM_OD, STATUS_ID) VALUES (:nMomcad2_id, :nIgrac1_id, TO_DATE(:dDatum_Igrac,'YYYY-MM-DD'), 1)";
+        "INSERT INTO NBA.VEZE_MOMCAD_IGRACI (MOMCAD_ID, IGRAC_ID, DATUM_OD, STATUS_ID, APP_CREATED_BY, APP_MODIFIED_BY) VALUES (:nMomcad2_id, :nIgrac1_id, TO_DATE(:dDatum_Igrac,'YYYY-MM-DD'), 1, :creator, :creator)";
     let insertDva_datum =
-        "INSERT INTO NBA.VEZE_MOMCAD_IGRACI (MOMCAD_ID, IGRAC_ID, DATUM_OD, STATUS_ID) VALUES (:nMomcad1_id, :nIgrac2_id, TO_DATE(:dDatum_Igrac,'YYYY-MM-DD'), 1)";
+        "INSERT INTO NBA.VEZE_MOMCAD_IGRACI (MOMCAD_ID, IGRAC_ID, DATUM_OD, STATUS_ID, APP_CREATED_BY, APP_MODIFIED_BY) VALUES (:nMomcad1_id, :nIgrac2_id, TO_DATE(:dDatum_Igrac,'YYYY-MM-DD'), 1, :creator, :creator)";
     let insertJedan =
-        'INSERT INTO NBA.VEZE_MOMCAD_IGRACI (MOMCAD_ID, IGRAC_ID, DATUM_OD, STATUS_ID) VALUES (:nMomcad2_id, :nIgrac1_id, sysdate, 1)';
+        'INSERT INTO NBA.VEZE_MOMCAD_IGRACI (MOMCAD_ID, IGRAC_ID, DATUM_OD, STATUS_ID, APP_CREATED_BY, APP_MODIFIED_BY) VALUES (:nMomcad2_id, :nIgrac1_id, sysdate, 1, :creator, :creator)';
     let insertDva =
-        'INSERT INTO NBA.VEZE_MOMCAD_IGRACI (MOMCAD_ID, IGRAC_ID, DATUM_OD, STATUS_ID) VALUES (:nMomcad1_id, :nIgrac2_id, sysdate, 1)';
+        'INSERT INTO NBA.VEZE_MOMCAD_IGRACI (MOMCAD_ID, IGRAC_ID, DATUM_OD, STATUS_ID, APP_CREATED_BY, APP_MODIFIED_BY) VALUES (:nMomcad1_id, :nIgrac2_id, sysdate, 1, :creator, :creator)';
 
     let sql = '';
     let nMomcad1_id;
@@ -645,18 +645,29 @@ app.post('/insertTrade', authenticateJWT, async (req, res) => {
                     dDatum_Igrac,
                     nIgrac1_id,
                 });
-                await connection.execute(ugasiStatus_1, { nIgrac1_id });
+                await connection.execute(ugasiStatus_1, {
+                    nIgrac1_id,
+                    creator: req.user.name,
+                });
                 await connection.execute(insertJedan_datum, {
                     nMomcad2_id,
                     nIgrac1_id,
                     dDatum_Igrac,
+                    creator: req.user.name,
+                    creator: req.user.name,
                 });
             } else {
                 await connection.execute(neUnesenDatum_1, { nIgrac1_id });
-                await connection.execute(ugasiStatus_1, { nIgrac1_id });
+                await connection.execute(ugasiStatus_1, {
+                    nIgrac1_id,
+                    creator: req.user.name,
+                });
                 await connection.execute(insertJedan, {
                     nMomcad2_id,
                     nIgrac1_id,
+
+                    creator: req.user.name,
+                    creator: req.user.name,
                 });
             }
 
@@ -674,25 +685,35 @@ app.post('/insertTrade', authenticateJWT, async (req, res) => {
                         dDatum_Igrac,
                         nIgrac2_id,
                     });
-                    await connection.execute(ugasiStatus_2, { nIgrac2_id });
+                    await connection.execute(ugasiStatus_2, {
+                        nIgrac2_id,
+                        creator: req.user.name,
+                    });
                     await connection.execute(insertDva_datum, {
                         nMomcad1_id,
                         nIgrac2_id,
                         dDatum_Igrac,
+                        creator: req.user.name,
+                        creator: req.user.name,
                     });
                 } else {
                     await connection.execute(neUnesenDatum_2, { nIgrac2_id });
-                    await connection.execute(ugasiStatus_2, { nIgrac2_id });
+                    await connection.execute(ugasiStatus_2, {
+                        nIgrac2_id,
+                        creator: req.user.name,
+                    });
                     await connection.execute(insertDva, {
                         nMomcad1_id,
                         nIgrac2_id,
+
+                        creator: req.user.name,
+                        creator: req.user.name,
                     });
                 }
             }
 
             await connection.execute('COMMIT');
 
-            console.log('All commands executed successfully.');
             res.send({ message: 'Uspješna transakcija' });
         }
     } catch (err) {
@@ -720,14 +741,11 @@ app.post('/promjeneMomcad', authenticateJWT, async (req, res) => {
     }
     try {
         connection = await oracledb.getConnection();
-        console.log(oracledb.getPool());
         for (let i = 0; i < promjeneAPI.length; i++) {
             if (promjeneAPI[i]) {
-                console.log('Promjene za : ', promjeneAPI[i].ime);
                 let ime = promjeneAPI[i].ime.trim();
 
                 for (let j = 0; j < 5; j++) {
-                    console.log('Promjena', j, ':', promjeneAPI[i].promjene[j]);
                     let params = [];
                     let sql = '';
 
@@ -736,18 +754,17 @@ app.post('/promjeneMomcad', authenticateJWT, async (req, res) => {
                         if (j == 0) {
                             podatak = promjeneAPI[i].promjene[j];
                             if (!(podatak === undefined)) {
-                                console.log(podatak);
                                 sql +=
-                                    'UPDATE NBA.IGRACI SET NAZIV = :podatak WHERE IGRACI.NAZIV = :ime';
-                                params.push(podatak, ime);
+                                    'UPDATE NBA.IGRACI SET NAZIV = :podatak, APP_MODIFIED_BY = :creator WHERE IGRACI.NAZIV = :ime';
+                                params.push(podatak, req.user.name, ime);
                             }
                         }
                         if (j == 1) {
                             podatak = promjeneAPI[i].promjene[j];
                             if (!(podatak === undefined)) {
                                 sql +=
-                                    'UPDATE NBA.IGRACI SET VISINA = :podatak WHERE IGRACI.NAZIV = :ime';
-                                params.push(podatak, ime);
+                                    'UPDATE NBA.IGRACI SET VISINA = :podatak, APP_MODIFIED_BY = :creator WHERE IGRACI.NAZIV = :ime';
+                                params.push(podatak, req.user.name, ime);
                             }
                         }
                         if (j == 2) {
@@ -767,14 +784,13 @@ app.post('/promjeneMomcad', authenticateJWT, async (req, res) => {
                                 sql = '';
                                 podatak = result.rows[0].DRZAVA_ID;
                                 sql +=
-                                    'UPDATE NBA.IGRACI SET DRZAVA_ID = :podatak WHERE IGRACI.NAZIV = :ime';
-                                params.push(podatak, ime);
+                                    'UPDATE NBA.IGRACI SET DRZAVA_ID = :podatak, APP_MODIFIED_BY = :creator WHERE IGRACI.NAZIV = :ime';
+                                params.push(podatak, req.user.name, ime);
                             }
                         }
                         if (j == 3) {
                             let podatak1 = promjeneAPI[i].promjene[j];
                             if (!(podatak1 === undefined)) {
-                                console.log(podatak1);
                                 sql +=
                                     'SELECT P.POZICIJA_ID FROM NBA.POZICIJE P WHERE P.NAZIV = :podatak1';
                                 const result = await connection.execute(
@@ -789,8 +805,8 @@ app.post('/promjeneMomcad', authenticateJWT, async (req, res) => {
                                 sql = '';
                                 podatak = result.rows[0].POZICIJA_ID;
                                 sql +=
-                                    'UPDATE NBA.IGRACI SET POZICIJA_ID = :podatak WHERE IGRACI.NAZIV = :ime';
-                                params.push(podatak, ime);
+                                    'UPDATE NBA.IGRACI SET POZICIJA_ID = :podatak AND APP_MODIFIED_BY = :creator WHERE IGRACI.NAZIV = :ime';
+                                params.push(podatak, req.user.name, ime);
                             }
                         }
                         if (j == 4) {
@@ -807,8 +823,8 @@ app.post('/promjeneMomcad', authenticateJWT, async (req, res) => {
                             sql = '';
                             let nIgrac = result.rows[0].IGRAC_ID;
                             sql +=
-                                "UPDATE NBA.VEZE_MOMCAD_IGRACI SET DATUM_OD = TO_DATE(:podatak, 'MM/DD/YYYY') WHERE IGRAC_ID = :nIgrac AND STATUS_ID = 1";
-                            params.push(podatak, nIgrac);
+                                "UPDATE NBA.VEZE_MOMCAD_IGRACI SET DATUM_OD = TO_DATE(:podatak, 'MM/DD/YYYY'), APP_MODIFIED_BY = :creator WHERE IGRAC_ID = :nIgrac AND STATUS_ID = 1";
+                            params.push(podatak, req.user.name, nIgrac);
                         }
                         const result = await connection.execute(sql, params, {
                             autoCommit: true,
@@ -844,7 +860,6 @@ app.post('/unosIgrac', authenticateJWT, async (req, res) => {
     let hasImeIgrac = imeIgrac ? imeIgrac.trim().length > 0 : false;
 
     if (!hasImeIgrac) {
-        console.log('Pogreška s imenom igrača');
         return res.send({ message: 'Unesite obavezno polje: Ime igrača' });
     }
 
@@ -860,7 +875,6 @@ app.post('/unosIgrac', authenticateJWT, async (req, res) => {
     let hasPozicija = pozicija ? pozicija.trim().length > 0 : false;
 
     let datum_od = req.body.datum_od.trim();
-    console.log('datum_od: ', datum_od);
     let hasDatum = datum_od ? datum_od.trim().length > 0 : false;
 
     try {
@@ -878,23 +892,26 @@ app.post('/unosIgrac', authenticateJWT, async (req, res) => {
             }
         );
         if (result_pronadi.rows[0].BROJ > 0) {
-            console.log('Igrač već postoji');
             return res.status(503).send({
                 message:
                     "Found a player with the same name. Please enter a player that doesn't exist or make a trade for this player!",
             });
         }
-        let sql = 'INSERT INTO NBA.IGRACI(NAZIV) VALUES(:imeIgrac)';
+        let sql =
+            'INSERT INTO NBA.IGRACI(NAZIV, APP_CREATED_BY, APP_MODIFIED_BY) VALUES(:imeIgrac, :creator, :creator)';
         const result = await connection.execute(
             sql,
-            { imeIgrac: imeIgrac },
+            {
+                imeIgrac: imeIgrac,
+                creator: req.user.name,
+                creator: req.user.name,
+            },
             {
                 autoCommit: true,
             }
         );
 
         if (result.rowsAffected !== 1) {
-            console.log('Neuspješno kreiranje igrača');
             res.status(503).send({
                 message: 'Failed to create player!',
             });
@@ -928,10 +945,10 @@ app.post('/unosIgrac', authenticateJWT, async (req, res) => {
 
         if (hasVisina) {
             let sql_update =
-                'UPDATE NBA.IGRACI SET VISINA = :visina WHERE NAZIV = :imeIgrac';
+                'UPDATE NBA.IGRACI SET VISINA = :visina, APP_MODIFIED_BY = :creator WHERE NAZIV = :imeIgrac';
             const update = await connection.execute(
                 sql_update,
-                { visina: visina, imeIgrac: imeIgrac },
+                { visina: visina, creator: req.user.name, imeIgrac: imeIgrac },
                 {
                     autoCommit: true,
                 }
@@ -940,7 +957,6 @@ app.post('/unosIgrac', authenticateJWT, async (req, res) => {
             message = 'Successfuly added a player! Edit team to add more info!';
 
         if (hasDrzava) {
-            console.log(drzava);
             let sql_drzava =
                 'SELECT D.DRZAVA_ID FROM NBA.DRZAVE D WHERE D.NAZIV = :drzava';
             const result_drzava = await connection.execute(
@@ -952,11 +968,10 @@ app.post('/unosIgrac', authenticateJWT, async (req, res) => {
                     outFormat: oracledb.OUT_FORMAT_OBJECT,
                 }
             );
-            console.log(result_drzava.rows[0]);
             let drzava_id = result_drzava.rows[0].DRZAVA_ID;
 
             let sql_update_drzava =
-                'UPDATE NBA.IGRACI SET DRZAVA_ID = :drzava_id WHERE NAZIV = :imeIgrac';
+                'UPDATE NBA.IGRACI SET DRZAVA_ID = :drzava_id, APP_MODIFIED_BY = :creator WHERE NAZIV = :imeIgrac';
             const update = await connection.execute(
                 sql_update_drzava,
                 { drzava_id: drzava_id, imeIgrac: imeIgrac },
@@ -982,10 +997,14 @@ app.post('/unosIgrac', authenticateJWT, async (req, res) => {
             let pozicija_id = result_pozicija.rows[0].POZICIJA_ID;
 
             let sql_update =
-                'UPDATE NBA.IGRACI SET POZICIJA_ID = :pozicija_id WHERE NAZIV = :imeIgrac';
+                'UPDATE NBA.IGRACI SET POZICIJA_ID = :pozicija_id, , APP_MODIFIED_BY = :creator WHERE NAZIV = :imeIgrac';
             const update = await connection.execute(
                 sql_update,
-                { pozicija_id: pozicija_id, imeIgrac: imeIgrac },
+                {
+                    pozicija_id: pozicija_id,
+                    creator: req.user.name,
+                    imeIgrac: imeIgrac,
+                },
                 {
                     autoCommit: true,
                 }
@@ -994,46 +1013,53 @@ app.post('/unosIgrac', authenticateJWT, async (req, res) => {
             message = 'Successfuly added a player! Edit team to add more info!';
 
         if (hasDatum) {
-            console.log('ima datum');
             let sql_update =
-                "UPDATE NBA.VEZE_MOMCAD_IGRACI SET DATUM_DO = TO_DATE(:datum_od,'YYYY-MM-DD') WHERE IGRAC_ID = :nIgrac_id AND STATUS_ID = 1";
+                "UPDATE NBA.VEZE_MOMCAD_IGRACI SET DATUM_DO = TO_DATE(:datum_od,'YYYY-MM-DD'), APP_MODIFIED_BY = :creator WHERE IGRAC_ID = :nIgrac_id AND STATUS_ID = 1";
             const update = await connection.execute(
                 sql_update,
-                { datum_od: datum_od, nIgrac_id: nIgrac_id },
+                {
+                    datum_od: datum_od,
+                    creator: req.user.name,
+                    nIgrac_id: nIgrac_id,
+                },
                 {
                     autoCommit: true,
                 }
             );
 
             let sql_VMI =
-                "INSERT INTO NBA.VEZE_MOMCAD_IGRACI (MOMCAD_ID, IGRAC_ID, DATUM_OD, STATUS_ID) VALUES (:momcad_id, :nIgrac_id, TO_DATE(:datum_od,'YYYY-MM-DD'), 1)";
+                "INSERT INTO NBA.VEZE_MOMCAD_IGRACI (MOMCAD_ID, IGRAC_ID, DATUM_OD, STATUS_ID, APP_CREATED_BY, APP_MODIFIED_BY) VALUES (:momcad_id, :nIgrac_id, TO_DATE(:datum_od,'YYYY-MM-DD'), 1, :creator, :creator)";
             const insert_VMI = await connection.execute(
                 sql_VMI,
                 {
                     momcad_id: momcad_id,
                     nIgrac_id: nIgrac_id,
                     datum_od: datum_od,
+                    creator: req.user.name,
+                    creator: req.user.name,
                 },
                 { autoCommit: true }
             );
         } else {
             let sql_update =
-                'UPDATE NBA.VEZE_MOMCAD_IGRACI SET DATUM_DO = sysdate WHERE IGRAC_ID = :nIgrac_id AND STATUS_ID = 1';
+                'UPDATE NBA.VEZE_MOMCAD_IGRACI SET DATUM_DO = sysdate, APP_MODIFIED_BY = :creator WHERE IGRAC_ID = :nIgrac_id AND STATUS_ID = 1';
             const update = await connection.execute(
                 sql_update,
-                { nIgrac_id: nIgrac_id },
+                { creator: req.user.name, nIgrac_id: nIgrac_id },
                 {
                     autoCommit: true,
                 }
             );
 
             let sql_VMI =
-                'INSERT INTO NBA.VEZE_MOMCAD_IGRACI (MOMCAD_ID, IGRAC_ID, DATUM_OD, STATUS_ID) VALUES (:momcad_id, :nIgrac_id, sysdate, 1)';
+                'INSERT INTO NBA.VEZE_MOMCAD_IGRACI (MOMCAD_ID, IGRAC_ID, DATUM_OD, STATUS_ID, APP_CREATED_BY, APP_MODIFIED_BY) VALUES (:momcad_id, :nIgrac_id, sysdate, 1, :creator, :creator)';
             const insert_VMI = await connection.execute(
                 sql_VMI,
                 {
                     momcad_id: momcad_id,
                     nIgrac_id: nIgrac_id,
+                    creator: req.user.name,
+                    creator: req.user.name,
                 },
                 { autoCommit: true }
             );
@@ -1062,7 +1088,6 @@ app.post('/izbrisiIgraca', authenticateJWT, async (req, res) => {
     let hasImeIgrac = imeIgrac ? imeIgrac.trim().length > 0 : false;
 
     if (!hasImeIgrac) {
-        console.log('Pogreška s imenom igrača');
         return res.send({ message: 'Pogreška pri brisanju' });
     }
 
@@ -1080,7 +1105,6 @@ app.post('/izbrisiIgraca', authenticateJWT, async (req, res) => {
         nIgrac_id = result.rows[0].IGRAC_ID;
 
         if (!nIgrac_id) {
-            console.log('Pogreška s traženjem ID-a igrača');
             return res.send({ message: 'Pogreška pri brisanju' });
         }
 
@@ -1092,7 +1116,6 @@ app.post('/izbrisiIgraca', authenticateJWT, async (req, res) => {
             { autoCommit: true }
         );
         if (delete_vmi.rowsAffected !== 1) {
-            console.log('Pogreška s brisanjem retka iz tablice VMI');
             return res.send({ message: 'Pogreška pri brisanju' });
         }
 
@@ -1103,7 +1126,6 @@ app.post('/izbrisiIgraca', authenticateJWT, async (req, res) => {
             { autoCommit: true }
         );
         if (delete_igraci.rowsAffected !== 1) {
-            console.log('Pogreška s brisanjem retka iz tablice IGRACI');
             return res.send({ message: 'Pogreška pri brisanju' });
         }
         res.send({ message: message + imeIgrac });
@@ -1361,7 +1383,7 @@ app.post('/kreirajUtakmicu', authenticateJWT, async (req, res) => {
     try {
         connection = await oracledb.getConnection();
         let sql_INSERT =
-            "INSERT INTO NBA.UTAKMICE (DOMACI_ID, POENI_DOMACI, GOSTI_ID, POENI_GOSTI, SUDAC_ID, STATUS_ID, DATUM_VRIJEME, LIGA_ID) VALUES (:domaci_id, 0, :gosti_id, 0, :sudac_id, 0, TO_DATE(:datum, 'YYYY-MM-DD HH24:MI:SS'), :liga_id)";
+            "INSERT INTO NBA.UTAKMICE (DOMACI_ID, POENI_DOMACI, GOSTI_ID, POENI_GOSTI, SUDAC_ID, STATUS_ID, DATUM_VRIJEME, LIGA_ID, APP_CREATED_BY, APP_MODIFIED_BY) VALUES (:domaci_id, 0, :gosti_id, 0, :sudac_id, 0, TO_DATE(:datum, 'YYYY-MM-DD HH24:MI:SS'), :liga_id, :creator, :creator)";
         if (hasDomaci && hasGosti && hasDatum && hasSezona && hasSudac) {
             const res1 = await connection.execute(
                 'SELECT M.MOMCAD_ID FROM NBA.MOMCAD M WHERE M.NAZIV = :domaci',
@@ -1423,6 +1445,8 @@ app.post('/kreirajUtakmicu', authenticateJWT, async (req, res) => {
                     sudac_id: sudac_id,
                     datum: datum,
                     liga_id: liga_id,
+                    creator: req.user.name,
+                    creator: req.user.name,
                 },
                 {
                     autoCommit: true,
@@ -1458,6 +1482,37 @@ app.post('/kreirajUtakmicu', authenticateJWT, async (req, res) => {
     }
 });
 
+app.post('/izbrisiUtakmicu', authenticateJWT, async (req, res) => {
+    let connection;
+    const utakmica_id = req.body.utakmica_id;
+
+    try {
+        connection = await oracledb.getConnection();
+
+        await connection.execute(
+            'DELETE FROM STATISTIKA WHERE UTAKMICA_ID = :utakmica_id',
+            { utakmica_id: utakmica_id },
+            { autoCommit: true }
+        );
+
+        await connection.execute(
+            'DELETE FROM UTAKMICE WHERE UTAKMICA_ID = :utakmica_id',
+            { utakmica_id: utakmica_id },
+            { autoCommit: true }
+        );
+        res.send({ message: 'Uspješno izbrisana utakmica!' });
+    } catch (err) {
+        console.log(err);
+    } finally {
+        if (connection) {
+            try {
+                await connection.close();
+            } catch (err) {
+                console.log(err);
+            }
+        }
+    }
+});
 app.post('/prikaziStatistikuUtakmice', authenticateJWT, async (req, res) => {
     let connection;
 
@@ -1605,7 +1660,7 @@ app.post('/unesiStatistiku', authenticateJWT, async (req, res) => {
 
         const unosPocetnogPodatka = async (igrac) => {
             const SQL_upit =
-                "INSERT INTO NBA.STATISTIKA(IGRAC_ID, SP_ID, STATUS_ID, UTAKMICA_ID, VRIJEME_POCETAK) VALUES (:igrac_id, :podatak_id, :status, :utakmica_id, '00:00')";
+                "INSERT INTO NBA.STATISTIKA(IGRAC_ID, SP_ID, STATUS_ID, UTAKMICA_ID, VRIJEME_POCETAK, APP_CREATED_BY, APP_MODIFIED_BY) VALUES (:igrac_id, :podatak_id, :status, :utakmica_id, '00:00', :creator, :creator)";
             try {
                 const unesi = await connection.execute(
                     SQL_upit,
@@ -1614,6 +1669,8 @@ app.post('/unesiStatistiku', authenticateJWT, async (req, res) => {
                         podatak_id: podatakID,
                         status: statusID,
                         utakmica_id: utakmica_id,
+                        creator: req.user.name,
+                        creator: req.user.name,
                     },
                     { autoCommit: true }
                 );
@@ -1654,19 +1711,24 @@ app.post('/unesiStatistiku', authenticateJWT, async (req, res) => {
                 });
             }
             const unesiVrijemeKraj = await connection.execute(
-                "UPDATE NBA.STATISTIKA SET VRIJEME_KRAJ = trim(TO_CHAR(:minute, '00')) || ':'  ||  trim(TO_CHAR(:sekunde,'00')) WHERE STAT_ID = :stat_id",
-                { minute: minute, sekunde: sekunde, stat_id: stat_id },
+                "UPDATE NBA.STATISTIKA SET VRIJEME_KRAJ = trim(TO_CHAR(:minute, '00')) || ':'  ||  trim(TO_CHAR(:sekunde,'00')), APP_MODIFIED_BY = :creator WHERE STAT_ID = :stat_id",
+                {
+                    minute: minute,
+                    sekunde: sekunde,
+                    creator: req.user.name,
+                    stat_id: stat_id,
+                },
                 { autoCommit: true }
             );
 
             const ugasiUlaz = await connection.execute(
-                'UPDATE NBA.STATISTIKA SET STATUS_ID = 3 WHERE STAT_ID = :stat_id',
-                { stat_id: stat_id },
+                'UPDATE NBA.STATISTIKA SET STATUS_ID = 3, APP_MODIFIED_BY = :creator WHERE STAT_ID = :stat_id',
+                { creator: req.user.name, stat_id: stat_id },
                 { autoCommit: true }
             );
 
             const unesiNoviUlaz_SQL =
-                "INSERT INTO NBA.STATISTIKA(IGRAC_ID, SP_ID, STATUS_ID, UTAKMICA_ID, VRIJEME_POCETAK) VALUES (:igrac_ulaz_id, :podatak_id, :status_id, :utakmica_id, trim(TO_CHAR(:minute, '00')) || ':'  ||  trim(TO_CHAR(:sekunde,'00')))";
+                "INSERT INTO NBA.STATISTIKA(IGRAC_ID, SP_ID, STATUS_ID, UTAKMICA_ID, VRIJEME_POCETAK, APP_CREATED_BY, APP_MODIFIED_BY) VALUES (:igrac_ulaz_id, :podatak_id, :status_id, :utakmica_id, trim(TO_CHAR(:minute, '00')) || ':'  ||  trim(TO_CHAR(:sekunde,'00')), :creator, :creator)";
 
             const unesiNoviUlaz = await connection.execute(
                 unesiNoviUlaz_SQL,
@@ -1677,6 +1739,8 @@ app.post('/unesiStatistiku', authenticateJWT, async (req, res) => {
                     utakmica_id: utakmica_id,
                     minute: minute,
                     sekunde: sekunde,
+                    creator: req.user.name,
+                    creator: req.user.name,
                 },
                 { autoCommit: true }
             );
@@ -1743,7 +1807,7 @@ app.post('/unesiStatistiku', authenticateJWT, async (req, res) => {
             });
         } else {
             const unesiNoviPodatak_SQL =
-                "INSERT INTO NBA.STATISTIKA(IGRAC_ID, SP_ID, STATUS_ID, UTAKMICA_ID, VRIJEME_POCETAK) VALUES (:igrac_id, :podatak_id, :status_id, :utakmica_id, trim(TO_CHAR(:minute, '00')) || ':'  ||  trim(TO_CHAR(:sekunde,'00')))";
+                "INSERT INTO NBA.STATISTIKA(IGRAC_ID, SP_ID, STATUS_ID, UTAKMICA_ID, VRIJEME_POCETAK, APP_CREATED_BY, APP_MODIFIED_BY) VALUES (:igrac_id, :podatak_id, :status_id, :utakmica_id, trim(TO_CHAR(:minute, '00')) || ':'  ||  trim(TO_CHAR(:sekunde,'00')), :creator, :creator)";
 
             let igrac_id = igracID ? igracID : igracUlazID ? igracUlazID : null;
             const unesi = await connection.execute(
@@ -1755,6 +1819,8 @@ app.post('/unesiStatistiku', authenticateJWT, async (req, res) => {
                     utakmica_id: utakmica_id,
                     minute: minute,
                     sekunde: sekunde,
+                    creator: req.user.name,
+                    creator: req.user.name,
                 },
                 { autoCommit: true }
             );
@@ -1825,8 +1891,12 @@ app.post('/unesiStatistiku', authenticateJWT, async (req, res) => {
                         '=' +
                         poeniMomcad +
                         '+ :poeni' +
-                        ' WHERE UTAKMICA_ID = :utakmica_id',
-                    { poeni: poeni, utakmica_id: utakmica_id },
+                        ', APP_MODIFIED_BY = :creator WHERE UTAKMICA_ID = :utakmica_id',
+                    {
+                        poeni: poeni,
+                        creator: req.user.name,
+                        utakmica_id: utakmica_id,
+                    },
                     { autoCommit: true }
                 );
             } else if (igracUlazID) {
@@ -1914,13 +1984,13 @@ app.post('/izbrisiPodatak', authenticateJWT, async (req, res) => {
 
         if (podatak[1] == 'Izlaz' && podatakUlaz[1] == 'Ulaz') {
             const azurirajVrijemeIzlaz = await connection.execute(
-                'UPDATE NBA.STATISTIKA S SET VRIJEME_KRAJ = null WHERE S.STAT_ID = :izbrisiPodatak',
-                { izbrisiPodatak: izbrisiPodatak },
+                'UPDATE NBA.STATISTIKA S SET VRIJEME_KRAJ = null, APP_MODIFIED_BY = :creator WHERE S.STAT_ID = :izbrisiPodatak',
+                { creator: req.user.name, izbrisiPodatak: izbrisiPodatak },
                 { autoCommit: true }
             );
             const azurirajStatusIzlaz = await connection.execute(
-                'UPDATE NBA.STATISTIKA S SET STATUS_ID = 2 WHERE S.STAT_ID = :izbrisiPodatak',
-                { izbrisiPodatak: izbrisiPodatak },
+                'UPDATE NBA.STATISTIKA S SET STATUS_ID = 2, APP_MODIFIED_BY = :creator WHERE S.STAT_ID = :izbrisiPodatak',
+                { creator: req.user.name, izbrisiPodatak: izbrisiPodatak },
                 { autoCommit: true }
             );
 
@@ -1982,8 +2052,15 @@ app.post('/izbrisiPodatak', authenticateJWT, async (req, res) => {
                         '=' +
                         poeniMomcad +
                         '- :poeni' +
-                        ' WHERE UTAKMICA_ID = :utakmica_id',
-                    { poeni: poeni, utakmica_id: utakmica_id },
+                        ', APP_MODIFIED_BY = :creator WHERE UTAKMICA_ID = :utakmica_id AND ' +
+                        poeniMomcad +
+                        ' >= ' +
+                        poeni,
+                    {
+                        poeni: poeni,
+                        creator: req.user.name,
+                        utakmica_id: utakmica_id,
+                    },
                     { autoCommit: true }
                 );
             }
@@ -2054,15 +2131,23 @@ app.post('/unesiPoene', authenticateJWT, async (req, res) => {
         connection = await oracledb.getConnection();
         if (poeniDomaci) {
             const result = await connection.execute(
-                'UPDATE NBA.UTAKMICE SET POENI_DOMACI = :poeniDomaci WHERE UTAKMICA_ID = :utakmica_id',
-                { poeniDomaci: poeniDomaci, utakmica_id: utakmica_id },
+                'UPDATE NBA.UTAKMICE SET POENI_DOMACI = :poeniDomaci, APP_MODIFIED_BY = :creator WHERE UTAKMICA_ID = :utakmica_id',
+                {
+                    poeniDomaci: poeniDomaci,
+                    creator: req.user.name,
+                    utakmica_id: utakmica_id,
+                },
                 { autoCommit: true }
             );
         }
         if (poeniGosti) {
             const result = await connection.execute(
-                'UPDATE NBA.UTAKMICE SET POENI_GOSTI = :poeniGosti WHERE UTAKMICA_ID = :utakmica_id',
-                { poeniGosti: poeniGosti, utakmica_id: utakmica_id },
+                'UPDATE NBA.UTAKMICE SET POENI_GOSTI = :poeniGosti, APP_MODIFIED_BY = :creator WHERE UTAKMICA_ID = :utakmica_id',
+                {
+                    poeniGosti: poeniGosti,
+                    creator: req.user.name,
+                    utakmica_id: utakmica_id,
+                },
                 { autoCommit: true }
             );
         }

@@ -4,8 +4,10 @@ import axios from 'axios';
 import { Link } from 'react-router-dom';
 import Logo from './library_css/Logo';
 
-function Search({ token }) {
-    const [searchType, setSearchType] = useState('igraci');
+function Search({ token, roles = [] }) {
+    const [searchType, setSearchType] = useState(
+        roles.includes('PREGLED') || roles == 'ADMIN' ? 'igraci' : 'momcadi'
+    );
     const [query, setQuery] = useState('');
     const [results, setResults] = useState([]);
     const [page, setPage] = useState(1);
@@ -13,9 +15,13 @@ function Search({ token }) {
     const [momcadi, setMomcadi] = useState([]);
 
     const [hoverIgraci, setHoverIgraci] = useState(false);
-    const [clickIgraci, setClickIgraci] = useState(true);
+    const [clickIgraci, setClickIgraci] = useState(
+        searchType === 'igraci' ? true : false
+    );
     const [hoverMomcadi, setHoverMomcadi] = useState(false);
-    const [clickMomcadi, setClickMomcadi] = useState(false);
+    const [clickMomcadi, setClickMomcadi] = useState(
+        searchType === 'momcadi' ? true : false
+    );
 
     const igraciKolone = [
         { ime: 'NAZIV', stil: 'left' },
@@ -46,9 +52,8 @@ function Search({ token }) {
                 );
                 setIgraci(result.data.igraci);
                 setMomcadi(result.data.momcadi);
-                setResults(result.data.igraci);
-                console.log(result.data.igraci);
-                console.log(result.data.momcadi);
+                if (searchType === 'igraci') setResults(result.data.igraci);
+                else setResults(result.data.momcadi);
             } catch (err) {
                 console.log(err);
             }
@@ -99,29 +104,33 @@ function Search({ token }) {
 
                 <div className="searchOdabir">
                     <div className="searchControls">
-                        <button
-                            onClick={() => {
-                                setSearchType('igraci');
-                                setHoverIgraci(false);
-                                setHoverMomcadi(false);
-                                setClickMomcadi(false);
-                                setClickIgraci(true);
-                            }}
-                            onMouseEnter={() => setHoverIgraci(true)}
-                            onMouseLeave={() =>
-                                clickMomcadi && setHoverIgraci(false)
-                            }
-                            className={
-                                !clickMomcadi && clickIgraci ? 'oznacen' : ''
-                            }
-                            style={{
-                                borderBottom: hoverIgraci
-                                    ? '3px solid black'
-                                    : '',
-                            }}
-                        >
-                            Igrači
-                        </button>
+                        {(roles.includes('PREGLED') || roles == 'ADMIN') && (
+                            <button
+                                onClick={() => {
+                                    setSearchType('igraci');
+                                    setHoverIgraci(false);
+                                    setHoverMomcadi(false);
+                                    setClickMomcadi(false);
+                                    setClickIgraci(true);
+                                }}
+                                onMouseEnter={() => setHoverIgraci(true)}
+                                onMouseLeave={() =>
+                                    clickMomcadi && setHoverIgraci(false)
+                                }
+                                className={
+                                    !clickMomcadi && clickIgraci
+                                        ? 'oznacen'
+                                        : ''
+                                }
+                                style={{
+                                    borderBottom: hoverIgraci
+                                        ? '3px solid black'
+                                        : '',
+                                }}
+                            >
+                                Igrači
+                            </button>
+                        )}
                         <button
                             onClick={() => {
                                 setSearchType('momcadi');

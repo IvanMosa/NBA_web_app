@@ -13,7 +13,7 @@
     font-size: 0.8vw; /* Prilagođen font */
     font-weight: normal; /* Normalna težina fonta */
     cursor: pointer; /* Promena kursora pri prelasku miša */
-    transition: background-color 0.3s, transform 0.2s; /* Efekti prelaska */
+    transition: background-color 0.1s, transform 0.2s; /* Efekti prelaska */
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); /* Blagi sjaj */
 }
 
@@ -66,5 +66,5 @@
     ); /* Tamnija nijansa plave pri prelasku miša */
     color: black;
     transform: scale(1.02); /* Blago povećanje pri prelasku miša */
-    transition: background-color 0.3s ease, color 0.3s ease;
+    transition: background-color 0.1s ease, color 0.1s ease;
 }

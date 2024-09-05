@@ -3,7 +3,7 @@ import { useState, useEffect } from 'react';
 import '../components/css/admin.css';
 import axios from 'axios';
 
-function Register({ roles, token }) {
+function Admin({ roles, token }) {
     const [registerPassword, setRegisterPassword] = useState('');
     const [registerUserName, setRegisterUserName] = useState('');
     const [errorMessage, setErrorMessage] = useState('');
@@ -29,7 +29,6 @@ function Register({ roles, token }) {
             ) {
                 setNoviKorisnikOpcije(['PREGLED']);
             } else {
-                console.log(['PREGLED', 'TRADE', 'DELEGAT', 'UREDI_MOMCAD']);
                 setNoviKorisnikOpcije([
                     'PREGLED',
                     'TRADE',
@@ -132,9 +131,7 @@ function Register({ roles, token }) {
             }),
         })
             .then((response) => {
-                console.log(response);
                 if (response.status && response.status === 200) {
-                    console.log('User created succesfuly');
                     setKorisnici((prev) => [
                         ...prev,
                         {
@@ -188,6 +185,8 @@ function Register({ roles, token }) {
             setIsEditing(false);
             setKorisniciPromjene([]);
             setPromjene([]);
+            setRegisterUserName('');
+            setRegisterPassword('');
             setPromjeneErrorMessage(unesiPromjene.data.message);
         } catch (err) {
             console.log(err);
@@ -233,8 +232,9 @@ function Register({ roles, token }) {
                         )
                     );
                     setPromjeneErrorMessage('Deleting...');
-                    await new Promise((resolve) => setTimeout(resolve, 3000));
+                    await new Promise((resolve) => setTimeout(resolve, 2000));
                     setPromjeneErrorMessage(izbrisi.data.message);
+                    setIsEditing(false);
                 }
             }
         } catch (err) {
@@ -448,158 +448,206 @@ function Register({ roles, token }) {
                                             <h4>DELEGAT</h4>
                                         </div>
                                         <div className="zaglavljePodatak">
-                                            <h4>UREDI MOMČAD</h4>
+                                            <h4>MOMČAD</h4>
+                                        </div>
+                                        <div className="zaglavljePodatak">
+                                            <h4>AKTIVAN</h4>
                                         </div>
                                     </div>
-                                    {(promjene.length > 0
-                                        ? korisniciPromjene
-                                        : korisnici
-                                    ).map((korisnik, index) => (
-                                        <div
-                                            className="registerKorisnik"
-                                            key={index}
-                                            onMouseEnter={() => {
-                                                if (!isEditing)
-                                                    setEditingCell(index);
-                                            }}
-                                            onClick={() => {
-                                                if (isEditing)
-                                                    setEditingCell(index);
-                                            }}
-                                        >
-                                            <div className="korisnikNaziv">
-                                                <h5>{korisnik.KORISNIK}</h5>
-                                            </div>
-                                            <div className="korisnikUloga">
-                                                <input
-                                                    type="checkbox"
-                                                    value="PREGLED"
-                                                    disabled={
-                                                        !isEditing ||
-                                                        editingCell !== index
-                                                    }
-                                                    checked={
-                                                        korisnik &&
-                                                        korisnik.ULOGE.includes(
-                                                            'PREGLED'
-                                                        )
-                                                    }
-                                                    onChange={() =>
-                                                        handleRoleChange(
-                                                            korisnik.KORISNIK,
-                                                            'PREGLED'
-                                                        )
-                                                    }
-                                                />
-                                            </div>
-                                            <div className="korisnikUloga">
-                                                <input
-                                                    type="checkbox"
-                                                    value="TRADE"
-                                                    disabled={
-                                                        !isEditing ||
-                                                        editingCell !== index
-                                                    }
-                                                    checked={
-                                                        korisnik &&
-                                                        korisnik.ULOGE.includes(
-                                                            'TRADE'
-                                                        )
-                                                    }
-                                                    onChange={() =>
-                                                        handleRoleChange(
-                                                            korisnik.KORISNIK,
-                                                            'TRADE'
-                                                        )
-                                                    }
-                                                />
-                                            </div>
-                                            <div className="korisnikUloga">
-                                                <input
-                                                    type="checkbox"
-                                                    value="DELEGAT"
-                                                    disabled={
-                                                        !isEditing ||
-                                                        editingCell !== index
-                                                    }
-                                                    checked={
-                                                        korisnik &&
-                                                        korisnik.ULOGE.includes(
-                                                            'DELEGAT'
-                                                        )
-                                                    }
-                                                    onChange={() =>
-                                                        handleRoleChange(
-                                                            korisnik.KORISNIK,
-                                                            'DELEGAT'
-                                                        )
-                                                    }
-                                                />
-                                            </div>
-                                            <div className="korisnikUloga">
-                                                <input
-                                                    type="checkbox"
-                                                    value="UREDI_MOMCAD"
-                                                    disabled={
-                                                        !isEditing ||
-                                                        editingCell !== index
-                                                    }
-                                                    checked={
-                                                        korisnik &&
-                                                        korisnik.ULOGE.includes(
-                                                            'UREDI_MOMCAD'
-                                                        )
-                                                    }
-                                                    onChange={() =>
-                                                        handleRoleChange(
-                                                            korisnik.KORISNIK,
-                                                            'UREDI_MOMCAD'
-                                                        )
-                                                    }
-                                                />
-                                            </div>
-                                            <div className="korisnikUloga ikona">
-                                                {isEditing &&
-                                                    editingCell === index && (
-                                                        <>
-                                                            <i
-                                                                className={`fas fa-save`}
-                                                                onClick={() =>
-                                                                    handleSave()
-                                                                }
-                                                            ></i>
-                                                            <i
-                                                                class="fa-solid fa-delete-left"
-                                                                onClick={() =>
-                                                                    handleDelete(
-                                                                        korisnik
-                                                                    )
-                                                                }
-                                                            ></i>
-                                                        </>
+                                    <div className="korisnikTijelo">
+                                        {(promjene.length > 0
+                                            ? korisniciPromjene
+                                            : korisnici
+                                        ).map((korisnik, index) => (
+                                            <div
+                                                className="registerKorisnik"
+                                                key={index}
+                                                onMouseEnter={() => {
+                                                    if (!isEditing)
+                                                        setEditingCell(index);
+                                                }}
+                                                onClick={() => {
+                                                    if (isEditing)
+                                                        setEditingCell(index);
+                                                }}
+                                            >
+                                                <div className="korisnikNaziv">
+                                                    <h5>{korisnik.KORISNIK}</h5>
+                                                </div>
+                                                <div className="korisnikUloga">
+                                                    <input
+                                                        type="checkbox"
+                                                        value="PREGLED"
+                                                        disabled={
+                                                            !isEditing ||
+                                                            editingCell !==
+                                                                index
+                                                        }
+                                                        checked={
+                                                            korisnik &&
+                                                            korisnik.ULOGE &&
+                                                            korisnik.ULOGE.includes(
+                                                                'PREGLED'
+                                                            )
+                                                        }
+                                                        onChange={() =>
+                                                            handleRoleChange(
+                                                                korisnik.KORISNIK,
+                                                                'PREGLED'
+                                                            )
+                                                        }
+                                                    />
+                                                </div>
+                                                <div className="korisnikUloga">
+                                                    <input
+                                                        type="checkbox"
+                                                        value="TRADE"
+                                                        disabled={
+                                                            !isEditing ||
+                                                            editingCell !==
+                                                                index
+                                                        }
+                                                        checked={
+                                                            korisnik &&
+                                                            korisnik.ULOGE &&
+                                                            korisnik.ULOGE.includes(
+                                                                'TRADE'
+                                                            )
+                                                        }
+                                                        onChange={() =>
+                                                            handleRoleChange(
+                                                                korisnik.KORISNIK,
+                                                                'TRADE'
+                                                            )
+                                                        }
+                                                    />
+                                                </div>
+                                                <div className="korisnikUloga">
+                                                    <input
+                                                        type="checkbox"
+                                                        value="DELEGAT"
+                                                        disabled={
+                                                            !isEditing ||
+                                                            editingCell !==
+                                                                index
+                                                        }
+                                                        checked={
+                                                            korisnik &&
+                                                            korisnik.ULOGE &&
+                                                            korisnik.ULOGE.includes(
+                                                                'DELEGAT'
+                                                            )
+                                                        }
+                                                        onChange={() =>
+                                                            handleRoleChange(
+                                                                korisnik.KORISNIK,
+                                                                'DELEGAT'
+                                                            )
+                                                        }
+                                                    />
+                                                </div>
+                                                <div className="korisnikUloga">
+                                                    <input
+                                                        type="checkbox"
+                                                        value="UREDI_MOMCAD"
+                                                        disabled={
+                                                            !isEditing ||
+                                                            editingCell !==
+                                                                index
+                                                        }
+                                                        checked={
+                                                            korisnik &&
+                                                            korisnik.ULOGE &&
+                                                            korisnik.ULOGE.includes(
+                                                                'UREDI_MOMCAD'
+                                                            )
+                                                        }
+                                                        onChange={() =>
+                                                            handleRoleChange(
+                                                                korisnik.KORISNIK,
+                                                                'UREDI_MOMCAD'
+                                                            )
+                                                        }
+                                                    />
+                                                </div>
+                                                <div className="korisnikUloga">
+                                                    <input
+                                                        type="checkbox"
+                                                        disabled={
+                                                            !isEditing ||
+                                                            editingCell !==
+                                                                index
+                                                        }
+                                                        checked={
+                                                            korisnik &&
+                                                            korisnik.STATUS &&
+                                                            korisnik.STATUS ==
+                                                                'Aktivan'
+                                                        }
+                                                        onChange={() =>
+                                                            handleRoleChange(
+                                                                korisnik.KORISNIK,
+                                                                'AKTIVAN'
+                                                            )
+                                                        }
+                                                    />
+                                                </div>
+                                                <div className="korisnikUloga ikona">
+                                                    {isEditing &&
+                                                        editingCell ===
+                                                            index && (
+                                                            <>
+                                                                <i
+                                                                    className={`fas fa-save`}
+                                                                    onClick={() =>
+                                                                        handleSave()
+                                                                    }
+                                                                ></i>
+                                                                <i
+                                                                    class="fa-solid fa-delete-left"
+                                                                    onClick={() =>
+                                                                        handleDelete(
+                                                                            korisnik
+                                                                        )
+                                                                    }
+                                                                ></i>
+                                                            </>
+                                                        )}
+                                                    {editingCell === index && (
+                                                        <i
+                                                            className={`fas fa-edit`}
+                                                            onClick={() => {
+                                                                setIsEditing(
+                                                                    !isEditing
+                                                                );
+                                                                setPromjene([]);
+                                                                setKorisniciPromjene(
+                                                                    korisnici
+                                                                );
+                                                            }}
+                                                        ></i>
                                                     )}
-                                                {editingCell === index && (
-                                                    <i
-                                                        className={`fas fa-edit`}
-                                                        onClick={() => {
-                                                            setIsEditing(
-                                                                !isEditing
-                                                            );
-                                                            setPromjene([]);
-                                                            setKorisniciPromjene(
-                                                                korisnici
-                                                            );
-                                                        }}
-                                                    ></i>
-                                                )}
+                                                </div>
                                             </div>
-                                        </div>
-                                    ))}
+                                        ))}
+                                    </div>
                                 </div>
                                 {promjeneErrorMessage && (
                                     <div className="errorOverlay">
                                         <div className="errorModal">
-                                            <p className="errorMessage">
+                                            <p
+                                                className="errorMessage"
+                                                style={
+                                                    promjeneErrorMessage ==
+                                                        'Uspješno obrisan korisnik!' ||
+                                                    promjeneErrorMessage ==
+                                                        'Uspješno unesene promjene'
+                                                        ? {
+                                                              color: 'green',
+                                                          }
+                                                        : { color: '' }
+                                                }
+                                            >
                                                 {promjeneErrorMessage}
                                             </p>
                                             {promjeneErrorMessage !==
@@ -654,4 +702,4 @@ function Register({ roles, token }) {
         );
 }
 
-export default Register;
+export default Admin;

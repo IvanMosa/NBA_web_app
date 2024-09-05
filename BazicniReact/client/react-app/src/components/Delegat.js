@@ -56,6 +56,7 @@ const Delegat = ({ token }) => {
     const [uzivoUnos, setUzivoUnos] = useState(false);
 
     const [editingCell, setEditingCell] = useState(0);
+    const [onUtakmicaDelete, setUtakmicaDelete] = useState(false);
     const [ondelete, setDelete] = useState(false);
     const [confirmationDialog, setConfirmationDialog] = useState(null);
 
@@ -107,8 +108,6 @@ const Delegat = ({ token }) => {
                 }
             );
 
-            console.log(statPodatci_statusi.data.statistickiPodatci);
-            console.log(statPodatci_statusi.data.statusi);
             setStatistickiPodatci(
                 Array.isArray(statPodatci_statusi.data.statistickiPodatci)
                     ? statPodatci_statusi.data.statistickiPodatci
@@ -387,7 +386,6 @@ const Delegat = ({ token }) => {
         if (utakmica_id !== 0) {
             prikaziStatistiku();
         }
-        console.log(oznacenaUtakmica);
     }, [utakmica_id]);
 
     useEffect(() => {
@@ -598,12 +596,23 @@ const Delegat = ({ token }) => {
         setEditingCell(rowIndex);
     };
 
-    const potvrdi = (izbrisiPodatak, izbrisiPodatakUlaz) => {
+    const potvrdi = (izbrisiPodatak, izbrisiPodatakUlaz, utakmica) => {
         return new Promise((resolve) => {
             const handleConfirm = () => resolve(true);
             const handleCancel = () => resolve(false);
 
-            if (
+            if (utakmica) {
+                setConfirmationDialog({
+                    message:
+                        'Ako izbrišete utakmicu između ' +
+                        utakmica.DOMACI_NAZIV +
+                        ' i ' +
+                        utakmica.GOSTI_NAZIV +
+                        ' izbrisat će se i svi statistički podatci s te utakmice!\n\nJeste li sigurni u ovu radnju?',
+                    onConfirm: handleConfirm,
+                    onCancel: handleCancel,
+                });
+            } else if (
                 izbrisiPodatak[1] == 'Izlaz' &&
                 izbrisiPodatakUlaz[1] == 'Ulaz'
             ) {
@@ -738,9 +747,15 @@ const Delegat = ({ token }) => {
                 const momcad = result.data.momcad;
                 const poeni = result.data.poeni;
 
-                if (momcad == 'DOMACI') {
+                if (
+                    momcad == 'DOMACI' &&
+                    oznacenaUtakmica.POENI_DOMACI >= poeni
+                ) {
                     oznacenaUtakmica.POENI_DOMACI -= poeni;
-                } else if (momcad == 'GOSTI') {
+                } else if (
+                    momcad == 'GOSTI' &&
+                    oznacenaUtakmica.POENI_GOSTI >= poeni
+                ) {
                     oznacenaUtakmica.POENI_GOSTI -= poeni;
                 }
             }
@@ -749,6 +764,40 @@ const Delegat = ({ token }) => {
         }
     };
 
+    const handleDeleteUtakmica = async (utakmica) => {
+        setUtakmicaDelete(true);
+        let confirm = await potvrdi(null, null, utakmica);
+        try {
+            setUtakmicaDelete(false);
+            if (confirm) {
+                const izbrisi = await axios.post(
+                    'http://localhost:4000/izbrisiUtakmicu',
+                    { utakmica_id: utakmica.UTAKMICA_ID },
+                    {
+                        headers: {
+                            authorization: `Bearer ${token}`,
+                        },
+                    }
+                );
+
+                if (izbrisi.data.message == 'Uspješno izbrisana utakmica!') {
+                    setSveUtakmice((prev) =>
+                        prev.filter(
+                            (pojedinaUtakmica) =>
+                                pojedinaUtakmica.UTAKMICA_ID !==
+                                utakmica.UTAKMICA_ID
+                        )
+                    );
+                    setErrorMessage(izbrisi.data.message);
+                    setTimeout(() => {
+                        setErrorMessage('');
+                    }, 5000);
+                }
+            }
+        } catch (err) {
+            console.log(err);
+        }
+    };
     return (
         <div>
             <div className={`container ${blurano ? 'blurred' : ''}`}>
@@ -983,6 +1032,7 @@ const Delegat = ({ token }) => {
                                                 'GOSTI',
                                                 'SUDAC',
                                                 'DATUM',
+                                                ' ',
                                             ].map((column, columnIndex) => (
                                                 <th key={columnIndex}>
                                                     {column}
@@ -995,35 +1045,124 @@ const Delegat = ({ token }) => {
                                             (rowItem, rowIndex) => (
                                                 <tr
                                                     key={rowIndex}
-                                                    onClick={() =>
-                                                        handleOdabir(rowItem)
+                                                    onMouseEnter={() =>
+                                                        setEditingCell(rowIndex)
                                                     }
                                                 >
-                                                    <td>
+                                                    <td
+                                                        onClick={() =>
+                                                            handleOdabir(
+                                                                rowItem
+                                                            )
+                                                        }
+                                                    >
                                                         {rowItem.DOMACI_NAZIV}
                                                     </td>
-                                                    <td>
+                                                    <td
+                                                        onClick={() =>
+                                                            handleOdabir(
+                                                                rowItem
+                                                            )
+                                                        }
+                                                    >
                                                         {rowItem.POENI_DOMACI +
                                                             ':' +
                                                             rowItem.POENI_GOSTI}
                                                     </td>
-                                                    <td>
+                                                    <td
+                                                        onClick={() =>
+                                                            handleOdabir(
+                                                                rowItem
+                                                            )
+                                                        }
+                                                    >
                                                         {rowItem.GOSTI_NAZIV}
                                                     </td>
-                                                    <td>{rowItem.SUDAC}</td>
-                                                    <td>
+                                                    <td
+                                                        onClick={() =>
+                                                            handleOdabir(
+                                                                rowItem
+                                                            )
+                                                        }
+                                                    >
+                                                        {rowItem.SUDAC}
+                                                    </td>
+                                                    <td
+                                                        onClick={() =>
+                                                            handleOdabir(
+                                                                rowItem
+                                                            )
+                                                        }
+                                                    >
                                                         {rowItem.DATUM_UTAKMICE}
+                                                    </td>
+                                                    <td
+                                                        onClick={() =>
+                                                            handleDeleteUtakmica(
+                                                                rowItem
+                                                            )
+                                                        }
+                                                        style={{
+                                                            width: '5vw',
+                                                            padding: '0',
+                                                            textAlign: 'center',
+                                                        }}
+                                                    >
+                                                        {editingCell ===
+                                                            rowIndex && (
+                                                            <i class="fa-solid fa-delete-left"></i>
+                                                        )}
                                                     </td>
                                                 </tr>
                                             )
                                         )}
                                     </tbody>
                                 </table>
+                                {onUtakmicaDelete && (
+                                    <div className="errorOverlay">
+                                        <div className="errorModal">
+                                            <p className="errorMessage">
+                                                {confirmationDialog.message}
+                                            </p>
+                                            <button
+                                                type="button"
+                                                className="okButton"
+                                                onClick={
+                                                    confirmationDialog.onConfirm
+                                                }
+                                            >
+                                                Da
+                                            </button>
+                                            <button
+                                                type="button"
+                                                className="okButton"
+                                                onClick={
+                                                    confirmationDialog.onCancel
+                                                }
+                                            >
+                                                Odustani
+                                            </button>
+                                        </div>
+                                    </div>
+                                )}
                             </div>
                             <div className="back_div">
                                 <button onClick={clickOdaberi}>
                                     <i className="fa-solid fa-circle-arrow-left"></i>
                                 </button>
+                            </div>
+                            <div
+                                className={
+                                    errorMessage
+                                        ? 'utakmicaError message'
+                                        : 'utakmicaError'
+                                }
+                            >
+                                {errorMessage && (
+                                    <p className="dropdown_container_p">
+                                        {errorMessage}
+                                    </p>
+                                )}
                             </div>
                         </div>
                     </div>

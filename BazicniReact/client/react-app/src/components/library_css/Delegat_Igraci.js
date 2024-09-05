@@ -36,8 +36,6 @@ const DelegatIgraci = ({
 
     useEffect(() => {
         console.log(start);
-        console.log(izlaz);
-        console.log(igraci);
     }, [igraci]);
 
     const handleAktivni = (igrac) => {

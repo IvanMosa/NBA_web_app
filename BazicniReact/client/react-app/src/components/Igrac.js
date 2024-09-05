@@ -29,7 +29,6 @@ function Igrac({ token }) {
         let podatci;
         let ugovoriIgrac;
         try {
-            console.log('usao');
             const result = await axios.post(
                 'http://localhost:4000/podatciIgraca',
                 {
@@ -41,13 +40,10 @@ function Igrac({ token }) {
                     },
                 }
             );
-            console.log(imeMomcad);
+
             if (imeMomcad === null) {
                 setImeMomcad(result.data.podatci[11]);
             }
-            console.log(result.data.podatci[11]);
-            console.log(result.data.podatci);
-            console.log(result.data.ugovoriIgraca);
             podatci = result.data.podatci;
             ugovoriIgrac = result.data.ugovoriIgraca;
         } catch (err) {
@@ -303,11 +299,6 @@ function Igrac({ token }) {
                                                             );
 
                                                         if (statsForSeason) {
-                                                            console.log(
-                                                                'ovooo',
-                                                                statsForSeason
-                                                            );
-
                                                             const MINUTE =
                                                                 statsForSeason.MINUTE /
                                                                 statsForSeason.BROJUTAKMICA;

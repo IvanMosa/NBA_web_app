@@ -125,10 +125,12 @@
 
 .tablicaStat h2 {
     align-self: center;
-    width: 25vw;
-    text-align: center;
+    width: 100%;
+    text-align: left;
     text-wrap: nowrap;
-    padding: 1vw;
+    padding-left: 0.5vw;
+    padding-top: 1vw;
+    padding-bottom: 0.2vw;
     border-bottom: 1px groove rgb(224, 224, 224);
 }
 .tablicaStat thead th {

@@ -14,25 +14,27 @@ const Logo = ({
     const slikaRef = useRef(null);
 
     useEffect(() => {
-        const fetchDominantColor = async () => {
-            if (!imeMomcad) {
-                console.error('ImeMomcad is not provided.');
-                return;
-            }
-
-            try {
-                const fac = new FastAverageColor();
-                const imageUrl = `/LOGOs/${imeMomcad}.png`;
-                if (slikaRef.current) {
-                    const color = await fac.getColorAsync(imageUrl);
-                    setDominantColor(color.rgba);
+        if (setDominantColor) {
+            const fetchDominantColor = async () => {
+                if (!imeMomcad) {
+                    console.error('ImeMomcad is not provided.');
+                    return;
                 }
-            } catch (error) {
-                console.error('Error extracting color: ', error);
-            }
-        };
 
-        fetchDominantColor();
+                try {
+                    const fac = new FastAverageColor();
+                    const imageUrl = `/LOGOs/${imeMomcad}.png`;
+                    if (slikaRef.current) {
+                        const color = await fac.getColorAsync(imageUrl);
+                        setDominantColor(color.rgba);
+                    }
+                } catch (error) {
+                    console.error('Error extracting color: ', error);
+                }
+            };
+
+            fetchDominantColor();
+        }
     }, [imeMomcad]);
 
     if (!imeMomcad) return null;

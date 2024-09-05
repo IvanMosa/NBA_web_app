@@ -20,7 +20,14 @@
 .navigation-tab {
     position: relative;
 }
-
+.navigation-tab .luser {
+    justify-items: start;
+    width: 1.5vw;
+    height: 2.5vh;
+}
+.navigation-tab .luser:hover {
+    transform: scale(1.05);
+}
 .navigation-tab:not(:last-child)::after {
     content: '';
     position: absolute;
@@ -63,6 +70,7 @@
     cursor: pointer;
     margin-right: 30px;
     color: white;
+    justify-items: center;
 }
 .navigation-logOut1 a:hover {
     font-weight: 600;
@@ -72,6 +80,15 @@
     font-weight: 600;
 }
 
+.navigation-logOut1 .luser {
+    width: 90%;
+    height: 90%;
+    align-items: center;
+    justify-self: center;
+}
+.navigation-logOut1 .luser:hover {
+    transform: scale(1.03);
+}
 .tutorial-tab {
     position: relative;
 }

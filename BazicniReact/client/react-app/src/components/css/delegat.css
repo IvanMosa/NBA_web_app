@@ -327,6 +327,15 @@ body {
     color: black; /* Adjust color as needed */
 }
 
+.utakmicaError {
+    margin-top: 15px;
+    text-align: center;
+    height: 0vh;
+    transition: height 0.2s ease;
+}
+.utakmicaError.message {
+    height: 2vh;
+}
 .statistics {
     width: 90%;
     margin: 0px auto;
@@ -384,6 +393,14 @@ body {
     overflow-y: auto; /* Vertikalno skrolanje */
 }
 
+.modal tr:hover {
+    background-color: rgb(211, 211, 211);
+}
+
+.modal .fa-delete-left {
+    font-size: 1.2vw;
+    align-self: center;
+}
 .modal .table-container {
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
 }

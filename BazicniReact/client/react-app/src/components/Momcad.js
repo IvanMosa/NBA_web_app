@@ -10,7 +10,7 @@ import MySelect from './library_css/MySelect.js';
 import '@fortawesome/fontawesome-free/css/all.min.css';
 import Logo from './library_css/Logo.js';
 
-const Momcad = ({ edit, token }) => {
+const Momcad = ({ edit, token, roles = [] }) => {
     const { imeMomcad } = useParams();
     const [igraci, setIgraci] = useState([]);
     const [pozicije, setPozicije] = useState([]);
@@ -52,8 +52,6 @@ const Momcad = ({ edit, token }) => {
         );
 
         setIgraci(Array.isArray(result.data.igraci) ? result.data.igraci : []);
-
-        console.log(result.data.igraci);
 
         const pozicijeTemp = Array.isArray(result.data.pozicije)
             ? result.data.pozicije
@@ -194,7 +192,6 @@ const Momcad = ({ edit, token }) => {
             );
             let temp = result.data.message;
             setInsertMessage(temp);
-            console.log(temp);
             if (
                 temp ===
                     'Successfuly added a player! Edit team to update info!' ||
@@ -228,7 +225,6 @@ const Momcad = ({ edit, token }) => {
         });
         try {
             setIsEditing(false);
-            console.log('usaao');
             const result = await axios.post(
                 'http://localhost:4000/promjeneMomcad',
                 promjeneZaAPI,
@@ -239,7 +235,6 @@ const Momcad = ({ edit, token }) => {
                 }
             );
 
-            console.log(result.data.message);
             if (result.data.message == 'Successfuly updated info!') {
                 setAddNew(false);
                 setNoviIgrac({});
@@ -309,508 +304,564 @@ const Momcad = ({ edit, token }) => {
         }
     };
     //------------------------------------------------------------------------------
-
-    return (
-        <div className="momcad_page">
-            <div className="logo_back">
-                <Logo imeMomcad={imeMomcad} visina={true} />
-            </div>
-            <div
-                className={`momcad_container stil1 ${addNew ? 'blurred' : ''}`}
-            >
-                <h1 className="momcad_title">{imeMomcad}</h1>
-                <hr className="line_momcad" />
-                <div className="table_div">
-                    <form>
-                        <select
-                            value={poz}
-                            onChange={(e) => setPoz(e.target.value)}
-                        >
-                            {pozicije.map((pozicija, index) => (
-                                <option key={index} value={pozicija}>
-                                    {pozicija}
-                                </option>
-                            ))}
-                        </select>
-                    </form>
-                    {igraci ? (
-                        <div className="header_and_button">
-                            <table className="data_table">
-                                <thead>
-                                    <tr>
-                                        {[
-                                            'NAZIV',
-                                            'VISINA',
-                                            'DRZAVLJANSTVO',
-                                            'POZICIJA',
-                                            'DATUM POTPISA',
-                                            '',
-                                        ].map((header, columnIndex) => (
-                                            <th key={columnIndex}>{header}</th>
-                                        ))}
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    {igraci
-                                        .filter((rowItem) => {
-                                            if (poz == 'Sve pozicije') {
-                                                return true;
-                                            }
-                                            const lastCell =
-                                                rowItem[rowItem.length - 8];
-                                            return lastCell == poz;
-                                        })
-                                        .map((rowItem, rowIndex) => (
-                                            <tr
-                                                key={rowIndex}
-                                                onMouseEnter={() =>
-                                                    handleMouseEnter(rowIndex)
+    if (
+        roles.includes('PREGLED') ||
+        roles.includes('UREDI_MOMCAD') ||
+        roles.includes('ADMIN')
+    )
+        return (
+            <div className="momcad_page">
+                <div className="logo_back">
+                    <Logo imeMomcad={imeMomcad} visina={true} />
+                </div>
+                <div
+                    className={`momcad_container stil1 ${
+                        addNew ? 'blurred' : ''
+                    }`}
+                >
+                    <h1 className="momcad_title">{imeMomcad}</h1>
+                    <hr className="line_momcad" />
+                    <div className="table_div">
+                        <form>
+                            <select
+                                value={poz}
+                                onChange={(e) => setPoz(e.target.value)}
+                            >
+                                {pozicije.map((pozicija, index) => (
+                                    <option key={index} value={pozicija}>
+                                        {pozicija}
+                                    </option>
+                                ))}
+                            </select>
+                        </form>
+                        {igraci ? (
+                            <div className="header_and_button">
+                                <table className="data_table">
+                                    <thead>
+                                        <tr>
+                                            {[
+                                                'NAZIV',
+                                                'VISINA',
+                                                'DRZAVLJANSTVO',
+                                                'POZICIJA',
+                                                'DATUM POTPISA',
+                                                '',
+                                            ].map((header, columnIndex) => (
+                                                <th key={columnIndex}>
+                                                    {header}
+                                                </th>
+                                            ))}
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {igraci
+                                            .filter((rowItem) => {
+                                                if (poz == 'Sve pozicije') {
+                                                    return true;
                                                 }
-                                                onClick={() =>
-                                                    handleMouseClick(rowIndex)
-                                                }
-                                            >
-                                                {rowItem
-                                                    .slice(0, -6)
-                                                    .map((row, rowInd) => (
-                                                        <React.Fragment
-                                                            key={rowInd}
-                                                        >
-                                                            <td key={rowInd}>
-                                                                {isEditing &&
-                                                                isEqual(
-                                                                    rowIndex
-                                                                ) ? (
-                                                                    rowInd ===
-                                                                        0 ||
-                                                                    rowInd ===
-                                                                        1 ? (
-                                                                        <input
-                                                                            type="text"
-                                                                            value={
-                                                                                promjene[
-                                                                                    rowItem[0]
-                                                                                ]?.[
-                                                                                    rowInd
-                                                                                ] ||
-                                                                                row
-                                                                            }
-                                                                            onChange={(
-                                                                                e
-                                                                            ) =>
-                                                                                handleInputChange(
+                                                const lastCell =
+                                                    rowItem[rowItem.length - 8];
+                                                return lastCell == poz;
+                                            })
+                                            .map((rowItem, rowIndex) => (
+                                                <tr
+                                                    key={rowIndex}
+                                                    onMouseEnter={() =>
+                                                        handleMouseEnter(
+                                                            rowIndex
+                                                        )
+                                                    }
+                                                    onClick={() =>
+                                                        handleMouseClick(
+                                                            rowIndex
+                                                        )
+                                                    }
+                                                >
+                                                    {rowItem
+                                                        .slice(0, -6)
+                                                        .map((row, rowInd) => (
+                                                            <React.Fragment
+                                                                key={rowInd}
+                                                            >
+                                                                <td
+                                                                    key={rowInd}
+                                                                >
+                                                                    {isEditing &&
+                                                                    isEqual(
+                                                                        rowIndex
+                                                                    ) ? (
+                                                                        rowInd ===
+                                                                            0 ||
+                                                                        rowInd ===
+                                                                            1 ? (
+                                                                            <input
+                                                                                type="text"
+                                                                                value={
+                                                                                    promjene[
+                                                                                        rowItem[0]
+                                                                                    ]?.[
+                                                                                        rowInd
+                                                                                    ] ||
+                                                                                    row
+                                                                                }
+                                                                                onChange={(
                                                                                     e
-                                                                                        .target
-                                                                                        .value,
-                                                                                    rowIndex,
-                                                                                    rowInd,
-                                                                                    rowItem[0],
-                                                                                    row
-                                                                                )
-                                                                            }
-                                                                        />
-                                                                    ) : rowInd ===
-                                                                          2 ||
-                                                                      rowInd ===
-                                                                          3 ? (
-                                                                        <MySelect
-                                                                            options={
-                                                                                options[
-                                                                                    rowInd
-                                                                                ] ||
-                                                                                []
-                                                                            }
-                                                                            value={{
-                                                                                value:
-                                                                                    promjene[
-                                                                                        rowItem[0]
-                                                                                    ]?.[
-                                                                                        rowInd
-                                                                                    ] ||
-                                                                                    row,
-                                                                                label:
-                                                                                    promjene[
-                                                                                        rowItem[0]
-                                                                                    ]?.[
-                                                                                        rowInd
-                                                                                    ] ||
-                                                                                    row,
-                                                                            }}
-                                                                            onChange={(
-                                                                                selectedOption
-                                                                            ) =>
-                                                                                handleInputChange(
-                                                                                    selectedOption,
-                                                                                    rowIndex,
-                                                                                    rowInd,
-                                                                                    rowItem[0],
-                                                                                    row
-                                                                                )
-                                                                            }
-                                                                            isSearchable
-                                                                        />
-                                                                    ) : (
-                                                                        <input
-                                                                            type="date"
-                                                                            value={
-                                                                                promjene[
-                                                                                    rowItem[0]
-                                                                                ]?.[
-                                                                                    rowInd
-                                                                                ] ||
-                                                                                format(
-                                                                                    new Date(
+                                                                                ) =>
+                                                                                    handleInputChange(
+                                                                                        e
+                                                                                            .target
+                                                                                            .value,
+                                                                                        rowIndex,
+                                                                                        rowInd,
+                                                                                        rowItem[0],
                                                                                         row
-                                                                                    ),
-                                                                                    'yyyy-MM-dd'
-                                                                                )
-                                                                            }
-                                                                            onChange={(
-                                                                                e
-                                                                            ) =>
-                                                                                handleInputChange(
+                                                                                    )
+                                                                                }
+                                                                            />
+                                                                        ) : rowInd ===
+                                                                              2 ||
+                                                                          rowInd ===
+                                                                              3 ? (
+                                                                            <MySelect
+                                                                                options={
+                                                                                    options[
+                                                                                        rowInd
+                                                                                    ] ||
+                                                                                    []
+                                                                                }
+                                                                                value={{
+                                                                                    value:
+                                                                                        promjene[
+                                                                                            rowItem[0]
+                                                                                        ]?.[
+                                                                                            rowInd
+                                                                                        ] ||
+                                                                                        row,
+                                                                                    label:
+                                                                                        promjene[
+                                                                                            rowItem[0]
+                                                                                        ]?.[
+                                                                                            rowInd
+                                                                                        ] ||
+                                                                                        row,
+                                                                                }}
+                                                                                onChange={(
+                                                                                    selectedOption
+                                                                                ) =>
+                                                                                    handleInputChange(
+                                                                                        selectedOption,
+                                                                                        rowIndex,
+                                                                                        rowInd,
+                                                                                        rowItem[0],
+                                                                                        row
+                                                                                    )
+                                                                                }
+                                                                                isSearchable
+                                                                            />
+                                                                        ) : (
+                                                                            <input
+                                                                                type="date"
+                                                                                value={
+                                                                                    promjene[
+                                                                                        rowItem[0]
+                                                                                    ]?.[
+                                                                                        rowInd
+                                                                                    ] ||
+                                                                                    format(
+                                                                                        new Date(
+                                                                                            row
+                                                                                        ),
+                                                                                        'yyyy-MM-dd'
+                                                                                    )
+                                                                                }
+                                                                                onChange={(
                                                                                     e
-                                                                                        .target
-                                                                                        .value,
-                                                                                    rowIndex,
-                                                                                    rowInd,
-                                                                                    rowItem[0],
-                                                                                    row
-                                                                                )
-                                                                            }
-                                                                        />
-                                                                    )
-                                                                ) : rowInd ===
-                                                                  0 ? (
-                                                                    <td className="momcadLink">
-                                                                        <Link
-                                                                            to={`/Igrac/${row}`}
-                                                                            state={{
-                                                                                rowItem,
-                                                                                imeMomcad:
-                                                                                    imeMomcad,
-                                                                            }}
-                                                                        >
+                                                                                ) =>
+                                                                                    handleInputChange(
+                                                                                        e
+                                                                                            .target
+                                                                                            .value,
+                                                                                        rowIndex,
+                                                                                        rowInd,
+                                                                                        rowItem[0],
+                                                                                        row
+                                                                                    )
+                                                                                }
+                                                                            />
+                                                                        )
+                                                                    ) : rowInd ===
+                                                                      0 ? (
+                                                                        <td className="momcadLink">
+                                                                            {roles.includes(
+                                                                                'PREGLED'
+                                                                            ) ||
+                                                                            roles ===
+                                                                                'ADMIN' ? (
+                                                                                <Link
+                                                                                    to={`/Igrac/${row}`}
+                                                                                    state={{
+                                                                                        rowItem,
+                                                                                        imeMomcad:
+                                                                                            imeMomcad,
+                                                                                    }}
+                                                                                >
+                                                                                    {
+                                                                                        row
+                                                                                    }
+                                                                                </Link>
+                                                                            ) : (
+                                                                                <>
+                                                                                    {
+                                                                                        row
+                                                                                    }
+                                                                                </>
+                                                                            )}
+                                                                        </td>
+                                                                    ) : rowInd ===
+                                                                      1 ? (
+                                                                        <>
                                                                             {
                                                                                 row
+                                                                            }
+                                                                            m
+                                                                        </>
+                                                                    ) : (
+                                                                        promjene[
+                                                                            rowItem[0]
+                                                                        ]?.[
+                                                                            rowInd
+                                                                        ] || row
+                                                                    )}
+                                                                </td>
+                                                            </React.Fragment>
+                                                        ))}
+                                                    <td className="button_cell">
+                                                        <div className="button_divs">
+                                                            {isEqual(
+                                                                rowIndex
+                                                            ) &&
+                                                                isEditing && (
+                                                                    <div className="button_div">
+                                                                        <button
+                                                                            type="button"
+                                                                            onClick={
+                                                                                handleSaveClick
+                                                                            }
+                                                                        >
+                                                                            <i
+                                                                                className={`fas fa-save`}
+                                                                            ></i>
+                                                                        </button>
+                                                                    </div>
+                                                                )}
+                                                            {isEqual(
+                                                                rowIndex
+                                                            ) &&
+                                                                isEditing && (
+                                                                    <div className="button_div">
+                                                                        <button
+                                                                            type="button"
+                                                                            onClick={
+                                                                                handleDeleteClick
+                                                                            }
+                                                                        >
+                                                                            <i class="fa-solid fa-delete-left"></i>
+                                                                        </button>
+                                                                    </div>
+                                                                )}
+                                                            {isEqual(
+                                                                rowIndex
+                                                            ) &&
+                                                                edit && (
+                                                                    <div className="button_div">
+                                                                        <button
+                                                                            type="button"
+                                                                            onClick={
+                                                                                handleClick
+                                                                            }
+                                                                        >
+                                                                            <i
+                                                                                className={`fas fa-edit`}
+                                                                            ></i>
+                                                                        </button>
+                                                                    </div>
+                                                                )}
+                                                        </div>
+                                                    </td>
+                                                </tr>
+                                            ))}
+                                    </tbody>
+                                </table>
+                                {edit && (
+                                    <div className="button_divs_add">
+                                        <div className="button_div">
+                                            <button
+                                                type="button"
+                                                onClick={handleAddClick}
+                                            >
+                                                <i className="fa-solid fa-plus"></i>
+                                            </button>
+                                        </div>
+                                    </div>
+                                )}
+                            </div>
+                        ) : (
+                            <p>No data available</p>
+                        )}
+                    </div>
+
+                    <div className="back_div">
+                        <button onClick={() => navigate(-1)}>
+                            <i className="fa-solid fa-circle-arrow-left"></i>
+                        </button>
+                    </div>
+                </div>
+                {addNew && (
+                    <div className="overlay" onClick={handleAddClick}>
+                        <div
+                            className="modal"
+                            onClick={(e) => e.stopPropagation()}
+                        >
+                            <h2 className="naslovUnos">
+                                Unesi podatke o novom igraču
+                            </h2>
+                            <input
+                                type="text"
+                                value={noviIgrac.imeIgrac}
+                                onChange={(e) =>
+                                    handleNoviIgracChange(
+                                        e.target.value,
+                                        'imeIgrac'
+                                    )
+                                }
+                                placeholder="Ime igrača*"
+                                className="inputField" // Dodajte klasu za inpute
+                            />
+                            <input
+                                type="text"
+                                value={noviIgrac.visina}
+                                onChange={(e) =>
+                                    handleNoviIgracChange(
+                                        e.target.value,
+                                        'visina'
+                                    )
+                                }
+                                placeholder="Visina"
+                                className="inputField" // Dodajte klasu za inpute
+                            />
+                            <MySelect
+                                className="selectField" // Dodajte klasu za select
+                                options={options[2] || []}
+                                value={{
+                                    value: noviIgrac.drzava,
+                                    label: noviIgrac.drzava,
+                                }}
+                                onChange={(selectedOption) =>
+                                    handleNoviIgracChange(
+                                        selectedOption.value,
+                                        'drzava'
+                                    )
+                                }
+                                isSearchable
+                                placeholder="Država"
+                            />
+                            <MySelect
+                                className="selectField" // Dodajte klasu za select
+                                options={options[3] || []}
+                                value={{
+                                    value: noviIgrac.pozicija,
+                                    label: noviIgrac.pozicija,
+                                }}
+                                onChange={(selectedOption) =>
+                                    handleNoviIgracChange(
+                                        selectedOption.value,
+                                        'pozicija'
+                                    )
+                                }
+                                isSearchable
+                            />
+                            <input
+                                type="date"
+                                value={noviIgrac.datum}
+                                onChange={(e) =>
+                                    handleNoviIgracChange(
+                                        e.target.value,
+                                        'datum_od'
+                                    )
+                                }
+                                className="inputField" // Dodajte klasu za inpute
+                            />
+                            <div className="buttonContainer">
+                                {insertMessage && (
+                                    <p className="errorMessage">
+                                        {insertMessage}
+                                    </p>
+                                )}
+                                <button
+                                    type="button"
+                                    onClick={handleAddSaveClick}
+                                    className="saveButton"
+                                >
+                                    <i className="fas fa-save"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                )}
+                {errorMessage && (
+                    <div className="errorOverlay">
+                        <div className="errorModal">
+                            <p className="errorMessage">{errorMessage}</p>
+                            {errorMessage !== 'Deleting...' && (
+                                <button
+                                    type="button"
+                                    className="okButton"
+                                    onClick={handleError}
+                                >
+                                    OK
+                                </button>
+                            )}
+                        </div>
+                    </div>
+                )}
+
+                {ondelete && (
+                    <div className="errorOverlay">
+                        <div className="errorModal">
+                            <p className="errorMessage">
+                                {confirmationDialog.message1}
+                            </p>
+                            <p className="errorMessage">
+                                {confirmationDialog.message}
+                            </p>
+                            <button
+                                type="button"
+                                className="okButton"
+                                onClick={confirmationDialog.onConfirm}
+                            >
+                                Da
+                            </button>
+                            <button
+                                type="button"
+                                className="okButton"
+                                onClick={confirmationDialog.onCancel}
+                            >
+                                Odustani
+                            </button>
+                        </div>
+                    </div>
+                )}
+
+                <div className="statistika_momcad">
+                    <div className="statistika_container_momcad">
+                        <p className="statistika_naslov_momcad">
+                            Statistika momčadi
+                        </p>
+                        <div className="statistika_menu" style={{ gap: '0px' }}>
+                            <div className="statistika_form_momcad">
+                                <form>
+                                    <p className="sezona_text">Sezona</p>
+                                    <select
+                                        value={imeSezone}
+                                        onChange={(e) =>
+                                            setimeSezone(e.target.value)
+                                        }
+                                    >
+                                        {sezone.map((sezona, index) => (
+                                            <option key={index} value={sezona}>
+                                                {sezona}
+                                            </option>
+                                        ))}
+                                    </select>
+                                </form>
+                            </div>
+                            <div className="momcadStat">
+                                <table className="data-table2">
+                                    <thead>
+                                        <tr>
+                                            {[
+                                                'DOMACI',
+                                                'REZULTAT',
+                                                'GOSTI',
+                                                'SUDAC',
+                                                'SEZONA',
+                                                'DATUM',
+                                                'W/L',
+                                            ].map((column, columnIndex) => (
+                                                <th key={columnIndex}>
+                                                    {column}
+                                                </th>
+                                            ))}
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {utakmice
+                                            .filter((rowItem) => {
+                                                return (
+                                                    rowItem.SEZONA == imeSezone
+                                                );
+                                            })
+                                            .map((rowItem, rowIndex) => (
+                                                <tr key={rowIndex}>
+                                                    {Object.values(rowItem)
+                                                        .slice(0, -5)
+                                                        .map((row, rowInd) => (
+                                                            <React.Fragment
+                                                                key={rowInd}
+                                                            >
+                                                                {rowInd ===
+                                                                0 ? (
+                                                                    <td className="momcadLink">
+                                                                        <Link
+                                                                            to={`/Momcad/${rowItem.DOMACI_NAZIV}`}
+                                                                        >
+                                                                            {
+                                                                                rowItem.DOMACI
                                                                             }
                                                                         </Link>
                                                                     </td>
                                                                 ) : rowInd ===
                                                                   1 ? (
-                                                                    <>{row}m</>
+                                                                    <td
+                                                                        key={
+                                                                            rowInd
+                                                                        }
+                                                                    >
+                                                                        {rowItem.POENI_DOMACI +
+                                                                            ' : ' +
+                                                                            rowItem.POENI_GOSTI}
+                                                                    </td>
+                                                                ) : rowInd ===
+                                                                  2 ? (
+                                                                    <td className="momcadLink">
+                                                                        <Link
+                                                                            to={`/Momcad/${rowItem.GOSTI_NAZIV}`}
+                                                                        >
+                                                                            {
+                                                                                rowItem.GOSTI
+                                                                            }
+                                                                        </Link>
+                                                                    </td>
                                                                 ) : (
-                                                                    promjene[
-                                                                        rowItem[0]
-                                                                    ]?.[
-                                                                        rowInd
-                                                                    ] || row
+                                                                    <td
+                                                                        key={
+                                                                            rowInd
+                                                                        }
+                                                                    >
+                                                                        {row}
+                                                                    </td>
                                                                 )}
-                                                            </td>
-                                                        </React.Fragment>
-                                                    ))}
-                                                <td className="button_cell">
-                                                    <div className="button_divs">
-                                                        {isEqual(rowIndex) &&
-                                                            isEditing && (
-                                                                <div className="button_div">
-                                                                    <button
-                                                                        type="button"
-                                                                        onClick={
-                                                                            handleSaveClick
-                                                                        }
-                                                                    >
-                                                                        <i
-                                                                            className={`fas fa-save`}
-                                                                        ></i>
-                                                                    </button>
-                                                                </div>
-                                                            )}
-                                                        {isEqual(rowIndex) &&
-                                                            isEditing && (
-                                                                <div className="button_div">
-                                                                    <button
-                                                                        type="button"
-                                                                        onClick={
-                                                                            handleDeleteClick
-                                                                        }
-                                                                    >
-                                                                        <i class="fa-solid fa-delete-left"></i>
-                                                                    </button>
-                                                                </div>
-                                                            )}
-                                                        {isEqual(rowIndex) &&
-                                                            edit && (
-                                                                <div className="button_div">
-                                                                    <button
-                                                                        type="button"
-                                                                        onClick={
-                                                                            handleClick
-                                                                        }
-                                                                    >
-                                                                        <i
-                                                                            className={`fas fa-edit`}
-                                                                        ></i>
-                                                                    </button>
-                                                                </div>
-                                                            )}
-                                                    </div>
-                                                </td>
-                                            </tr>
-                                        ))}
-                                </tbody>
-                            </table>
-                            {edit && (
-                                <div className="button_divs_add">
-                                    <div className="button_div">
-                                        <button
-                                            type="button"
-                                            onClick={handleAddClick}
-                                        >
-                                            <i className="fa-solid fa-plus"></i>
-                                        </button>
-                                    </div>
-                                </div>
-                            )}
-                        </div>
-                    ) : (
-                        <p>No data available</p>
-                    )}
-                </div>
-
-                <div className="back_div">
-                    <button onClick={() => navigate(-1)}>
-                        <i className="fa-solid fa-circle-arrow-left"></i>
-                    </button>
-                </div>
-            </div>
-            {addNew && (
-                <div className="overlay" onClick={handleAddClick}>
-                    <div className="modal" onClick={(e) => e.stopPropagation()}>
-                        <h2 className="naslovUnos">
-                            Unesi podatke o novom igraču
-                        </h2>
-                        <input
-                            type="text"
-                            value={noviIgrac.imeIgrac}
-                            onChange={(e) =>
-                                handleNoviIgracChange(
-                                    e.target.value,
-                                    'imeIgrac'
-                                )
-                            }
-                            placeholder="Ime igrača*"
-                            className="inputField" // Dodajte klasu za inpute
-                        />
-                        <input
-                            type="text"
-                            value={noviIgrac.visina}
-                            onChange={(e) =>
-                                handleNoviIgracChange(e.target.value, 'visina')
-                            }
-                            placeholder="Visina"
-                            className="inputField" // Dodajte klasu za inpute
-                        />
-                        <MySelect
-                            className="selectField" // Dodajte klasu za select
-                            options={options[2] || []}
-                            value={{
-                                value: noviIgrac.drzava,
-                                label: noviIgrac.drzava,
-                            }}
-                            onChange={(selectedOption) =>
-                                handleNoviIgracChange(
-                                    selectedOption.value,
-                                    'drzava'
-                                )
-                            }
-                            isSearchable
-                            placeholder="Država"
-                        />
-                        <MySelect
-                            className="selectField" // Dodajte klasu za select
-                            options={options[3] || []}
-                            value={{
-                                value: noviIgrac.pozicija,
-                                label: noviIgrac.pozicija,
-                            }}
-                            onChange={(selectedOption) =>
-                                handleNoviIgracChange(
-                                    selectedOption.value,
-                                    'pozicija'
-                                )
-                            }
-                            isSearchable
-                        />
-                        <input
-                            type="date"
-                            value={noviIgrac.datum}
-                            onChange={(e) =>
-                                handleNoviIgracChange(
-                                    e.target.value,
-                                    'datum_od'
-                                )
-                            }
-                            className="inputField" // Dodajte klasu za inpute
-                        />
-                        <div className="buttonContainer">
-                            {insertMessage && (
-                                <p className="errorMessage">{insertMessage}</p>
-                            )}
-                            <button
-                                type="button"
-                                onClick={handleAddSaveClick}
-                                className="saveButton"
-                            >
-                                <i className="fas fa-save"></i>
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            )}
-            {errorMessage && (
-                <div className="errorOverlay">
-                    <div className="errorModal">
-                        <p className="errorMessage">{errorMessage}</p>
-                        {errorMessage !== 'Deleting...' && (
-                            <button
-                                type="button"
-                                className="okButton"
-                                onClick={handleError}
-                            >
-                                OK
-                            </button>
-                        )}
-                    </div>
-                </div>
-            )}
-
-            {ondelete && (
-                <div className="errorOverlay">
-                    <div className="errorModal">
-                        <p className="errorMessage">
-                            {confirmationDialog.message1}
-                        </p>
-                        <p className="errorMessage">
-                            {confirmationDialog.message}
-                        </p>
-                        <button
-                            type="button"
-                            className="okButton"
-                            onClick={confirmationDialog.onConfirm}
-                        >
-                            Da
-                        </button>
-                        <button
-                            type="button"
-                            className="okButton"
-                            onClick={confirmationDialog.onCancel}
-                        >
-                            Odustani
-                        </button>
-                    </div>
-                </div>
-            )}
-
-            <div className="statistika_momcad">
-                <div className="statistika_container_momcad">
-                    <p className="statistika_naslov_momcad">
-                        Statistika momčadi
-                    </p>
-                    <div className="statistika_menu" style={{ gap: '0px' }}>
-                        <div className="statistika_form_momcad">
-                            <form>
-                                <p className="sezona_text">Sezona</p>
-                                <select
-                                    value={imeSezone}
-                                    onChange={(e) =>
-                                        setimeSezone(e.target.value)
-                                    }
-                                >
-                                    {sezone.map((sezona, index) => (
-                                        <option key={index} value={sezona}>
-                                            {sezona}
-                                        </option>
-                                    ))}
-                                </select>
-                            </form>
-                        </div>
-                        <div className="momcadStat">
-                            <table className="data-table2">
-                                <thead>
-                                    <tr>
-                                        {[
-                                            'DOMACI',
-                                            'REZULTAT',
-                                            'GOSTI',
-                                            'SUDAC',
-                                            'SEZONA',
-                                            'DATUM',
-                                            'W/L',
-                                        ].map((column, columnIndex) => (
-                                            <th key={columnIndex}>{column}</th>
-                                        ))}
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    {utakmice
-                                        .filter((rowItem) => {
-                                            return rowItem.SEZONA == imeSezone;
-                                        })
-                                        .map((rowItem, rowIndex) => (
-                                            <tr key={rowIndex}>
-                                                {Object.values(rowItem)
-                                                    .slice(0, -5)
-                                                    .map((row, rowInd) => (
-                                                        <React.Fragment
-                                                            key={rowInd}
-                                                        >
-                                                            {rowInd === 0 ? (
-                                                                <td className="momcadLink">
-                                                                    <Link
-                                                                        to={`/Momcad/${rowItem.DOMACI_NAZIV}`}
-                                                                    >
-                                                                        {
-                                                                            rowItem.DOMACI
-                                                                        }
-                                                                    </Link>
-                                                                </td>
-                                                            ) : rowInd === 1 ? (
-                                                                <td
-                                                                    key={rowInd}
-                                                                >
-                                                                    {rowItem.POENI_DOMACI +
-                                                                        ' : ' +
-                                                                        rowItem.POENI_GOSTI}
-                                                                </td>
-                                                            ) : rowInd === 2 ? (
-                                                                <td className="momcadLink">
-                                                                    <Link
-                                                                        to={`/Momcad/${rowItem.GOSTI_NAZIV}`}
-                                                                    >
-                                                                        {
-                                                                            rowItem.GOSTI
-                                                                        }
-                                                                    </Link>
-                                                                </td>
-                                                            ) : (
-                                                                <td
-                                                                    key={rowInd}
-                                                                >
-                                                                    {row}
-                                                                </td>
-                                                            )}
-                                                        </React.Fragment>
-                                                    ))}
-                                            </tr>
-                                        ))}
-                                </tbody>
-                            </table>
+                                                            </React.Fragment>
+                                                        ))}
+                                                </tr>
+                                            ))}
+                                    </tbody>
+                                </table>
+                            </div>
                         </div>
                     </div>
                 </div>
             </div>
-        </div>
-    );
+        );
 };
 export default Momcad;

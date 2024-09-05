@@ -10,7 +10,6 @@ function Login() {
     const dispatch = useDispatch();
     useEffect(() => {}, []);
     const handleSubmitLogin = (e) => {
-        console.log(loginPassword, loginUserName);
         fetch('http://localhost:4000/login', {
             method: 'POST',
             headers: {
@@ -22,18 +21,13 @@ function Login() {
             }),
         })
             .then((response) => {
-                console.log(response);
                 if (response.status === 200) {
                     return response.json();
                 } else {
-                    console.log('new error created');
                     throw new Error('Login Failed');
                 }
             })
             .then((data) => {
-                console.log('User logged in');
-                console.log('Token: ', data.token);
-                console.log('Uloge: ', data.roles);
                 dispatch({
                     type: actions.USER_LOGGED_IN,
                     payload: {

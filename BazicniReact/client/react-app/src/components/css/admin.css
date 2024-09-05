@@ -148,7 +148,7 @@
 
 .zaglavljePodatak {
     display: flex;
-    width: 14.5%;
+    width: 11.6%;
     height: 2vh;
     font-size: 0.65vw;
     text-align: center;
@@ -187,7 +187,7 @@
 
 .korisnikUloga {
     display: flex;
-    width: 14.5%;
+    width: 11.6%;
     height: 100%;
     justify-content: center;
     align-content: center;
@@ -214,4 +214,12 @@
 .korisnikUloga.ikona .fa-save:hover,
 .korisnikUloga .fa-delete-left:hover {
     font-size: 1.4vw;
+}
+
+.korisnikTijelo {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    height: 90%;
+    overflow: auto;
 }
