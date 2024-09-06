@@ -2,7 +2,7 @@ import * as React from 'react';
 import { useEffect, useState, useRef } from 'react';
 import './css/delegat.css';
 import { format, parse } from 'date-fns';
-import axios from 'axios';
+import api from '../api';
 import DropdownMenu from './library_css/DropdownMenu';
 import Logo from './library_css/Logo';
 import OdabirPodatka from './library_css/OdabirPodatka';
@@ -62,8 +62,8 @@ const Delegat = ({ token }) => {
 
     const fetchData = async () => {
         try {
-            const pocetniPodatci = await axios.post(
-                'http://localhost:4000/getMomcadi',
+            const pocetniPodatci = await api.post(
+                '/getMomcadi',
                 {},
                 {
                     headers: {
@@ -87,8 +87,8 @@ const Delegat = ({ token }) => {
                     : []
             );
 
-            const statistikaMomcadi = await axios.post(
-                'http://localhost:4000/getStatistikaMomcadi',
+            const statistikaMomcadi = await api.post(
+                '/getStatistikaMomcadi',
                 {},
                 {
                     headers: {
@@ -98,8 +98,8 @@ const Delegat = ({ token }) => {
             );
             setSveUtakmice(statistikaMomcadi.data.utakmice);
 
-            const statPodatci_statusi = await axios.post(
-                'http://localhost:4000/getStatistickiPodatci',
+            const statPodatci_statusi = await api.post(
+                '/getStatistickiPodatci',
                 {},
                 {
                     headers: {
@@ -159,8 +159,8 @@ const Delegat = ({ token }) => {
         if (domaci && gosti && sudac && sezona && vrijeme && datum) {
             try {
                 setErrorMessage('');
-                const result = await axios.post(
-                    'http://localhost:4000/kreirajUtakmicu',
+                const result = await api.post(
+                    '/kreirajUtakmicu',
                     {
                         domaci: domaci.toString(),
                         gosti: gosti.toString(),
@@ -178,8 +178,8 @@ const Delegat = ({ token }) => {
                 if (
                     result.data.message === 'Insert was completed successfully!'
                 ) {
-                    const result1 = await axios.post(
-                        'http://localhost:4000/getStatistikaMomcadi',
+                    const result1 = await api.post(
+                        '/getStatistikaMomcadi',
                         {
                             imeMomcad: domaci.toString(),
                             imeMomcad1: gosti.toString(),
@@ -261,8 +261,8 @@ const Delegat = ({ token }) => {
         setAktivniGosti(gosti_temp);
 
         try {
-            const result = await axios.post(
-                'http://localhost:4000/unesiStatistiku',
+            const result = await api.post(
+                '/unesiStatistiku',
                 {
                     utakmica_id: utakmica_id,
                     aktivni_domaci: domaci_temp,
@@ -286,8 +286,8 @@ const Delegat = ({ token }) => {
     const prikaziStatistiku = async () => {
         try {
             const [statistikaResponse, igraciResponses] = await Promise.all([
-                axios.post(
-                    'http://localhost:4000/prikaziStatistikuUtakmice',
+                api.post(
+                    '/prikaziStatistikuUtakmice',
                     {
                         utakmica_id: utakmica_id,
                         domaci_naziv: oznacenaUtakmica.DOMACI_NAZIV.toString(),
@@ -300,8 +300,8 @@ const Delegat = ({ token }) => {
                     }
                 ),
                 Promise.all([
-                    axios.post(
-                        'http://localhost:4000/showRoster',
+                    api.post(
+                        '/showRoster',
                         {
                             imeMomcad: oznacenaUtakmica.DOMACI_NAZIV.toString(),
                             status: 0,
@@ -312,8 +312,8 @@ const Delegat = ({ token }) => {
                             },
                         }
                     ),
-                    axios.post(
-                        'http://localhost:4000/showRoster',
+                    api.post(
+                        '/showRoster',
                         {
                             imeMomcad: oznacenaUtakmica.GOSTI_NAZIV.toString(),
                             status: 0,
@@ -429,8 +429,8 @@ const Delegat = ({ token }) => {
                         Igrac_promjena.length !== 0 &&
                         Igrac_ulazi.length !== 0
                     ) {
-                        result = await axios.post(
-                            'http://localhost:4000/unesiStatistiku',
+                        result = await api.post(
+                            '/unesiStatistiku',
                             {
                                 igrac_id: Igrac_promjena,
                                 igrac_ulaz_id: Igrac_ulazi,
@@ -478,8 +478,8 @@ const Delegat = ({ token }) => {
                             setPromjene(true);
                         }
                     } else {
-                        result = await axios.post(
-                            'http://localhost:4000/unesiStatistiku',
+                        result = await api.post(
+                            '/unesiStatistiku',
                             {
                                 igrac_ulaz_id: Igrac_ulazi,
                                 domaci_naziv:
@@ -525,8 +525,8 @@ const Delegat = ({ token }) => {
                         }
                     }
                 } else {
-                    result = await axios.post(
-                        'http://localhost:4000/unesiStatistiku',
+                    result = await api.post(
+                        '/unesiStatistiku',
                         {
                             igrac_id: Igrac_promjena,
                             status: status.toString(),
@@ -728,8 +728,8 @@ const Delegat = ({ token }) => {
                     setAktivniGosti([]);
                 }
 
-                const result = await axios.post(
-                    'http://localhost:4000/izbrisiPodatak',
+                const result = await api.post(
+                    '/izbrisiPodatak',
                     {
                         izbrisiPodatak: izbrisiPodatak,
                         izbrisiPodatakUlaz: izbrisiPodatakUlaz,
@@ -770,8 +770,8 @@ const Delegat = ({ token }) => {
         try {
             setUtakmicaDelete(false);
             if (confirm) {
-                const izbrisi = await axios.post(
-                    'http://localhost:4000/izbrisiUtakmicu',
+                const izbrisi = await api.post(
+                    '/izbrisiUtakmicu',
                     { utakmica_id: utakmica.UTAKMICA_ID },
                     {
                         headers: {

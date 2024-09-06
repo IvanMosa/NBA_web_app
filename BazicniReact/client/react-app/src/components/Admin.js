@@ -1,7 +1,8 @@
 import * as React from 'react';
 import { useState, useEffect } from 'react';
+import { CiLock, CiUnlock } from 'react-icons/ci';
 import '../components/css/admin.css';
-import axios from 'axios';
+import api from '../api';
 
 function Admin({ roles, token }) {
     const [registerPassword, setRegisterPassword] = useState('');
@@ -51,7 +52,6 @@ function Admin({ roles, token }) {
                 (korisnik) =>
                     korisnik.KORISNIK === user && korisnik.ULOGA === uloga
             );
-
             if (postoji) {
                 return prev.filter(
                     (korisnik) =>
@@ -79,12 +79,14 @@ function Admin({ roles, token }) {
                         return {
                             KORISNIK: korisnik.KORISNIK,
                             ULOGE: novaUlogeKorisnika.join(','),
+                            STATUS: korisnik.STATUS,
                         };
                     } else {
                         ulogeKorisnika.push(uloga);
                         return {
                             KORISNIK: korisnik.KORISNIK,
                             ULOGE: ulogeKorisnika.join(','),
+                            STATUS: korisnik.STATUS,
                         };
                     }
                 }
@@ -93,10 +95,56 @@ function Admin({ roles, token }) {
         });
     };
 
+    const potvrdiZakljucavanje = (korisnik, aktivan) => {
+        return new Promise((resolve) => {
+            const handleConfirm = () => resolve(true);
+            const handleCancel = () => resolve(false);
+
+            setConfirmationDialog({
+                message:
+                    'Jeste li sigurni da želite korisniku: ' +
+                    korisnik +
+                    " promjeniti aktivnost u '" +
+                    aktivan +
+                    "'?",
+                onConfirm: handleConfirm,
+                onCancel: handleCancel,
+            });
+        });
+    };
+    const handleZakljucaj = async (korisnik, aktivan) => {
+        setDelete(true);
+        let confirm = await potvrdiZakljucavanje(korisnik, aktivan);
+        try {
+            setDelete(false);
+            if (confirm) {
+                const zakljucaj = await api.post(
+                    '/adminPromjeniAktivnost',
+                    { korisnik: korisnik, aktivnost: aktivan },
+                    {
+                        headers: {
+                            authorization: `Bearer ${token}`,
+                        },
+                    }
+                );
+                if (
+                    zakljucaj.data.message == 'Uspješno promjenjena aktivnost!'
+                ) {
+                    setPromjeneErrorMessage('Uspješno promjenjena aktivnost!');
+                    prikaziSveKorisnike();
+                    setIsEditing(false);
+                    setKorisniciPromjene([]);
+                    setPromjene([]);
+                }
+            }
+        } catch (err) {
+            console.log(err);
+        }
+    };
     const prikaziSveKorisnike = async () => {
         try {
-            const korisnici = await axios.post(
-                'http://localhost:4000/adminSviKorisnici',
+            const korisnici = await api.post(
+                '/adminSviKorisnici',
                 {},
                 {
                     headers: {
@@ -172,8 +220,8 @@ function Admin({ roles, token }) {
             setPromjeneErrorMessage('Nema unešenih promjena');
         }
         try {
-            const unesiPromjene = await axios.post(
-                'http://localhost:4000/adminDodajRole',
+            const unesiPromjene = await api.post(
+                '/adminDodajRole',
                 { promjene: promjene },
                 {
                     headers: {
@@ -215,8 +263,8 @@ function Admin({ roles, token }) {
         try {
             setDelete(false);
             if (confirm) {
-                const izbrisi = await axios.post(
-                    'http://localhost:4000/adminIzbrisiKorisnika',
+                const izbrisi = await api.post(
+                    '/adminIzbrisiKorisnika',
                     { korisnik: korisnik },
                     {
                         headers: {
@@ -451,7 +499,7 @@ function Admin({ roles, token }) {
                                             <h4>MOMČAD</h4>
                                         </div>
                                         <div className="zaglavljePodatak">
-                                            <h4>AKTIVAN</h4>
+                                            <h4>AKTIVNOST</h4>
                                         </div>
                                     </div>
                                     <div className="korisnikTijelo">
@@ -472,13 +520,25 @@ function Admin({ roles, token }) {
                                                 }}
                                             >
                                                 <div className="korisnikNaziv">
-                                                    <h5>{korisnik.KORISNIK}</h5>
+                                                    <h5
+                                                        style={{
+                                                            opacity:
+                                                                korisnik.STATUS ==
+                                                                'Neaktivan'
+                                                                    ? '0.4'
+                                                                    : '1',
+                                                        }}
+                                                    >
+                                                        {korisnik.KORISNIK}
+                                                    </h5>
                                                 </div>
                                                 <div className="korisnikUloga">
                                                     <input
                                                         type="checkbox"
                                                         value="PREGLED"
                                                         disabled={
+                                                            korisnik.STATUS ==
+                                                                'Neaktivan' ||
                                                             !isEditing ||
                                                             editingCell !==
                                                                 index
@@ -503,6 +563,8 @@ function Admin({ roles, token }) {
                                                         type="checkbox"
                                                         value="TRADE"
                                                         disabled={
+                                                            korisnik.STATUS ==
+                                                                'Neaktivan' ||
                                                             !isEditing ||
                                                             editingCell !==
                                                                 index
@@ -527,6 +589,8 @@ function Admin({ roles, token }) {
                                                         type="checkbox"
                                                         value="DELEGAT"
                                                         disabled={
+                                                            korisnik.STATUS ==
+                                                                'Neaktivan' ||
                                                             !isEditing ||
                                                             editingCell !==
                                                                 index
@@ -551,6 +615,8 @@ function Admin({ roles, token }) {
                                                         type="checkbox"
                                                         value="UREDI_MOMCAD"
                                                         disabled={
+                                                            korisnik.STATUS ==
+                                                                'Neaktivan' ||
                                                             !isEditing ||
                                                             editingCell !==
                                                                 index
@@ -570,27 +636,42 @@ function Admin({ roles, token }) {
                                                         }
                                                     />
                                                 </div>
-                                                <div className="korisnikUloga">
-                                                    <input
-                                                        type="checkbox"
-                                                        disabled={
-                                                            !isEditing ||
-                                                            editingCell !==
-                                                                index
-                                                        }
-                                                        checked={
-                                                            korisnik &&
-                                                            korisnik.STATUS &&
-                                                            korisnik.STATUS ==
-                                                                'Aktivan'
-                                                        }
-                                                        onChange={() =>
-                                                            handleRoleChange(
-                                                                korisnik.KORISNIK,
-                                                                'AKTIVAN'
-                                                            )
-                                                        }
-                                                    />
+                                                <div
+                                                    className="korisnikUloga"
+                                                    style={
+                                                        !isEditing ||
+                                                        editingCell !== index
+                                                            ? {
+                                                                  pointerEvents:
+                                                                      'none',
+                                                                  opacity:
+                                                                      '0.4',
+                                                              }
+                                                            : {}
+                                                    }
+                                                >
+                                                    {korisnik.STATUS ==
+                                                    'Neaktivan' ? (
+                                                        <CiLock
+                                                            className="adminIkonica"
+                                                            onClick={() =>
+                                                                handleZakljucaj(
+                                                                    korisnik.KORISNIK,
+                                                                    'Aktivan'
+                                                                )
+                                                            }
+                                                        />
+                                                    ) : (
+                                                        <CiUnlock
+                                                            className="adminIkonica"
+                                                            onClick={() =>
+                                                                handleZakljucaj(
+                                                                    korisnik.KORISNIK,
+                                                                    'Neaktivan'
+                                                                )
+                                                            }
+                                                        />
+                                                    )}
                                                 </div>
                                                 <div className="korisnikUloga ikona">
                                                     {isEditing &&
@@ -641,7 +722,9 @@ function Admin({ roles, token }) {
                                                     promjeneErrorMessage ==
                                                         'Uspješno obrisan korisnik!' ||
                                                     promjeneErrorMessage ==
-                                                        'Uspješno unesene promjene'
+                                                        'Uspješno unesene promjene' ||
+                                                    promjeneErrorMessage ==
+                                                        'Uspješno promjenjena aktivnost!'
                                                         ? {
                                                               color: 'green',
                                                           }

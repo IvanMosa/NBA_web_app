@@ -1,7 +1,7 @@
 import * as React from 'react';
 import { useState, useEffect } from 'react';
 import '../components/css/tablica.css';
-import axios from 'axios';
+import api from '../api';
 import { Link } from 'react-router-dom';
 
 const Tablica = ({ token }) => {
@@ -17,8 +17,8 @@ const Tablica = ({ token }) => {
     useEffect(() => {
         const fetchData = async () => {
             try {
-                const response = await axios.post(
-                    'http://localhost:4000/getMomcadi',
+                const response = await api.post(
+                    '/getMomcadi',
                     {},
                     {
                         headers: {
@@ -43,8 +43,8 @@ const Tablica = ({ token }) => {
                 setKonferencija_Divizija('Konferencija');
                 setimeSezone('23/24');
 
-                const response1 = await axios.post(
-                    'http://localhost:4000/ShowMomcadi',
+                const response1 = await api.post(
+                    '/ShowMomcadi',
                     {
                         imeSezone: '23/24',
                         konf_div: 'Konferencija',
@@ -73,8 +73,8 @@ const Tablica = ({ token }) => {
                 setIzbor(Div);
             }
             try {
-                const response = await axios.post(
-                    'http://localhost:4000/ShowMomcadi',
+                const response = await api.post(
+                    '/ShowMomcadi',
                     {
                         //imeMomcad: imeMomcad,
                         imeSezone: imeSezone,

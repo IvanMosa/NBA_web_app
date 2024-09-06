@@ -1,7 +1,7 @@
 import * as React from 'react';
 import { useEffect, useState } from 'react';
 import './css/home.css';
-import axios from 'axios';
+import api from '../api';
 import Logo from './library_css/Logo';
 import { Link } from 'react-router-dom';
 
@@ -14,8 +14,8 @@ function Home({ roles = [] }) {
         const fetchData = async () => {
             try {
                 const token = localStorage.getItem('token');
-                const homePoziv = await axios.post(
-                    'http://localhost:4000/podatciPocetna',
+                const homePoziv = await api.post(
+                    '/podatciPocetna',
                     {},
                     {
                         headers: {

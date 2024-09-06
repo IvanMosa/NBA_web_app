@@ -1,6 +1,6 @@
 import * as React from 'react';
 import { useState, useEffect } from 'react';
-import axios from 'axios';
+import api from '../api';
 import '../components/css/trade.css';
 import Logo from './library_css/Logo';
 
@@ -18,8 +18,8 @@ const Trade = ({ token }) => {
     const [datum_igrac, setDatumIgrac] = useState('');
     useEffect(() => {
         const fetchData = async () => {
-            const result = await axios.post(
-                'http://localhost:4000/getMomcadi',
+            const result = await api.post(
+                '/getMomcadi',
                 {},
                 {
                     headers: {
@@ -51,8 +51,8 @@ const Trade = ({ token }) => {
                 momcad1 != momcad2
             ) {
                 setErrorMessage('');
-                const result1 = await axios.post(
-                    'http://localhost:4000/showRosterTrade',
+                const result1 = await api.post(
+                    '/showRosterTrade',
                     {
                         imeMomcad: momcad1,
                         imeMomcad1: momcad2,
@@ -76,8 +76,8 @@ const Trade = ({ token }) => {
             } else if (momcad1 == momcad2) {
                 setErrorMessage('Momcadi moraju biti razlicite!');
             } else if (momcad1 != 'Odaberi momcad') {
-                const result1 = await axios.post(
-                    'http://localhost:4000/showRosterTrade',
+                const result1 = await api.post(
+                    '/showRosterTrade',
                     {
                         imeMomcad: momcad1,
                     },
@@ -92,8 +92,8 @@ const Trade = ({ token }) => {
                     : [];
                 setIgraci_1(['Odaberi igraca', ...igraci1_temp]);
             } else if (momcad2 != 'Odaberi momcad') {
-                const result1 = await axios.post(
-                    'http://localhost:4000/showRosterTrade',
+                const result1 = await api.post(
+                    '/showRosterTrade',
                     {
                         imeMomcad1: momcad2,
                     },
@@ -144,8 +144,8 @@ const Trade = ({ token }) => {
         }
 
         if (TradeAccepted) {
-            const result = await axios.post(
-                'http://localhost:4000/insertTrade',
+            const result = await api.post(
+                '/insertTrade',
                 {
                     igrac1: igrac1,
                     igrac2: igrac2,

@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useRef } from 'react';
-import axios from 'axios';
+import api from '../../api.js';
 import './css/odabirpodataka.css';
 
 const OdabirPodatka = ({
@@ -68,8 +68,8 @@ const OdabirPodatka = ({
 
     const unesiPoene = async () => {
         try {
-            const result = await axios.post(
-                'http://localhost:4000/unesiPoene',
+            const result = await api.post(
+                '/unesiPoene',
                 {
                     poeniDomaci: poeniDomaci,
                     poeniGosti: poeniGosti,

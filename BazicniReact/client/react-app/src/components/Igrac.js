@@ -3,7 +3,7 @@ import { useState, useEffect } from 'react';
 import { useParams, useLocation } from 'react-router-dom';
 import Logo from './library_css/Logo';
 import './css/igrac.css';
-import axios from 'axios';
+import api from '../api';
 import Statistika from './Statistika';
 import { Link } from 'react-router-dom';
 import KarijeraMomcadi from './library_css/karijeraMomcadi';
@@ -29,8 +29,8 @@ function Igrac({ token }) {
         let podatci;
         let ugovoriIgrac;
         try {
-            const result = await axios.post(
-                'http://localhost:4000/podatciIgraca',
+            const result = await api.post(
+                '/podatciIgraca',
                 {
                     imeIgrac: imeIgrac,
                 },

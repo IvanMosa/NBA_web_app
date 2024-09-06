@@ -1,7 +1,7 @@
 import * as React from 'react';
 import { useState, useEffect } from 'react';
 import '../components/css/momcad.css';
-import axios from 'axios';
+import api from '../api';
 import { useParams } from 'react-router-dom';
 import { Link } from 'react-router-dom';
 import { add, format, parse } from 'date-fns';
@@ -39,8 +39,8 @@ const Momcad = ({ edit, token, roles = [] }) => {
     const location = useLocation();
 
     const fetchData = async () => {
-        const result = await axios.post(
-            'http://localhost:4000/showRoster',
+        const result = await api.post(
+            '/showRoster',
             {
                 imeMomcad: imeMomcad,
             },
@@ -74,8 +74,8 @@ const Momcad = ({ edit, token, roles = [] }) => {
         const newOptions = { 2: drzaveTemp, 3: pozicijeTempAltered };
         setOptions(newOptions);
 
-        const result1 = await axios.post(
-            'http://localhost:4000/getStatistikaMomcadi',
+        const result1 = await api.post(
+            '/getStatistikaMomcadi',
             { imeMomcad: imeMomcad },
             {
                 headers: {
@@ -174,8 +174,8 @@ const Momcad = ({ edit, token, roles = [] }) => {
     //SAVE
     const handleAddSaveClick = async () => {
         try {
-            const result = await axios.post(
-                'http://localhost:4000/unosIgrac',
+            const result = await api.post(
+                '/unosIgrac',
                 {
                     imeIgrac: noviIgrac.imeIgrac,
                     imeMomcad: imeMomcad,
@@ -225,15 +225,11 @@ const Momcad = ({ edit, token, roles = [] }) => {
         });
         try {
             setIsEditing(false);
-            const result = await axios.post(
-                'http://localhost:4000/promjeneMomcad',
-                promjeneZaAPI,
-                {
-                    headers: {
-                        authorization: `Bearer ${token}`,
-                    },
-                }
-            );
+            const result = await api.post('/promjeneMomcad', promjeneZaAPI, {
+                headers: {
+                    authorization: `Bearer ${token}`,
+                },
+            });
 
             if (result.data.message == 'Successfuly updated info!') {
                 setAddNew(false);
@@ -282,8 +278,8 @@ const Momcad = ({ edit, token, roles = [] }) => {
         try {
             setDelete(false);
             if (confirm) {
-                const result = await axios.post(
-                    'http://localhost:4000/izbrisiIgraca',
+                const result = await api.post(
+                    '/izbrisiIgraca',
                     { imeIgrac: imeIgrac },
                     {
                         headers: {

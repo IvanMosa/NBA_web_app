@@ -6,6 +6,7 @@ import { BrowserRouter as Router, Switch, Route, Link } from 'react-router-dom';
 import { useNavigate } from 'react-router-dom';
 import { useDispatch } from 'react-redux';
 import { useState } from 'react';
+import api from '../api';
 import * as actions from '../redux/actionTypes';
 import Tutorial from '../components/library_css/Tutorial';
 import './css/navigation.css';
@@ -16,6 +17,15 @@ function Navigation({ roles = {} }) {
     const dispatch = useDispatch();
     const navigate = useNavigate();
 
+    const handleLogout = async () => {
+        try {
+            await api.post('/logout', {
+                token: localStorage.getItem('refreshToken'),
+            });
+        } catch (error) {
+            console.error('Greška prilikom odjave:', error);
+        }
+    };
     return (
         <div className="navigation-container">
             <div className="navigation-tabs">
@@ -79,6 +89,7 @@ function Navigation({ roles = {} }) {
                 <div
                     className="navigation-logOut1"
                     onClick={() => {
+                        handleLogout();
                         localStorage.removeItem('token');
                         localStorage.removeItem('roles');
                         dispatch({

@@ -1,7 +1,7 @@
 import * as React from 'react';
 import { useState, useEffect } from 'react';
 import '../components/css/statistika.css';
-import axios from 'axios';
+import api from '../api';
 import { Link } from 'react-router-dom';
 
 const Statistika = ({ imeIgrac, setPoeni, setStatistikaSezona, token }) => {
@@ -67,8 +67,8 @@ const Statistika = ({ imeIgrac, setPoeni, setStatistikaSezona, token }) => {
     useEffect(() => {
         const fetchData = async () => {
             try {
-                const result = await axios.post(
-                    'http://localhost:4000/getStatistikaIgraci',
+                const result = await api.post(
+                    '/getStatistikaIgraci',
                     { imeIgrac: imeIgrac ? imeIgrac : 'Svi' },
                     {
                         headers: {
@@ -81,8 +81,8 @@ const Statistika = ({ imeIgrac, setPoeni, setStatistikaSezona, token }) => {
                 if (!imeIgrac) setPodatciSez(result.data.karijera);
                 else setStatistikaSezona(result.data.karijera);
 
-                const result1 = await axios.post(
-                    'http://localhost:4000/getStatistikaMomcadi',
+                const result1 = await api.post(
+                    '/getStatistikaMomcadi',
                     {},
                     {
                         headers: {

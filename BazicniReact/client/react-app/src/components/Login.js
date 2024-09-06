@@ -21,8 +21,11 @@ function Login() {
             }),
         })
             .then((response) => {
+                console.log(response);
                 if (response.status === 200) {
                     return response.json();
+                } else if (response.status === 201) {
+                    throw new Error('Korisnički račun zaključan!');
                 } else {
                     throw new Error('Login Failed');
                 }
@@ -32,6 +35,7 @@ function Login() {
                     type: actions.USER_LOGGED_IN,
                     payload: {
                         token: data.token,
+                        refreshToken: data.refreshToken,
                         roles: data.roles,
                     },
                 });
@@ -40,7 +44,7 @@ function Login() {
 
             .catch((error) => {
                 console.log(error);
-                setErrorMessage('Invalid username or password!');
+                setErrorMessage('Korisnički račun zaključan!');
             });
         e.preventDefault();
     };

@@ -3,7 +3,6 @@ const cors = require('cors');
 const oracledb = require('oracledb');
 const bodyParser = require('body-parser');
 const app = express();
-
 const bcrypt = require('bcrypt');
 var jwt = require('jsonwebtoken');
 var _ = require('lodash');
@@ -41,27 +40,81 @@ app.listen(4000, function () {
 
 const authenticateJWT = (req, res, next) => {
     const authHeader = req.headers.authorization;
-
+    console.log('authhed: ', authHeader);
     if (authHeader) {
         const token = authHeader.split(' ')[1];
-        jwt.verify(token, dbConfig.jwtSecretKey, (err, result) => {
+        jwt.verify(token, dbConfig.jwtAccessSecretKey, (err, result) => {
             if (err) {
-                res.status(403);
+                console.log(err);
+                res.status(401);
+                return;
             } else {
                 req.user = result;
                 next();
             }
         });
     } else {
-        let msg = 'Molimo prijavite se na uslugu za pregled traženih resursa';
-        let error = 401;
-
-        res.status(401).send({
-            message: msg,
-        });
+        return res.status(401).json({ message: 'Nema tokena u zahtjevu' });
     }
 };
 
+app.post('/refresh-token', async (req, res) => {
+    let connection;
+    console.log('ISTEKA, OVO JE REFRESH: ', req.body);
+    const { refreshToken } = req.body;
+
+    if (!refreshToken) {
+        return res.status(401).json({ message: 'Refresh token nedostaje' });
+    }
+
+    try {
+        connection = await oracledb.getConnection();
+
+        const findStored = await connection.execute(
+            'SELECT AS.TOKEN FROM NBA.APP_SESIJE AP WHERE AP.TOKEN = :refreshToken AND AP.STATUS_ID = 1 AND AP.KRAJ IS NULL',
+            { refreshToken: refreshToken },
+            { outFormat: oracledb.OBJECT }
+        );
+
+        const storedToken = findStored.rows[0].TOKEN;
+        if (!storedToken) {
+            return res
+                .status(403)
+                .json({ message: 'Refresh token nije validan' });
+        }
+        jwt.verify(
+            refreshToken,
+            process.env.REFRESH_TOKEN_SECRET,
+            (err, user) => {
+                if (err) {
+                    return res
+                        .status(403)
+                        .json({ message: 'Nevažeći refresh token' });
+                }
+
+                const newAccessToken = generirajAccessToken(user.name);
+
+                res.json({ accessToken: newAccessToken });
+            }
+        );
+    } catch (err) {
+        console.log(err);
+    } finally {
+        if (connection) {
+            try {
+                await connection.close();
+            } catch (err) {
+                console.log(err);
+            }
+        }
+    }
+});
+
+function generirajAccessToken(user) {
+    return jwt.sign(user, dbConfig.jwtAccessSecretKey, {
+        expiresIn: dbConfig.jwtAccessExpirationWeb,
+    });
+}
 //Login API
 app.post('/login', async (req, res) => {
     let connection;
@@ -71,7 +124,7 @@ app.post('/login', async (req, res) => {
         const { userName, password } = req.body;
 
         const result = await connection.execute(
-            `SELECT KORISNIK, SIFRA, LISTAGG(ULOGA, ', ') WITHIN GROUP (ORDER BY ULOGA) AS ULOGE FROM( SELECT KR.NAZIV AS Korisnik, KR.SIFRA AS SIFRA,  KR1.NAZIV as ULOGA FROM NBA.VEZE_KORISNICI_ROLE VKR, NBA.KORISNICI_ROLE KR, NBA.KORISNICI_ROLE KR1 WHERE VKR.KORISNIK_ID = KR.KORISNIK_ID AND VKR.KORISNIK_ID1 = KR1.KORISNIK_ID AND KR.NAZIV = :userName AND KR.STATUS_ID = 1 AND KR.TKORISNIKA = 'Korisnik') GROUP BY KORISNIK, SIFRA`,
+            `SELECT KORISNIK_ID, KORISNIK, SIFRA, LISTAGG(ULOGA, ', ') WITHIN GROUP (ORDER BY ULOGA) AS ULOGE, STATUS FROM( SELECT KR.KORISNIK_ID, KR.NAZIV AS Korisnik, KR.SIFRA AS SIFRA,  KR1.NAZIV as ULOGA, KR.STATUS_ID AS STATUS FROM NBA.VEZE_KORISNICI_ROLE VKR, NBA.KORISNICI_ROLE KR, NBA.KORISNICI_ROLE KR1 WHERE VKR.KORISNIK_ID = KR.KORISNIK_ID AND VKR.KORISNIK_ID1 = KR1.KORISNIK_ID AND KR.NAZIV = :userName AND KR.TKORISNIKA = 'Korisnik') GROUP BY KORISNIK_ID, KORISNIK, SIFRA, STATUS`,
             { userName },
             {
                 resultSet: true,
@@ -90,21 +143,49 @@ app.post('/login', async (req, res) => {
                 bcrypt.compare(
                     userInputPassword,
                     HashedPassword,
-                    (err, result1) => {
+                    async (err, result1) => {
                         if (err) {
                             console.error('Error comparing passwords:', err);
                             return;
                         }
                         if (result1) {
-                            let payload = { name: userName };
-                            let AccessToken = jwt.sign(
+                            if (row.STATUS == 0) {
+                                res.status(201).send({
+                                    message: 'Korisnički račun zaključan!',
+                                });
+                                return;
+                            }
+                            const payload = { name: userName };
+                            const AccessToken = generirajAccessToken(payload);
+                            const RefreshToken = jwt.sign(
                                 payload,
-                                dbConfig.jwtSecretKey,
-                                { expiresIn: dbConfig.jwtExpirationWeb }
+                                dbConfig.jwtRefreshSecretKey
                             );
-
+                            let connection1;
+                            try {
+                                connection1 = await oracledb.getConnection();
+                                await connection1.execute(
+                                    'INSERT INTO NBA.APP_SESIJE(TOKEN, POCETAK, KORISNIK_ID, STATUS_ID) VALUES(:RefreshToken, sysdate, :korisnik_id, 1)',
+                                    {
+                                        RefreshToken: RefreshToken,
+                                        korisnik_id: row.KORISNIK_ID,
+                                    },
+                                    { autoCommit: true }
+                                );
+                            } catch (err) {
+                                console.log(err);
+                            } finally {
+                                if (connection1) {
+                                    try {
+                                        await connection1.close();
+                                    } catch (err) {
+                                        console.log(err);
+                                    }
+                                }
+                            }
                             res.status(200).json({
                                 token: AccessToken,
+                                refreshToken: RefreshToken,
                                 roles: row.ULOGE,
                             });
                         } else {
@@ -136,6 +217,29 @@ app.post('/login', async (req, res) => {
     }
 });
 
+app.post('/logout', async (req, res) => {
+    let connection;
+    const refreshToken = req.body.token;
+    try {
+        connection = await oracledb.getConnection();
+
+        await connection.execute(
+            'UPDATE NBA.APP_SESIJE SET KRAJ = sysdate, STATUS_ID = 0, TRAJANJE = TO_NUMBER(sysdate - POCETAK) * 86400 WHERE TOKEN = :refreshToken',
+            { refreshToken: refreshToken },
+            { autoCommit: true }
+        );
+    } catch (err) {
+        console.log(err);
+    } finally {
+        if (connection) {
+            try {
+                await connection.close();
+            } catch (err) {
+                console.log(err);
+            }
+        }
+    }
+});
 //Register API
 app.post('/register', authenticateJWT, async (req, res) => {
     let connection;
@@ -235,7 +339,7 @@ app.post('/adminSviKorisnici', authenticateJWT, async (req, res) => {
         connection = await oracledb.getConnection();
 
         const korisnici = await connection.execute(
-            "SELECT KORISNIK, LISTAGG(ULOGA, ',') WITHIN GROUP (ORDER BY ULOGA) AS ULOGE FROM( SELECT KR.NAZIV AS Korisnik,  KR1.NAZIV AS Uloga FROM NBA.KORISNICI_ROLE KR, NBA.VEZE_KORISNICI_ROLE VKR, NBA.KORISNICI_ROLE KR1 WHERE VKR.KORISNIK_ID(+) = KR.KORISNIK_ID AND VKR.KORISNIK_ID1 = KR1.KORISNIK_ID(+) AND KR.STATUS_ID = 1 AND KR.NAZIV != 'admin' AND KR.TKORISNIKA = 'Korisnik') GROUP BY KORISNIK",
+            "SELECT KORISNIK, LISTAGG(ULOGA, ',') WITHIN GROUP (ORDER BY ULOGA) AS ULOGE, STATUS FROM( SELECT KR.NAZIV AS Korisnik,  KR1.NAZIV AS Uloga, S.NAZIV AS STATUS FROM NBA.KORISNICI_ROLE KR, NBA.VEZE_KORISNICI_ROLE VKR, NBA.KORISNICI_ROLE KR1, NBA.STATUSI S WHERE VKR.KORISNIK_ID(+) = KR.KORISNIK_ID AND VKR.KORISNIK_ID1 = KR1.KORISNIK_ID(+)  AND KR.STATUS_ID = S.STATUS_ID AND S.TABLICA = 'KORISNICI_ROLE' AND KR.NAZIV != 'admin' AND KR.TKORISNIKA = 'Korisnik') GROUP BY KORISNIK, STATUS",
             [],
             { outFormat: oracledb.OBJECT }
         );
@@ -314,6 +418,42 @@ app.post('/adminDodajRole', authenticateJWT, async (req, res) => {
     }
 });
 
+app.post('/adminPromjeniAktivnost', authenticateJWT, async (req, res) => {
+    let connection;
+    const korisnik = req.body.korisnik;
+    const aktivnost = req.body.aktivnost;
+    const status = aktivnost == 'Aktivan' ? 1 : 0;
+    try {
+        connection = await oracledb.getConnection();
+
+        const pronadiKorisnikID = await connection.execute(
+            "SELECT KR.KORISNIK_ID FROM NBA.KORISNICI_ROLE KR WHERE KR.NAZIV = :korisnik AND KR.TKORISNIKA = 'Korisnik'",
+            { korisnik: korisnik },
+            { outFormat: oracledb.OBJECT }
+        );
+        const korisnikID = pronadiKorisnikID.rows[0].KORISNIK_ID;
+        await connection.execute(
+            "UPDATE NBA.KORISNICI_ROLE SET STATUS_ID = :status, APP_MODIFIED_BY = :creator WHERE KORISNIK_ID = :korisnikID AND TKORISNIKA = 'Korisnik'",
+            {
+                status: status,
+                creator: req.user.name,
+                korisnikID: korisnikID,
+            },
+            { autoCommit: true }
+        );
+        res.send({ message: 'Uspješno promjenjena aktivnost!' });
+    } catch (err) {
+        console.log(err);
+    } finally {
+        if (connection) {
+            try {
+                await connection.close();
+            } catch (err) {
+                console.log(err);
+            }
+        }
+    }
+});
 app.post('/adminIzbrisiKorisnika', authenticateJWT, async (req, res) => {
     let connection;
 

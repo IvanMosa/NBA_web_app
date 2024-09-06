@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import '../components/css/search.css';
-import axios from 'axios';
+import api from '../api';
 import { Link } from 'react-router-dom';
 import Logo from './library_css/Logo';
 
@@ -41,8 +41,8 @@ function Search({ token, roles = [] }) {
     useEffect(() => {
         const fetchData = async () => {
             try {
-                const result = await axios.post(
-                    'http://localhost:4000/podatciSearch',
+                const result = await api.post(
+                    '/podatciSearch',
                     {},
                     {
                         headers: {

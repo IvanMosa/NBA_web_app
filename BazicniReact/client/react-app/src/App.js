@@ -1,5 +1,6 @@
 import logo from './logo.svg';
 import './App.css';
+import { useEffect } from 'react';
 import { BrowserRouter, Switch, Route, Routes, Link } from 'react-router-dom';
 
 import { useSelector, useDispatch } from 'react-redux';
@@ -14,6 +15,7 @@ import Trade from './components/Trade';
 import Statistika from './components/Statistika';
 import Delegat from './components/Delegat';
 import Search from './components/Search';
+
 function App() {
     const token = useSelector((status) => localStorage.getItem('token'));
     const roles = useSelector((status) => localStorage.getItem('roles'));
