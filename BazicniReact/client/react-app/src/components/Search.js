@@ -41,15 +41,7 @@ function Search({ token, roles = [] }) {
     useEffect(() => {
         const fetchData = async () => {
             try {
-                const result = await api.post(
-                    '/podatciSearch',
-                    {},
-                    {
-                        headers: {
-                            authorization: `Bearer ${token}`,
-                        },
-                    }
-                );
+                const result = await api.post('/podatciSearch');
                 setIgraci(result.data.igraci);
                 setMomcadi(result.data.momcadi);
                 if (searchType === 'igraci') setResults(result.data.igraci);
@@ -291,11 +283,11 @@ function Search({ token, roles = [] }) {
                                             <>{result.STADION}</>
                                         )}
                                     </td>
-                                    <td>
-                                        {searchType == 'igraci' ? (
+                                    {searchType == 'igraci' && (
+                                        <td>
                                             <>{result.DRZAVA}</>
-                                        ) : null}
-                                    </td>
+                                        </td>
+                                    )}
                                 </tr>
                             ))}
                         </tbody>

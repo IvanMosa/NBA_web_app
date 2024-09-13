@@ -18,15 +18,7 @@ const Trade = ({ token }) => {
     const [datum_igrac, setDatumIgrac] = useState('');
     useEffect(() => {
         const fetchData = async () => {
-            const result = await api.post(
-                '/getMomcadi',
-                {},
-                {
-                    headers: {
-                        authorization: `Bearer ${token}`,
-                    },
-                }
-            );
+            const result = await api.post('/getMomcadi');
             const momcadTemp = Array.isArray(result.data.momcad)
                 ? result.data.momcad
                 : [];
@@ -51,18 +43,10 @@ const Trade = ({ token }) => {
                 momcad1 != momcad2
             ) {
                 setErrorMessage('');
-                const result1 = await api.post(
-                    '/showRosterTrade',
-                    {
-                        imeMomcad: momcad1,
-                        imeMomcad1: momcad2,
-                    },
-                    {
-                        headers: {
-                            authorization: `Bearer ${token}`,
-                        },
-                    }
-                );
+                const result1 = await api.post('/showRosterTrade', {
+                    imeMomcad: momcad1,
+                    imeMomcad1: momcad2,
+                });
                 const igraci1_temp = Array.isArray(result1.data.igraci_1)
                     ? result1.data.igraci_1
                     : [];
@@ -76,33 +60,17 @@ const Trade = ({ token }) => {
             } else if (momcad1 == momcad2) {
                 setErrorMessage('Momcadi moraju biti razlicite!');
             } else if (momcad1 != 'Odaberi momcad') {
-                const result1 = await api.post(
-                    '/showRosterTrade',
-                    {
-                        imeMomcad: momcad1,
-                    },
-                    {
-                        headers: {
-                            authorization: `Bearer ${token}`,
-                        },
-                    }
-                );
+                const result1 = await api.post('/showRosterTrade', {
+                    imeMomcad: momcad1,
+                });
                 const igraci1_temp = Array.isArray(result1.data.igraci_1)
                     ? result1.data.igraci_1
                     : [];
                 setIgraci_1(['Odaberi igraca', ...igraci1_temp]);
             } else if (momcad2 != 'Odaberi momcad') {
-                const result1 = await api.post(
-                    '/showRosterTrade',
-                    {
-                        imeMomcad1: momcad2,
-                    },
-                    {
-                        headers: {
-                            authorization: `Bearer ${token}`,
-                        },
-                    }
-                );
+                const result1 = await api.post('/showRosterTrade', {
+                    imeMomcad1: momcad2,
+                });
                 const igraci2_temp = Array.isArray(result1.data.igraci_2)
                     ? result1.data.igraci_2
                     : [];
@@ -144,21 +112,13 @@ const Trade = ({ token }) => {
         }
 
         if (TradeAccepted) {
-            const result = await api.post(
-                '/insertTrade',
-                {
-                    igrac1: igrac1,
-                    igrac2: igrac2,
-                    momcad1: momcad1,
-                    momcad2: momcad2,
-                    datum_igrac: datum_igrac,
-                },
-                {
-                    headers: {
-                        authorization: `Bearer ${token}`,
-                    },
-                }
-            );
+            const result = await api.post('/insertTrade', {
+                igrac1: igrac1,
+                igrac2: igrac2,
+                momcad1: momcad1,
+                momcad2: momcad2,
+                datum_igrac: datum_igrac,
+            });
             setErrorMessage(result.data.message);
         }
     };
@@ -173,14 +133,7 @@ const Trade = ({ token }) => {
                             onChange={(e) => setMomcad1(e.target.value)}
                         >
                             {momcadi.map((item, index) => (
-                                <option key={index}>
-                                    <Logo
-                                        imeMomcad={item}
-                                        none={true}
-                                        home={true}
-                                    />
-                                    {item}
-                                </option>
+                                <option key={index}>{item}</option>
                             ))}
                         </select>
                         <select

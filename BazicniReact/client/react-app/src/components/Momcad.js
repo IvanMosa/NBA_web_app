@@ -39,17 +39,9 @@ const Momcad = ({ edit, token, roles = [] }) => {
     const location = useLocation();
 
     const fetchData = async () => {
-        const result = await api.post(
-            '/showRoster',
-            {
-                imeMomcad: imeMomcad,
-            },
-            {
-                headers: {
-                    authorization: `Bearer ${token}`,
-                },
-            }
-        );
+        const result = await api.post('/showRoster', {
+            imeMomcad: imeMomcad,
+        });
 
         setIgraci(Array.isArray(result.data.igraci) ? result.data.igraci : []);
 
@@ -74,15 +66,9 @@ const Momcad = ({ edit, token, roles = [] }) => {
         const newOptions = { 2: drzaveTemp, 3: pozicijeTempAltered };
         setOptions(newOptions);
 
-        const result1 = await api.post(
-            '/getStatistikaMomcadi',
-            { imeMomcad: imeMomcad },
-            {
-                headers: {
-                    authorization: `Bearer ${token}`,
-                },
-            }
-        );
+        const result1 = await api.post('/getStatistikaMomcadi', {
+            imeMomcad: imeMomcad,
+        });
         setUtakmice(result1.data.utakmice);
         setSezone(result1.data.sezone);
     };
@@ -132,16 +118,22 @@ const Momcad = ({ edit, token, roles = [] }) => {
         }
 
         if (!newData[ime]) newData[ime] = {};
-        if (rowInd === 4) {
-            newData[ime][rowInd] =
-                typeof selectedOption === 'object' && selectedOption !== null
-                    ? selectedOption.value.toString()
-                    : selectedOption.toString();
+        if (rowInd === 1 && selectedOption == '') {
+            newData[ime][rowInd] = '';
         } else {
-            newData[ime][rowInd] =
-                typeof selectedOption === 'object' && selectedOption !== null
-                    ? selectedOption.value.toString()
-                    : selectedOption.toString();
+            if (rowInd === 4) {
+                newData[ime][rowInd] =
+                    typeof selectedOption === 'object' &&
+                    selectedOption !== null
+                        ? selectedOption.value.toString()
+                        : selectedOption.toString();
+            } else {
+                newData[ime][rowInd] =
+                    typeof selectedOption === 'object' &&
+                    selectedOption !== null
+                        ? selectedOption.value.toString()
+                        : selectedOption.toString();
+            }
         }
 
         setPromjene(newData);
@@ -163,10 +155,21 @@ const Momcad = ({ edit, token, roles = [] }) => {
     };
 
     const handleNoviIgracChange = (value, field) => {
-        setNoviIgrac((prev) => ({
-            ...prev,
-            [field]: value,
-        }));
+        const regex = /^\d(\.\d{0,2})?$/;
+        if (
+            (field == 'visina' && regex.test(value)) ||
+            (field == 'visina' && value == '')
+        )
+            setNoviIgrac((prev) => ({
+                ...prev,
+                [field]: value,
+            }));
+        else if (field !== 'visina') {
+            setNoviIgrac((prev) => ({
+                ...prev,
+                [field]: value,
+            }));
+        }
     };
     //------------------------------------------------------------------------------
 
@@ -174,22 +177,14 @@ const Momcad = ({ edit, token, roles = [] }) => {
     //SAVE
     const handleAddSaveClick = async () => {
         try {
-            const result = await api.post(
-                '/unosIgrac',
-                {
-                    imeIgrac: noviIgrac.imeIgrac,
-                    imeMomcad: imeMomcad,
-                    visina: noviIgrac.visina,
-                    drzava: noviIgrac.drzava.toString(),
-                    pozicija: noviIgrac.pozicija.toString(),
-                    datum_od: noviIgrac.datum_od,
-                },
-                {
-                    headers: {
-                        authorization: `Bearer ${token}`,
-                    },
-                }
-            );
+            const result = await api.post('/unosIgrac', {
+                imeIgrac: noviIgrac.imeIgrac,
+                imeMomcad: imeMomcad,
+                visina: noviIgrac.visina,
+                drzava: noviIgrac.drzava.toString(),
+                pozicija: noviIgrac.pozicija.toString(),
+                datum_od: noviIgrac.datum_od,
+            });
             let temp = result.data.message;
             setInsertMessage(temp);
             if (
@@ -225,11 +220,7 @@ const Momcad = ({ edit, token, roles = [] }) => {
         });
         try {
             setIsEditing(false);
-            const result = await api.post('/promjeneMomcad', promjeneZaAPI, {
-                headers: {
-                    authorization: `Bearer ${token}`,
-                },
-            });
+            const result = await api.post('/promjeneMomcad', promjeneZaAPI);
 
             if (result.data.message == 'Successfuly updated info!') {
                 setAddNew(false);
@@ -278,15 +269,9 @@ const Momcad = ({ edit, token, roles = [] }) => {
         try {
             setDelete(false);
             if (confirm) {
-                const result = await api.post(
-                    '/izbrisiIgraca',
-                    { imeIgrac: imeIgrac },
-                    {
-                        headers: {
-                            authorization: `Bearer ${token}`,
-                        },
-                    }
-                );
+                const result = await api.post('/izbrisiIgraca', {
+                    imeIgrac: imeIgrac,
+                });
                 setOnError(true);
                 setErrorMessage('Deleting...');
                 await new Promise((resolve) => setTimeout(resolve, 3000));
@@ -402,17 +387,43 @@ const Momcad = ({ edit, token, roles = [] }) => {
                                                                                 }
                                                                                 onChange={(
                                                                                     e
-                                                                                ) =>
-                                                                                    handleInputChange(
-                                                                                        e
-                                                                                            .target
-                                                                                            .value,
-                                                                                        rowIndex,
-                                                                                        rowInd,
-                                                                                        rowItem[0],
-                                                                                        row
-                                                                                    )
-                                                                                }
+                                                                                ) => {
+                                                                                    const regex =
+                                                                                        /^\d(\.\d{0,2})?$/;
+                                                                                    if (
+                                                                                        rowInd ===
+                                                                                            1 &&
+                                                                                        (regex.test(
+                                                                                            e
+                                                                                                .target
+                                                                                                .value
+                                                                                        ) ||
+                                                                                            e
+                                                                                                .target
+                                                                                                .value ==
+                                                                                                '')
+                                                                                    ) {
+                                                                                        handleInputChange(
+                                                                                            e
+                                                                                                .target
+                                                                                                .value,
+                                                                                            rowIndex,
+                                                                                            rowInd,
+                                                                                            rowItem[0],
+                                                                                            row
+                                                                                        );
+                                                                                    } else {
+                                                                                        handleInputChange(
+                                                                                            e
+                                                                                                .target
+                                                                                                .value,
+                                                                                            rowIndex,
+                                                                                            rowInd,
+                                                                                            rowItem[0],
+                                                                                            row
+                                                                                        );
+                                                                                    }
+                                                                                }}
                                                                             />
                                                                         ) : rowInd ===
                                                                               2 ||

@@ -14,15 +14,7 @@ function Home({ roles = [] }) {
         const fetchData = async () => {
             try {
                 const token = localStorage.getItem('token');
-                const homePoziv = await api.post(
-                    '/podatciPocetna',
-                    {},
-                    {
-                        headers: {
-                            authorization: `Bearer ${token}`,
-                        },
-                    }
-                );
+                const homePoziv = await api.post('/podatciPocetna');
 
                 setUtakmica(homePoziv.data.utakmica[0]);
                 setIgrac(homePoziv.data.igrac[0]);
@@ -58,7 +50,7 @@ function Home({ roles = [] }) {
                             <div className="homeUtakmica">
                                 <div className="posljednjaUtakmica">
                                     <h2>POSLJEDNJA UTAKMICA</h2>
-                                    <div class="homePodatak zadnja">
+                                    <div className="homePodatak zadnja">
                                         <h4>
                                             <Link
                                                 to={`/Momcad/${utakmica.DOMACI_NAZIV}`}
@@ -112,7 +104,7 @@ function Home({ roles = [] }) {
                             >
                                 <div className="homePoveznica">
                                     <h2>
-                                        Pritisnite za pregled potpune statistika
+                                        Pritisnite za pregled potpune statistike
                                     </h2>
                                 </div>
                             </Link>
@@ -180,7 +172,7 @@ function Home({ roles = [] }) {
                         >
                             {prvihDesetUtakmica.map((utk, index) => {
                                 return (
-                                    <div className="homePodatak" key={utk.id}>
+                                    <div className="homePodatak" key={index}>
                                         <h4>
                                             <Link
                                                 to={`/Momcad/${utk.DOMACI_NAZIV}`}

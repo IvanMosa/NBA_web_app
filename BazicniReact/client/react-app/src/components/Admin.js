@@ -18,6 +18,7 @@ function Admin({ roles, token }) {
     const [promjene, setPromjene] = useState([]);
     const [onDelete, setDelete] = useState(false);
     const [confirmationDialog, setConfirmationDialog] = useState(null);
+    const accessToken = localStorage.getItem('token');
 
     const handleOptionChange = (event) => {
         const value = event.target.value;
@@ -118,15 +119,10 @@ function Admin({ roles, token }) {
         try {
             setDelete(false);
             if (confirm) {
-                const zakljucaj = await api.post(
-                    '/adminPromjeniAktivnost',
-                    { korisnik: korisnik, aktivnost: aktivan },
-                    {
-                        headers: {
-                            authorization: `Bearer ${token}`,
-                        },
-                    }
-                );
+                const zakljucaj = await api.post('/adminPromjeniAktivnost', {
+                    korisnik: korisnik,
+                    aktivnost: aktivan,
+                });
                 if (
                     zakljucaj.data.message == 'Uspješno promjenjena aktivnost!'
                 ) {
@@ -143,15 +139,7 @@ function Admin({ roles, token }) {
     };
     const prikaziSveKorisnike = async () => {
         try {
-            const korisnici = await api.post(
-                '/adminSviKorisnici',
-                {},
-                {
-                    headers: {
-                        authorization: `Bearer ${token}`,
-                    },
-                }
-            );
+            const korisnici = await api.post('/adminSviKorisnici');
             setKorisnici(korisnici.data.korisnici);
             setKorisniciPromjene(korisnici.data.korisnici);
         } catch (err) {
@@ -170,7 +158,7 @@ function Admin({ roles, token }) {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
-                authorization: `Bearer ${token}`,
+                Authorization: `Bearer ${accessToken}`,
             },
             body: JSON.stringify({
                 userName: registerUserName,
@@ -218,26 +206,21 @@ function Admin({ roles, token }) {
     const handleSave = async () => {
         if (promjene.length === 0) {
             setPromjeneErrorMessage('Nema unešenih promjena');
-        }
-        try {
-            const unesiPromjene = await api.post(
-                '/adminDodajRole',
-                { promjene: promjene },
-                {
-                    headers: {
-                        authorization: `Bearer ${token}`,
-                    },
-                }
-            );
-            prikaziSveKorisnike();
-            setIsEditing(false);
-            setKorisniciPromjene([]);
-            setPromjene([]);
-            setRegisterUserName('');
-            setRegisterPassword('');
-            setPromjeneErrorMessage(unesiPromjene.data.message);
-        } catch (err) {
-            console.log(err);
+        } else {
+            try {
+                const unesiPromjene = await api.post('/adminDodajRole', {
+                    promjene: promjene,
+                });
+                prikaziSveKorisnike();
+                setIsEditing(false);
+                setKorisniciPromjene([]);
+                setPromjene([]);
+                setRegisterUserName('');
+                setRegisterPassword('');
+                setPromjeneErrorMessage(unesiPromjene.data.message);
+            } catch (err) {
+                console.log(err);
+            }
         }
     };
 
@@ -263,15 +246,9 @@ function Admin({ roles, token }) {
         try {
             setDelete(false);
             if (confirm) {
-                const izbrisi = await api.post(
-                    '/adminIzbrisiKorisnika',
-                    { korisnik: korisnik },
-                    {
-                        headers: {
-                            authorization: `Bearer ${token}`,
-                        },
-                    }
-                );
+                const izbrisi = await api.post('/adminIzbrisiKorisnika', {
+                    korisnik: korisnik,
+                });
                 if (izbrisi.data.message == 'Uspješno obrisan korisnik!') {
                     setKorisnici((sviKorisnici) =>
                         sviKorisnici.filter(

@@ -62,15 +62,7 @@ const Delegat = ({ token }) => {
 
     const fetchData = async () => {
         try {
-            const pocetniPodatci = await api.post(
-                '/getMomcadi',
-                {},
-                {
-                    headers: {
-                        authorization: `Bearer ${token}`,
-                    },
-                }
-            );
+            const pocetniPodatci = await api.post('/getMomcadi');
             setMomcadi(
                 Array.isArray(pocetniPodatci.data.momcad)
                     ? pocetniPodatci.data.momcad
@@ -87,25 +79,11 @@ const Delegat = ({ token }) => {
                     : []
             );
 
-            const statistikaMomcadi = await api.post(
-                '/getStatistikaMomcadi',
-                {},
-                {
-                    headers: {
-                        authorization: `Bearer ${token}`,
-                    },
-                }
-            );
+            const statistikaMomcadi = await api.post('/getStatistikaMomcadi');
             setSveUtakmice(statistikaMomcadi.data.utakmice);
 
             const statPodatci_statusi = await api.post(
-                '/getStatistickiPodatci',
-                {},
-                {
-                    headers: {
-                        authorization: `Bearer ${token}`,
-                    },
-                }
+                '/getStatistickiPodatci'
             );
 
             setStatistickiPodatci(
@@ -159,38 +137,22 @@ const Delegat = ({ token }) => {
         if (domaci && gosti && sudac && sezona && vrijeme && datum) {
             try {
                 setErrorMessage('');
-                const result = await api.post(
-                    '/kreirajUtakmicu',
-                    {
-                        domaci: domaci.toString(),
-                        gosti: gosti.toString(),
-                        datum: datum + ' ' + vrijeme,
-                        sezona: sezona.toString(),
-                        sudac: sudac.toString(),
-                    },
-                    {
-                        headers: {
-                            authorization: `Bearer ${token}`,
-                        },
-                    }
-                );
+                const result = await api.post('/kreirajUtakmicu', {
+                    domaci: domaci.toString(),
+                    gosti: gosti.toString(),
+                    datum: datum + ' ' + vrijeme,
+                    sezona: sezona.toString(),
+                    sudac: sudac.toString(),
+                });
 
                 if (
                     result.data.message === 'Insert was completed successfully!'
                 ) {
-                    const result1 = await api.post(
-                        '/getStatistikaMomcadi',
-                        {
-                            imeMomcad: domaci.toString(),
-                            imeMomcad1: gosti.toString(),
-                            datum: datum + ' ' + vrijeme,
-                        },
-                        {
-                            headers: {
-                                authorization: `Bearer ${token}`,
-                            },
-                        }
-                    );
+                    const result1 = await api.post('/getStatistikaMomcadi', {
+                        imeMomcad: domaci.toString(),
+                        imeMomcad1: gosti.toString(),
+                        datum: datum + ' ' + vrijeme,
+                    });
                     setOznacenaUtakmica(result1.data.utakmica);
                     setErrorMessage('Uspješno krenirana utakmica!');
                     await new Promise((resolve) => setTimeout(resolve, 3000));
@@ -261,22 +223,14 @@ const Delegat = ({ token }) => {
         setAktivniGosti(gosti_temp);
 
         try {
-            const result = await api.post(
-                '/unesiStatistiku',
-                {
-                    utakmica_id: utakmica_id,
-                    aktivni_domaci: domaci_temp,
-                    aktivni_gosti: gosti_temp,
-                    status: 'U tijeku',
-                    podatak: 'Ulaz/Izlaz',
-                    setStarteri: true,
-                },
-                {
-                    headers: {
-                        authorization: `Bearer ${token}`,
-                    },
-                }
-            );
+            const result = await api.post('/unesiStatistiku', {
+                utakmica_id: utakmica_id,
+                aktivni_domaci: domaci_temp,
+                aktivni_gosti: gosti_temp,
+                status: 'U tijeku',
+                podatak: 'Ulaz/Izlaz',
+                setStarteri: true,
+            });
             setPozivStarteriOznaceni(true);
         } catch (err) {
             console.log(err);
@@ -286,44 +240,20 @@ const Delegat = ({ token }) => {
     const prikaziStatistiku = async () => {
         try {
             const [statistikaResponse, igraciResponses] = await Promise.all([
-                api.post(
-                    '/prikaziStatistikuUtakmice',
-                    {
-                        utakmica_id: utakmica_id,
-                        domaci_naziv: oznacenaUtakmica.DOMACI_NAZIV.toString(),
-                        gosti_naziv: oznacenaUtakmica.GOSTI_NAZIV.toString(),
-                    },
-                    {
-                        headers: {
-                            authorization: `Bearer ${token}`,
-                        },
-                    }
-                ),
+                api.post('/prikaziStatistikuUtakmice', {
+                    utakmica_id: utakmica_id,
+                    domaci_naziv: oznacenaUtakmica.DOMACI_NAZIV.toString(),
+                    gosti_naziv: oznacenaUtakmica.GOSTI_NAZIV.toString(),
+                }),
                 Promise.all([
-                    api.post(
-                        '/showRoster',
-                        {
-                            imeMomcad: oznacenaUtakmica.DOMACI_NAZIV.toString(),
-                            status: 0,
-                        },
-                        {
-                            headers: {
-                                authorization: `Bearer ${token}`,
-                            },
-                        }
-                    ),
-                    api.post(
-                        '/showRoster',
-                        {
-                            imeMomcad: oznacenaUtakmica.GOSTI_NAZIV.toString(),
-                            status: 0,
-                        },
-                        {
-                            headers: {
-                                authorization: `Bearer ${token}`,
-                            },
-                        }
-                    ),
+                    api.post('/showRoster', {
+                        imeMomcad: oznacenaUtakmica.DOMACI_NAZIV.toString(),
+                        status: 0,
+                    }),
+                    api.post('/showRoster', {
+                        imeMomcad: oznacenaUtakmica.GOSTI_NAZIV.toString(),
+                        status: 0,
+                    }),
                 ]),
             ]);
 
@@ -429,27 +359,19 @@ const Delegat = ({ token }) => {
                         Igrac_promjena.length !== 0 &&
                         Igrac_ulazi.length !== 0
                     ) {
-                        result = await api.post(
-                            '/unesiStatistiku',
-                            {
-                                igrac_id: Igrac_promjena,
-                                igrac_ulaz_id: Igrac_ulazi,
-                                domaci_naziv:
-                                    oznacenaUtakmica.DOMACI_NAZIV.toString(),
-                                gosti_naziv:
-                                    oznacenaUtakmica.GOSTI_NAZIV.toString(),
-                                status: status,
-                                minute: minute,
-                                sekunde: sekunde,
-                                podatak: oznaceni_podatak,
-                                utakmica_id: utakmica_id,
-                            },
-                            {
-                                headers: {
-                                    authorization: `Bearer ${token}`,
-                                },
-                            }
-                        );
+                        result = await api.post('/unesiStatistiku', {
+                            igrac_id: Igrac_promjena,
+                            igrac_ulaz_id: Igrac_ulazi,
+                            domaci_naziv:
+                                oznacenaUtakmica.DOMACI_NAZIV.toString(),
+                            gosti_naziv:
+                                oznacenaUtakmica.GOSTI_NAZIV.toString(),
+                            status: status,
+                            minute: minute,
+                            sekunde: sekunde,
+                            podatak: oznaceni_podatak,
+                            utakmica_id: utakmica_id,
+                        });
 
                         if (result.data.message) {
                             setErrorVrijeme(result.data.message);
@@ -478,26 +400,18 @@ const Delegat = ({ token }) => {
                             setPromjene(true);
                         }
                     } else {
-                        result = await api.post(
-                            '/unesiStatistiku',
-                            {
-                                igrac_ulaz_id: Igrac_ulazi,
-                                domaci_naziv:
-                                    oznacenaUtakmica.DOMACI_NAZIV.toString(),
-                                gosti_naziv:
-                                    oznacenaUtakmica.GOSTI_NAZIV.toString(),
-                                status: status,
-                                minute: minute,
-                                sekunde: sekunde,
-                                podatak: oznaceni_podatak,
-                                utakmica_id: utakmica_id,
-                            },
-                            {
-                                headers: {
-                                    authorization: `Bearer ${token}`,
-                                },
-                            }
-                        );
+                        result = await api.post('/unesiStatistiku', {
+                            igrac_ulaz_id: Igrac_ulazi,
+                            domaci_naziv:
+                                oznacenaUtakmica.DOMACI_NAZIV.toString(),
+                            gosti_naziv:
+                                oznacenaUtakmica.GOSTI_NAZIV.toString(),
+                            status: status,
+                            minute: minute,
+                            sekunde: sekunde,
+                            podatak: oznaceni_podatak,
+                            utakmica_id: utakmica_id,
+                        });
 
                         if (result.data.message) {
                             setErrorVrijeme(result.data.message);
@@ -525,23 +439,15 @@ const Delegat = ({ token }) => {
                         }
                     }
                 } else {
-                    result = await api.post(
-                        '/unesiStatistiku',
-                        {
-                            igrac_id: Igrac_promjena,
-                            status: status.toString(),
-                            minute: minute,
-                            sekunde: sekunde,
-                            podatak: oznaceni_podatak,
-                            utakmica_id: utakmica_id,
-                            uzivo: uzivoUnos,
-                        },
-                        {
-                            headers: {
-                                authorization: `Bearer ${token}`,
-                            },
-                        }
-                    );
+                    result = await api.post('/unesiStatistiku', {
+                        igrac_id: Igrac_promjena,
+                        status: status.toString(),
+                        minute: minute,
+                        sekunde: sekunde,
+                        podatak: oznaceni_podatak,
+                        utakmica_id: utakmica_id,
+                        uzivo: uzivoUnos,
+                    });
                     setStatistika((prev) => [result.data.noviPodatak, ...prev]);
                     setPromjene(true);
                     const momcad = result.data.momcad;
@@ -728,20 +634,12 @@ const Delegat = ({ token }) => {
                     setAktivniGosti([]);
                 }
 
-                const result = await api.post(
-                    '/izbrisiPodatak',
-                    {
-                        izbrisiPodatak: izbrisiPodatak,
-                        izbrisiPodatakUlaz: izbrisiPodatakUlaz,
-                        utakmica_id: utakmica_id,
-                        uzivo: uzivoUnos,
-                    },
-                    {
-                        headers: {
-                            authorization: `Bearer ${token}`,
-                        },
-                    }
-                );
+                const result = await api.post('/izbrisiPodatak', {
+                    izbrisiPodatak: izbrisiPodatak,
+                    izbrisiPodatakUlaz: izbrisiPodatakUlaz,
+                    utakmica_id: utakmica_id,
+                    uzivo: uzivoUnos,
+                });
 
                 prikaziStatistiku();
                 const momcad = result.data.momcad;
@@ -770,15 +668,9 @@ const Delegat = ({ token }) => {
         try {
             setUtakmicaDelete(false);
             if (confirm) {
-                const izbrisi = await api.post(
-                    '/izbrisiUtakmicu',
-                    { utakmica_id: utakmica.UTAKMICA_ID },
-                    {
-                        headers: {
-                            authorization: `Bearer ${token}`,
-                        },
-                    }
-                );
+                const izbrisi = await api.post('/izbrisiUtakmicu', {
+                    utakmica_id: utakmica.UTAKMICA_ID,
+                });
 
                 if (izbrisi.data.message == 'Uspješno izbrisana utakmica!') {
                     setSveUtakmice((prev) =>

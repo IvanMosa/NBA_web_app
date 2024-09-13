@@ -44,7 +44,10 @@ function Login() {
 
             .catch((error) => {
                 console.log(error);
-                setErrorMessage('Korisnički račun zaključan!');
+                if (error == 'Korisnički račun zaključan!')
+                    setErrorMessage('Korisnički račun zaključan!');
+                else if (error == 'Login Failed')
+                    setErrorMessage('Pogrešno korisničko ime ili lozinka!');
             });
         e.preventDefault();
     };

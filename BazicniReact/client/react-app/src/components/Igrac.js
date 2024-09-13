@@ -29,17 +29,9 @@ function Igrac({ token }) {
         let podatci;
         let ugovoriIgrac;
         try {
-            const result = await api.post(
-                '/podatciIgraca',
-                {
-                    imeIgrac: imeIgrac,
-                },
-                {
-                    headers: {
-                        authorization: `Bearer ${token}`,
-                    },
-                }
-            );
+            const result = await api.post('/podatciIgraca', {
+                imeIgrac: imeIgrac,
+            });
 
             if (imeMomcad === null) {
                 setImeMomcad(result.data.podatci[11]);

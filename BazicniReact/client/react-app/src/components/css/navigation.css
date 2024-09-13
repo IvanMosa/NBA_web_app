@@ -104,7 +104,6 @@
     z-index: 1000; /* Ensure it's above other elements */
     padding: 1vh 0; /* Padding around the dropdown content */
 }
-
 /* Optional: Add some additional styling for card items */
 .tutorial-dropdown .card {
     width: 100%; /* Ensure full width inside dropdown */

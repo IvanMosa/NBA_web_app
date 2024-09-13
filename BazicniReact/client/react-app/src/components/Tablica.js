@@ -17,15 +17,7 @@ const Tablica = ({ token }) => {
     useEffect(() => {
         const fetchData = async () => {
             try {
-                const response = await api.post(
-                    '/getMomcadi',
-                    {},
-                    {
-                        headers: {
-                            authorization: `Bearer ${token}`,
-                        },
-                    }
-                );
+                const response = await api.post('/getMomcadi');
                 setSeasons(
                     Array.isArray(response.data.sezona)
                         ? response.data.sezona
@@ -43,18 +35,10 @@ const Tablica = ({ token }) => {
                 setKonferencija_Divizija('Konferencija');
                 setimeSezone('23/24');
 
-                const response1 = await api.post(
-                    '/ShowMomcadi',
-                    {
-                        imeSezone: '23/24',
-                        konf_div: 'Konferencija',
-                    },
-                    {
-                        headers: {
-                            authorization: `Bearer ${token}`,
-                        },
-                    }
-                );
+                const response1 = await api.post('/ShowMomcadi', {
+                    imeSezone: '23/24',
+                    konf_div: 'Konferencija',
+                });
                 setFilteredData(
                     Array.isArray(response1.data) ? response1.data : []
                 );
@@ -73,19 +57,11 @@ const Tablica = ({ token }) => {
                 setIzbor(Div);
             }
             try {
-                const response = await api.post(
-                    '/ShowMomcadi',
-                    {
-                        //imeMomcad: imeMomcad,
-                        imeSezone: imeSezone,
-                        konf_div: Konferencija_Divizija,
-                    },
-                    {
-                        headers: {
-                            authorization: `Bearer ${token}`,
-                        },
-                    }
-                );
+                const response = await api.post('/ShowMomcadi', {
+                    //imeMomcad: imeMomcad,
+                    imeSezone: imeSezone,
+                    konf_div: Konferencija_Divizija,
+                });
                 setFilteredData(response.data);
             } catch (error) {
                 console.error(error);

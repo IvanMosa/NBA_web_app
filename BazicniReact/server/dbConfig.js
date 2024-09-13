@@ -1,7 +1,7 @@
 let dbConfig = {};
 
 dbConfig.jwtAccessSecretKey = 'AskscubQsI';
-dbConfig.jwtAccessExpirationWeb = '15s';
+dbConfig.jwtAccessExpirationWeb = '1800s';
 
 dbConfig.jwtRefreshSecretKey = 'MnEksfUSZx';
 

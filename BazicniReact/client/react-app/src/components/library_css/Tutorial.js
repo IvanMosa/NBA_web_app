@@ -50,7 +50,7 @@ function Tutorial({ setClickedNavigation, roles }) {
     ];
 
     return (
-        <div className="detalji">
+        <div className={clicked ? 'detalji clicked' : 'detalji'}>
             <div
                 className={
                     clicked ? 'cards-container clicked' : 'cards-container'
@@ -79,6 +79,7 @@ function Tutorial({ setClickedNavigation, roles }) {
                             setClicked(!clicked);
                         }}
                         onMouseEnter={() => setHoveredIndex(index)}
+                        key={index}
                     >
                         <h2>{component.name}</h2>
                         <p>{component.description}</p>

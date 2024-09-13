@@ -8,6 +8,14 @@ const api = axios.create({
     },
 });
 
+api.interceptors.request.use((config) => {
+    const token = localStorage.getItem('token');
+    if (token) {
+        config.headers['Authorization'] = `Bearer ${token}`;
+    }
+    return config;
+});
+
 api.interceptors.response.use(
     (response) => response,
     async (error) => {
@@ -24,7 +32,11 @@ api.interceptors.response.use(
 
                 localStorage.setItem('token', response.data.accessToken);
 
-                // Ažuriraj Authorization header u originalnom zahtjevu
+                console.log(response.data.accessToken);
+                api.defaults.headers[
+                    'Authorization'
+                ] = `Bearer ${response.data.accessToken}`;
+
                 originalRequest.headers[
                     'Authorization'
                 ] = `Bearer ${response.data.accessToken}`;

@@ -40,14 +40,16 @@ app.listen(4000, function () {
 
 const authenticateJWT = (req, res, next) => {
     const authHeader = req.headers.authorization;
-    console.log('authhed: ', authHeader);
     if (authHeader) {
         const token = authHeader.split(' ')[1];
         jwt.verify(token, dbConfig.jwtAccessSecretKey, (err, result) => {
             if (err) {
                 console.log(err);
-                res.status(401);
-                return;
+                return res.status(401).json({
+                    status: 401,
+                    message: 'No token provided',
+                    error: 'Unatuhorized',
+                });
             } else {
                 req.user = result;
                 next();
@@ -60,7 +62,6 @@ const authenticateJWT = (req, res, next) => {
 
 app.post('/refresh-token', async (req, res) => {
     let connection;
-    console.log('ISTEKA, OVO JE REFRESH: ', req.body);
     const { refreshToken } = req.body;
 
     if (!refreshToken) {
@@ -71,7 +72,7 @@ app.post('/refresh-token', async (req, res) => {
         connection = await oracledb.getConnection();
 
         const findStored = await connection.execute(
-            'SELECT AS.TOKEN FROM NBA.APP_SESIJE AP WHERE AP.TOKEN = :refreshToken AND AP.STATUS_ID = 1 AND AP.KRAJ IS NULL',
+            'SELECT AP.TOKEN FROM NBA.APP_SESIJE AP WHERE AP.TOKEN = :refreshToken AND AP.STATUS_ID = 1 AND AP.KRAJ IS NULL',
             { refreshToken: refreshToken },
             { outFormat: oracledb.OBJECT }
         );
@@ -82,21 +83,17 @@ app.post('/refresh-token', async (req, res) => {
                 .status(403)
                 .json({ message: 'Refresh token nije validan' });
         }
-        jwt.verify(
-            refreshToken,
-            process.env.REFRESH_TOKEN_SECRET,
-            (err, user) => {
-                if (err) {
-                    return res
-                        .status(403)
-                        .json({ message: 'Nevažeći refresh token' });
-                }
-
-                const newAccessToken = generirajAccessToken(user.name);
-
-                res.json({ accessToken: newAccessToken });
+        jwt.verify(refreshToken, dbConfig.jwtRefreshSecretKey, (err, user) => {
+            if (err) {
+                return res
+                    .status(403)
+                    .json({ message: 'Nevažeći refresh token' });
             }
-        );
+
+            const newAccessToken = generirajAccessToken({ name: user.name });
+
+            res.send({ accessToken: newAccessToken });
+        });
     } catch (err) {
         console.log(err);
     } finally {
@@ -149,7 +146,7 @@ app.post('/login', async (req, res) => {
                             return;
                         }
                         if (result1) {
-                            if (row.STATUS == 0) {
+                            if (row.STATUS === 0) {
                                 res.status(201).send({
                                     message: 'Korisnički račun zaključan!',
                                 });
@@ -468,6 +465,13 @@ app.post('/adminIzbrisiKorisnika', authenticateJWT, async (req, res) => {
         );
 
         const korisnik_id = pronadiKorisnikID.rows[0].KORISNIK_ID;
+
+        await connection.execute(
+            'DELETE FROM NBA.APP_SESIJE WHERE KORISNIK_ID = :korisnik_id',
+            { korisnik_id: korisnik_id },
+            { autoCommit: true }
+        );
+
         await connection.execute(
             'DELETE FROM VEZE_KORISNICI_ROLE WHERE KORISNIK_ID = :korisnik_id',
             { korisnik_id: korisnik_id },

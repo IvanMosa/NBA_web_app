@@ -68,19 +68,11 @@ const OdabirPodatka = ({
 
     const unesiPoene = async () => {
         try {
-            const result = await api.post(
-                '/unesiPoene',
-                {
-                    poeniDomaci: poeniDomaci,
-                    poeniGosti: poeniGosti,
-                    utakmica_id: oznacenaUtakmica.UTAKMICA_ID,
-                },
-                {
-                    headers: {
-                        authorization: `Bearer ${token}`,
-                    },
-                }
-            );
+            const result = await api.post('/unesiPoene', {
+                poeniDomaci: poeniDomaci,
+                poeniGosti: poeniGosti,
+                utakmica_id: oznacenaUtakmica.UTAKMICA_ID,
+            });
         } catch (err) {
             console.log(err);
         }

@@ -25,13 +25,13 @@ const Statistika = ({ imeIgrac, setPoeni, setStatistikaSezona, token }) => {
         { short: 'P', full: 'POENI' },
         { short: 'PIP', full: 'POGODCI IZ POLJA' },
         { short: 'PIPU', full: 'POKUŠAJI IZ POLJA' },
-        { short: 'FG%', full: 'FG%' },
+        { short: 'FG%', full: 'POSTOTAK POKUŠAJA IZ POLJA' },
         { short: 'PT', full: 'POGOĐENE TRICE' },
         { short: 'PRT', full: 'PROMAŠENE TRICE' },
-        { short: '3P%', full: '3P%' },
+        { short: '3P%', full: 'POSTOTAK TRICA' },
         { short: 'PSB', full: 'POGOĐENA SLOBODNA BACANJA' },
         { short: 'PRSB', full: 'PROMAŠENA SLOBODNA BACANJA' },
-        { short: 'SB%', full: 'SB%' },
+        { short: 'SB%', full: 'POSTOTAK SLOBODNIH BACANJA' },
         { short: 'NS', full: 'NAPADAČKI SKOK' },
         { short: 'OS', full: 'OBRAMBENI SKOK' },
         { short: 'S', full: 'SKOKOVI' },
@@ -59,37 +59,23 @@ const Statistika = ({ imeIgrac, setPoeni, setStatistikaSezona, token }) => {
         { short: 'FG%', full: 'POSTOTAK POKUŠAJA IZ POLJA' },
         { short: 'PT', full: 'POGOĐENE TRICE' },
         { short: 'PRT', full: 'PROMAŠENE TRICE' },
-        { short: '3P%', full: 'POSTOTAK TRICE' },
+        { short: '3P%', full: 'POSTOTAK TRICA' },
         { short: 'PSB', full: 'POGOĐENA SLOBODNA BACANJA' },
         { short: 'PRSB', full: 'PROMAŠENA SLOBODNA BACANJA' },
-        { short: 'SB%' },
+        { short: 'SB%', full: 'POSTOTAK SLOBODNIH BACANJA' },
     ];
     useEffect(() => {
         const fetchData = async () => {
             try {
-                const result = await api.post(
-                    '/getStatistikaIgraci',
-                    { imeIgrac: imeIgrac ? imeIgrac : 'Svi' },
-                    {
-                        headers: {
-                            authorization: `Bearer ${token}`,
-                        },
-                    }
-                );
+                const result = await api.post('/getStatistikaIgraci', {
+                    imeIgrac: imeIgrac ? imeIgrac : 'Svi',
+                });
                 setIgraci(result.data.igraci);
                 setSezone(result.data.sezone);
                 if (!imeIgrac) setPodatciSez(result.data.karijera);
                 else setStatistikaSezona(result.data.karijera);
 
-                const result1 = await api.post(
-                    '/getStatistikaMomcadi',
-                    {},
-                    {
-                        headers: {
-                            authorization: `Bearer ${token}`,
-                        },
-                    }
-                );
+                const result1 = await api.post('/getStatistikaMomcadi');
                 setUtakmice(result1.data.utakmice);
             } catch (err) {
                 console.log(err);
